@@ -14,7 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          budget: string | null
+          client_email: string | null
+          client_name: string | null
+          created_at: string
+          deliverables: string | null
+          description: string | null
+          generated_content: string
+          id: string
+          industry: string | null
+          project_type: string | null
+          status: string
+          timeline: string | null
+          title: string
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          created_at?: string
+          deliverables?: string | null
+          description?: string | null
+          generated_content: string
+          id?: string
+          industry?: string | null
+          project_type?: string | null
+          status?: string
+          timeline?: string | null
+          title: string
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          created_at?: string
+          deliverables?: string | null
+          description?: string | null
+          generated_content?: string
+          id?: string
+          industry?: string | null
+          project_type?: string | null
+          status?: string
+          timeline?: string | null
+          title?: string
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
