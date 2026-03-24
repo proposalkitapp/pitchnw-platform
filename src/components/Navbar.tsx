@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
+import proposalLogo from "@/assets/proposal-logo.png";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -14,6 +16,21 @@ const navLinks = [
 export function Navbar() {
   const { isDark, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    }
+    setMobileOpen(false);
+  };
 
   return (
     <motion.header
@@ -23,13 +40,12 @@ export function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
-        <a href="#" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="font-display text-sm font-bold text-primary-foreground">PK</span>
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">
-            Proposal<span className="text-gradient">Kit</span>
-          </span>
+        <a
+          href="/"
+          onClick={(e) => { e.preventDefault(); navigate("/"); }}
+          className="flex items-center gap-2"
+        >
+          <img src={proposalLogo} alt="ProposalKit" className="h-8 w-auto" />
         </a>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -37,6 +53,7 @@ export function Navbar() {
             <a
               key={link.href}
               href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
             >
               {link.label}
@@ -48,7 +65,12 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Button variant="hero" size="sm" className="hidden md:inline-flex">
+          <Button
+            variant="hero"
+            size="sm"
+            className="hidden md:inline-flex"
+            onClick={() => navigate("/generate")}
+          >
             Get Started Free
           </Button>
           <Button
@@ -76,13 +98,13 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => handleNavClick(e, link.href)}
                   className="rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                 >
                   {link.label}
                 </a>
               ))}
-              <Button variant="hero" size="lg" className="mt-2">
+              <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/generate"); setMobileOpen(false); }}>
                 Get Started Free
               </Button>
             </div>

@@ -1,3 +1,5 @@
+import proposalLogo from "@/assets/proposal-logo.png";
+
 export function Footer() {
   return (
     <footer className="border-t border-border py-12">
@@ -5,12 +7,7 @@ export function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center">
-                <span className="font-display text-xs font-bold text-primary-foreground">PK</span>
-              </div>
-              <span className="font-display text-base font-bold text-foreground">
-                Proposal<span className="text-gradient">Kit</span>
-              </span>
+              <img src={proposalLogo} alt="ProposalKit" className="h-7 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Generate. Customize. Close. The AI-powered proposal platform for freelancers.
