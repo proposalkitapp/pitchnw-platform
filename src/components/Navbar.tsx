@@ -1,6 +1,7 @@
-import { Moon, Sun, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu, X, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,6 +16,7 @@ const navLinks = [
 
 export function Navbar() {
   const { isDark, toggle } = useTheme();
+  const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +32,11 @@ export function Navbar() {
       document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
     }
     setMobileOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
   return (
@@ -65,14 +72,37 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Button
-            variant="hero"
-            size="sm"
-            className="hidden md:inline-flex"
-            onClick={() => navigate("/generate")}
-          >
-            Get Started Free
-          </Button>
+
+          {user ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex gap-2"
+                onClick={() => navigate("/dashboard")}
+              >
+                <LayoutDashboard className="h-4 w-4" /> Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden md:inline-flex text-muted-foreground"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="hero"
+              size="sm"
+              className="hidden md:inline-flex"
+              onClick={() => navigate("/auth")}
+            >
+              Get Started Free
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -104,9 +134,20 @@ export function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/generate"); setMobileOpen(false); }}>
-                Get Started Free
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="ghost" className="justify-start gap-2" onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}>
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                  </Button>
+                  <Button variant="ghost" className="justify-start gap-2 text-destructive" onClick={() => { handleSignOut(); setMobileOpen(false); }}>
+                    <LogOut className="h-4 w-4" /> Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>
+                  Get Started Free
+                </Button>
+              )}
             </div>
           </motion.div>
         )}
