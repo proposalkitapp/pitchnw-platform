@@ -1,10 +1,26 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import heroBg from "@/assets/hero-bg.jpg";
 
 export function HeroSection() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
+      {/* Hero background image */}
+      <div className="absolute inset-0">
+        <img
+          src={heroBg}
+          alt=""
+          width={1920}
+          height={1080}
+          className="w-full h-full object-cover opacity-30 dark:opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+      </div>
+
       {/* Background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border)/0.3)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border)/0.3)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black_20%,transparent_100%)]" />
 
@@ -60,11 +76,15 @@ export function HeroSection() {
           transition={{ delay: 0.7 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Button variant="hero" size="xl">
+          <Button variant="hero" size="xl" onClick={() => navigate("/generate")}>
             Start Creating Proposals
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <Button variant="hero-outline" size="xl">
+          <Button
+            variant="hero-outline"
+            size="xl"
+            onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+          >
             See How It Works
           </Button>
         </motion.div>
