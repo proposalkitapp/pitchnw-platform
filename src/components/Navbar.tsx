@@ -76,7 +76,7 @@ export function Navbar() {
             onClick={(e) => { e.preventDefault(); navigate("/"); }}
             className="flex items-center gap-2"
           >
-            <img src={proposalLogo} alt="ProposalKit" className="h-8 w-auto" />
+            <img src={proposalLogo} alt="ProposalKit" className="h-20 w-auto" />
           </a>
 
           {user && displayName && (
