@@ -135,6 +135,18 @@ export default function AuthPage() {
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
             </p>
+
+            {isLogin && (
+              <p className="text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-muted-foreground hover:text-primary hover:underline transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </p>
+            )}
           </form>
         </motion.div>
       </main>

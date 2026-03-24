@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download } from "lucide-react";
 import { toast } from "sonner";
+import { exportProposalAsPdf } from "@/lib/export-pdf";
 
 interface Proposal {
   id: string;
@@ -95,9 +96,19 @@ export default function Dashboard() {
               animate={{ opacity: 1 }}
               className="space-y-4"
             >
-              <Button variant="ghost" onClick={() => setSelectedProposal(null)} className="gap-2">
-                ← Back to list
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="ghost" onClick={() => setSelectedProposal(null)} className="gap-2">
+                  ← Back to list
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => exportProposalAsPdf(selectedProposal.title, selectedProposal.generated_content)}
+                >
+                  <Download className="h-4 w-4" /> Export PDF
+                </Button>
+              </div>
               <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
                 <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">
                   {selectedProposal.title}
