@@ -1,6 +1,8 @@
 import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 const plans = [
   {
@@ -55,6 +57,18 @@ const plans = [
 ];
 
 export function PricingSection() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePlanClick = (planName: string) => {
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      const intent = planName.toLowerCase();
+      navigate(intent === "free" ? "/auth?mode=signup" : `/auth?mode=signup&intent=${intent}`);
+    }
+  };
+
   return (
     <ParallaxSection id="pricing" className="py-24 lg:py-32" speed={0.1}>
       <div className="container mx-auto px-4">
@@ -97,7 +111,12 @@ export function PricingSection() {
                     </li>
                   ))}
                 </ul>
-                <Button variant={plan.variant} size="lg" className="w-full">
+                <Button
+                  variant={plan.variant}
+                  size="lg"
+                  className="w-full"
+                  onClick={() => handlePlanClick(plan.name)}
+                >
                   {plan.cta}
                 </Button>
               </div>
