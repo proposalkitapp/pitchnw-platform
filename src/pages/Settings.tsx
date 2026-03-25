@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { User, Building, Save, Lock } from "lucide-react";
+import { User, Building, Save, Lock, Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
@@ -150,7 +150,7 @@ export default function Settings() {
                   disabled={saving}
                   className="gap-2"
                 >
-                  <Save className="h-4 w-4" />
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {saving ? "Saving..." : "Save Profile"}
                 </Button>
               </div>
@@ -197,7 +197,7 @@ export default function Settings() {
                   disabled={changingPassword}
                   className="gap-2"
                 >
-                  <Lock className="h-4 w-4" />
+                  {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                   {changingPassword ? "Updating..." : "Change Password"}
                 </Button>
               </div>

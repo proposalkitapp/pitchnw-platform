@@ -16,28 +16,31 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert proposal writer for freelancers and agencies. Generate professional, persuasive business proposals in Markdown format. Include:
+    const systemPrompt = `You are a professional business proposal writer. You write in clean, formal, polished English. You never use markdown formatting characters (no **, no ##, no backticks, no dashes as bullet points, no quotation marks around headings). You write proposals that sound like they were written by a senior consultant at a top agency. Your tone is confident, specific, and persuasive. Always write in full sentences and paragraphs unless creating a structured list, in which case use clean numbered items only.
+
+Include these sections:
 - Executive Summary
-- Project Scope & Objectives
-- Deliverables (as bullet list)
-- Timeline & Milestones
-- Budget & Pricing
-- Terms & Next Steps
+- Project Scope and Objectives
+- Deliverables
+- Timeline and Milestones
+- Budget and Pricing
+- Terms and Next Steps
 
 Write in a ${formData.tone || "professional"} tone. Be specific, detailed, and persuasive. Make the proposal feel tailored and high-quality.`;
 
-    const userPrompt = `Generate a professional proposal with these details:
-- Client: ${formData.clientName || "the client"}
-- Client Email: ${formData.clientEmail || "N/A"}
-- Project Title: ${formData.projectTitle || "Untitled Project"}
-- Industry: ${formData.industry || "General"}
-- Project Type: ${formData.projectType || "General"}
-- Budget Range: ${formData.budget || "To be discussed"}
-- Timeline: ${formData.timeline || "To be determined"}
-- Description: ${formData.description || "No additional description provided."}
-- Key Deliverables: ${formData.deliverables || "As discussed with client."}
+    const userPrompt = `Write a professional client proposal for the following project:
 
-Generate a complete, ready-to-send proposal in Markdown format.`;
+Client Name: ${formData.clientName || "the client"}
+Client Email: ${formData.clientEmail || "N/A"}
+Project Title: ${formData.projectTitle || "Untitled Project"}
+Industry: ${formData.industry || "General"}
+Project Type: ${formData.projectType || "General"}
+Budget Range: ${formData.budget || "To be discussed"}
+Timeline: ${formData.timeline || "To be determined"}
+Description: ${formData.description || "No additional description provided."}
+Key Deliverables: ${formData.deliverables || "As discussed with client."}
+
+Generate a complete, ready-to-send proposal. Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets. Write clean, professional prose with numbered lists where appropriate.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

@@ -2,8 +2,13 @@ import { FadeInView } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 export function CTASection() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden">
       <motion.div
@@ -22,7 +27,11 @@ export function CTASection() {
             Join thousands of freelancers who are winning more projects with AI-powered proposals.
             Start for free — no credit card required.
           </p>
-          <Button variant="hero" size="xl">
+          <Button
+            variant="hero"
+            size="xl"
+            onClick={() => navigate(user ? "/dashboard" : "/auth?mode=signup")}
+          >
             Get Started Free
             <ArrowRight className="h-5 w-5" />
           </Button>

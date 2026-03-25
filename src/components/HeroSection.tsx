@@ -2,14 +2,19 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import heroBg from "@/assets/hero-bg.jpg";
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGetStarted = () => {
+    navigate(user ? "/dashboard" : "/auth?mode=signup");
+  };
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-      {/* Hero background image */}
       <div className="absolute inset-0">
         <img
           src={heroBg}
@@ -21,10 +26,8 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
       </div>
 
-      {/* Background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border)/0.3)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border)/0.3)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black_20%,transparent_100%)]" />
 
-      {/* Glow orbs */}
       <motion.div
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -76,7 +79,7 @@ export function HeroSection() {
           transition={{ delay: 0.7 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Button variant="hero" size="xl" onClick={() => navigate("/generate")}>
+          <Button variant="hero" size="xl" onClick={handleGetStarted}>
             Start Creating Proposals
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -89,7 +92,6 @@ export function HeroSection() {
           </Button>
         </motion.div>
 
-        {/* Stats bar */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}

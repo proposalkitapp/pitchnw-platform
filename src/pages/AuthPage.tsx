@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Loader2 } from "lucide-react";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("mode") === "signup" ? false : true;
+  const [isLogin, setIsLogin] = useState(defaultTab);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -21,6 +23,10 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     try {
       if (isLogin) {
@@ -29,10 +35,18 @@ export default function AuthPage() {
         navigate("/dashboard");
       } else {
         await signUp(email, password, displayName);
-        toast.success("Account created! Check your email to confirm.");
+        toast.success("Account created! Welcome to ProposalKit 🎉");
+        navigate("/dashboard");
       }
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      const msg = err.message || "";
+      if (msg.includes("User already registered")) {
+        toast.error("An account with this email already exists. Sign in instead.");
+      } else if (msg.includes("Invalid login credentials")) {
+        toast.error("Incorrect email or password. Please try again.");
+      } else {
+        toast.error(msg || "Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -73,6 +87,7 @@ export default function AuthPage() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="pl-10"
+                    required
                   />
                 </div>
               </div>
@@ -105,19 +120,23 @@ export default function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={isLogin ? 1 : 8}
                   className="pl-10"
                 />
               </div>
+              {!isLogin && (
+                <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters</p>
+              )}
             </div>
 
             <Button
               variant="hero"
               size="lg"
-              className="w-full"
+              className="w-full gap-2"
               type="submit"
               disabled={loading}
             >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {loading
                 ? "Please wait..."
                 : isLogin
