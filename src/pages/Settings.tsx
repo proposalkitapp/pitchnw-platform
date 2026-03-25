@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { User, Building, Save, Lock } from "lucide-react";
+import { User, Building, Save, Lock, Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, loading: authLoading } = useAuth();
