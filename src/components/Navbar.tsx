@@ -141,7 +141,7 @@ export function Navbar() {
               variant="hero"
               size="sm"
               className="hidden md:inline-flex"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=signup")}
             >
               Get Started Free
             </Button>
