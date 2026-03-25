@@ -197,7 +197,7 @@ export default function Settings() {
                   disabled={changingPassword}
                   className="gap-2"
                 >
-                  <Lock className="h-4 w-4" />
+                  {changingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
                   {changingPassword ? "Updating..." : "Change Password"}
                 </Button>
               </div>

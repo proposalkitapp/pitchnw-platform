@@ -199,7 +199,7 @@ export function Navbar() {
                       {link.label}
                     </a>
                   ))}
-                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>
+                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}>
                     Get Started Free
                   </Button>
                 </>
