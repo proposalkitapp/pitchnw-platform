@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Proposal {
   id: string;
@@ -19,21 +19,33 @@ interface Proposal {
   generated_content: string;
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
+    if (user) {
+      fetchProposals();
+      supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .single()
+        .then(({ data }) => {
+          setDisplayName(data?.display_name?.split(" ")[0] || "there");
+        });
     }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) fetchProposals();
   }, [user]);
 
   const fetchProposals = async () => {
@@ -61,127 +73,188 @@ export default function Dashboard() {
     }
   };
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  const totalProposals = proposals.length;
+  const wonProposals = proposals.filter((p) => p.status === "won").length;
+  const thisMonthProposals = proposals.filter((p) => {
+    const d = new Date(p.created_at);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  const winRate = totalProposals > 0 ? Math.round((wonProposals / totalProposals) * 100) : 0;
+
+  const stats = [
+    { label: "Total Proposals", value: totalProposals.toString(), icon: FileText, color: "text-primary" },
+    { label: "Proposals Won", value: wonProposals.toString(), icon: TrendingUp, color: "text-success" },
+    { label: "This Month", value: thisMonthProposals.toString(), icon: CalendarDays, color: "text-warning" },
+    { label: "Win Rate", value: `${winRate}%`, icon: BarChart3, color: "text-primary" },
+  ];
+
+  const statusColors: Record<string, string> = {
+    draft: "bg-secondary text-muted-foreground",
+    sent: "bg-blue-500/10 text-blue-500",
+    opened: "bg-warning/10 text-warning",
+    won: "bg-success/10 text-success",
+    lost: "bg-destructive/10 text-destructive",
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-8"
-          >
-            <div>
-              <h1 className="font-display text-3xl font-bold">My Proposals</h1>
-              <p className="text-muted-foreground mt-1">
-                {proposals.length} proposal{proposals.length !== 1 ? "s" : ""} saved
-              </p>
-            </div>
-            <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
-              <Plus className="h-4 w-4" /> New Proposal
-            </Button>
-          </motion.div>
+    <AuthLayout>
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="font-display text-3xl font-bold">
+            {getGreeting()}, {displayName} 👋
+          </h1>
+          <p className="text-muted-foreground mt-1">Here's your proposal overview.</p>
+        </motion.div>
 
-          {selectedProposal ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="ghost" onClick={() => setSelectedProposal(null)} className="gap-2">
-                  ← Back to list
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => exportProposalAsPdf(selectedProposal.title, selectedProposal.generated_content)}
-                >
-                  <Download className="h-4 w-4" /> Export PDF
-                </Button>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-                <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">
-                  {selectedProposal.title}
-                </h2>
-                <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
-                  {selectedProposal.generated_content}
-                </pre>
-              </div>
-            </motion.div>
-          ) : proposals.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
-            >
-              <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-              <h2 className="font-display text-xl font-semibold mb-2">No proposals yet</h2>
-              <p className="text-muted-foreground mb-6">
-                Create your first AI-generated proposal to get started.
-              </p>
-              <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
-                <Plus className="h-4 w-4" /> Create Proposal
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="grid gap-4">
-              {proposals.map((proposal, i) => (
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))
+            : stats.map((stat, i) => (
                 <motion.div
-                  key={proposal.id}
+                  key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-border bg-card p-5 flex items-center justify-between hover:border-primary/30 transition-colors"
+                  className="rounded-xl border border-border bg-card p-5"
                 >
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold text-card-foreground truncate">
-                      {proposal.title}
-                    </h3>
-                    <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
-                      {proposal.client_name && <span>{proposal.client_name}</span>}
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {new Date(proposal.created_at).toLocaleDateString()}
-                      </span>
-                      <span className="capitalize px-2 py-0.5 rounded-full bg-secondary text-xs">
-                        {proposal.status}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                      {stat.label}
+                    </span>
+                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
                   </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedProposal(proposal)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => deleteProposal(proposal.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="font-display text-2xl font-bold text-card-foreground">
+                    {stat.value}
                   </div>
                 </motion.div>
               ))}
-            </div>
-          )}
         </div>
-      </main>
-      <Footer />
-    </div>
+
+        {/* Quick Action */}
+        <Button
+          variant="hero"
+          size="lg"
+          className="w-full mb-8 gap-2"
+          onClick={() => navigate("/generate")}
+        >
+          <Plus className="h-5 w-5" /> New Proposal
+        </Button>
+
+        {selectedProposal ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="ghost" onClick={() => setSelectedProposal(null)} className="gap-2">
+                ← Back to list
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => exportProposalAsPdf(selectedProposal.title, selectedProposal.generated_content)}
+              >
+                <Download className="h-4 w-4" /> Export PDF
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">
+                {selectedProposal.title}
+              </h2>
+              <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
+                {selectedProposal.generated_content}
+              </pre>
+            </div>
+          </motion.div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-semibold text-foreground">
+                Recent Proposals
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 rounded-xl" />
+                ))}
+              </div>
+            ) : proposals.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-20 rounded-xl border border-dashed border-border"
+              >
+                <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h2 className="font-display text-xl font-semibold mb-2">No proposals yet</h2>
+                <p className="text-muted-foreground mb-6">
+                  Generate your first AI proposal in under 60 seconds.
+                </p>
+                <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
+                  <Plus className="h-4 w-4" /> Create Your First Proposal
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid gap-3">
+                {proposals.slice(0, 10).map((proposal, i) => (
+                  <motion.div
+                    key={proposal.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="rounded-xl border border-border bg-card p-4 flex items-center justify-between hover:border-primary/30 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display font-semibold text-card-foreground truncate text-sm">
+                        {proposal.title}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        {proposal.client_name && <span>{proposal.client_name}</span>}
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(proposal.created_at).toLocaleDateString()}
+                        </span>
+                        <span className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[proposal.status] || "bg-secondary text-muted-foreground"}`}>
+                          {proposal.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 ml-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setSelectedProposal(proposal)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteProposal(proposal.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </AuthLayout>
   );
 }
