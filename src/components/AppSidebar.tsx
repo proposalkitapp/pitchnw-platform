@@ -130,9 +130,13 @@ export function AppSidebar() {
 
         {!collapsed && (
           <div className="px-3 py-2 border-t border-border mt-1">
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            <span className="inline-block mt-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-              Free Plan
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <span className={`inline-block mt-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              plan === "pro" ? "bg-primary/10 text-primary" :
+              plan === "standard" ? "bg-warning/10 text-warning" :
+              "bg-secondary text-muted-foreground"
+            }`}>
+              {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro Plan" : "Standard Plan"}
             </span>
           </div>
         )}
