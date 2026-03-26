@@ -41,11 +41,14 @@ export default function Dashboard() {
       fetchProposals();
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, onboarding_completed")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name?.split(" ")[0] || "there");
+          if (data && !data.onboarding_completed) {
+            setShowOnboarding(true);
+          }
         });
     }
   }, [user]);
