@@ -56,7 +56,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data, error } = await supabase
       .from("proposals")
-      .select("id, title, client_name, status, created_at, generated_content")
+      .select("id, title, client_name, status, created_at, generated_content, public_slug")
       .order("created_at", { ascending: false });
 
     if (error) {
