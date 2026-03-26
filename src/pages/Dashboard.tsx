@@ -18,6 +18,7 @@ interface Proposal {
   status: string;
   created_at: string;
   generated_content: string;
+  public_slug: string | null;
 }
 
 function getGreeting(): string {
