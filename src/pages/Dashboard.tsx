@@ -247,6 +247,19 @@ export default function Dashboard() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      {proposal.public_slug && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/p/${proposal.public_slug}`);
+                            toast.success("Client link copied! 🔗");
+                          }}
+                        >
+                          <Link2 className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
