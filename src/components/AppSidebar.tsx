@@ -98,6 +98,19 @@ export function AppSidebar() {
                 );
               })}
             </SidebarMenu>
+
+            {isAdmin && (
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === "/admin"}>
+                    <NavLink to="/admin" end className="hover:bg-warning/10" activeClassName="bg-warning/10 text-warning font-medium">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span>Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
