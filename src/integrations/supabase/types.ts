@@ -21,6 +21,10 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_admin: boolean
+          onboarding_completed: boolean
+          plan: string
+          signature_data: string | null
           updated_at: string
           user_id: string
         }
@@ -30,6 +34,10 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_admin?: boolean
+          onboarding_completed?: boolean
+          plan?: string
+          signature_data?: string | null
           updated_at?: string
           user_id: string
         }
@@ -39,23 +47,64 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_admin?: boolean
+          onboarding_completed?: boolean
+          plan?: string
+          signature_data?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      proposal_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          proposal_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          proposal_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          proposal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_events_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposals: {
         Row: {
           budget: string | null
           client_email: string | null
           client_name: string | null
+          client_signature_data: string | null
+          client_signed_name: string | null
           created_at: string
           deliverables: string | null
           description: string | null
           generated_content: string
           id: string
           industry: string | null
+          is_locked: boolean
           project_type: string | null
+          public_slug: string | null
+          signed_at: string | null
           status: string
           timeline: string | null
           title: string
@@ -67,13 +116,18 @@ export type Database = {
           budget?: string | null
           client_email?: string | null
           client_name?: string | null
+          client_signature_data?: string | null
+          client_signed_name?: string | null
           created_at?: string
           deliverables?: string | null
           description?: string | null
           generated_content: string
           id?: string
           industry?: string | null
+          is_locked?: boolean
           project_type?: string | null
+          public_slug?: string | null
+          signed_at?: string | null
           status?: string
           timeline?: string | null
           title: string
@@ -85,13 +139,18 @@ export type Database = {
           budget?: string | null
           client_email?: string | null
           client_name?: string | null
+          client_signature_data?: string | null
+          client_signed_name?: string | null
           created_at?: string
           deliverables?: string | null
           description?: string | null
           generated_content?: string
           id?: string
           industry?: string | null
+          is_locked?: boolean
           project_type?: string | null
+          public_slug?: string | null
+          signed_at?: string | null
           status?: string
           timeline?: string | null
           title?: string
@@ -106,7 +165,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

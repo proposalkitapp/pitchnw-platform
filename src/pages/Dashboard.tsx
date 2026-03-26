@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OnboardingModal } from "@/components/OnboardingModal";
 
 interface Proposal {
   id: string;
@@ -17,6 +18,7 @@ interface Proposal {
   status: string;
   created_at: string;
   generated_content: string;
+  public_slug: string | null;
 }
 
 function getGreeting(): string {
@@ -33,17 +35,20 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [displayName, setDisplayName] = useState("");
-
+  const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProposals();
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, onboarding_completed")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name?.split(" ")[0] || "there");
+          if (data && !data.onboarding_completed) {
+            setShowOnboarding(true);
+          }
         });
     }
   }, [user]);
@@ -51,7 +56,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data, error } = await supabase
       .from("proposals")
-      .select("id, title, client_name, status, created_at, generated_content")
+      .select("id, title, client_name, status, created_at, generated_content, public_slug")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -99,6 +104,9 @@ export default function Dashboard() {
 
   return (
     <AuthLayout>
+      {showOnboarding && (
+        <OnboardingModal displayName={displayName} onComplete={() => setShowOnboarding(false)} />
+      )}
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -239,6 +247,19 @@ export default function Dashboard() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      {proposal.public_slug && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/p/${proposal.public_slug}`);
+                            toast.success("Client link copied! 🔗");
+                          }}
+                        >
+                          <Link2 className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

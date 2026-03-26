@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +21,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "New Proposal", url: "/generate", icon: Plus },
+  { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Marketplace", url: "/marketplace", icon: Store },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
@@ -32,16 +33,20 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [plan, setPlan] = useState("free");
 
   useEffect(() => {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, is_admin, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name || user.email?.split("@")[0] || "User");
+          setIsAdmin(data?.is_admin || false);
+          setPlan(data?.plan || "free");
         });
     }
   }, [user]);
@@ -93,6 +98,19 @@ export function AppSidebar() {
                 );
               })}
             </SidebarMenu>
+
+            {isAdmin && (
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === "/admin"}>
+                    <NavLink to="/admin" end className="hover:bg-warning/10" activeClassName="bg-warning/10 text-warning font-medium">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span>Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -112,9 +130,13 @@ export function AppSidebar() {
 
         {!collapsed && (
           <div className="px-3 py-2 border-t border-border mt-1">
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            <span className="inline-block mt-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
-              Free Plan
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <span className={`inline-block mt-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              plan === "pro" ? "bg-primary/10 text-primary" :
+              plan === "standard" ? "bg-warning/10 text-warning" :
+              "bg-secondary text-muted-foreground"
+            }`}>
+              {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro Plan" : "Standard Plan"}
             </span>
           </div>
         )}
