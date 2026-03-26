@@ -21,6 +21,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "New Proposal", url: "/generate", icon: Plus },
+  { title: "CRM Pipeline", url: "/crm", icon: Kanban },
   { title: "Marketplace", url: "/marketplace", icon: Store },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
