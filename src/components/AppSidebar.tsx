@@ -33,16 +33,20 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [plan, setPlan] = useState("free");
 
   useEffect(() => {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, is_admin, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name || user.email?.split("@")[0] || "User");
+          setIsAdmin(data?.is_admin || false);
+          setPlan(data?.plan || "free");
         });
     }
   }, [user]);
