@@ -35,7 +35,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [displayName, setDisplayName] = useState("");
-
+  const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProposals();
