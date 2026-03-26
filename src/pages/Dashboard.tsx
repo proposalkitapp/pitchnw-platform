@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OnboardingModal } from "@/components/OnboardingModal";
 
 interface Proposal {
   id: string;
