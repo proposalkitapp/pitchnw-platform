@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Check, X, Download, Loader2 } from "lucide-react";
+import { Check, X, Loader2 } from "lucide-react";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 import proposalLogo from "@/assets/proposal-logo.png";
 
 export default function ClientPortal() {
@@ -15,6 +16,7 @@ export default function ClientPortal() {
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [clientName, setClientName] = useState("");
+  const [clientSignature, setClientSignature] = useState<string | null>(null);
   const [declineReason, setDeclineReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,7 +26,6 @@ export default function ClientPortal() {
 
   useEffect(() => {
     if (proposal) {
-      // Track view
       supabase.from("proposal_events").insert({
         proposal_id: proposal.id,
         event_type: "open",
@@ -53,6 +54,10 @@ export default function ClientPortal() {
       toast.error("Please enter your full name");
       return;
     }
+    if (!clientSignature) {
+      toast.error("Please provide your signature");
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase
       .from("proposals")
@@ -60,6 +65,7 @@ export default function ClientPortal() {
         status: "won",
         is_locked: true,
         client_signed_name: clientName,
+        client_signature_data: clientSignature,
         signed_at: new Date().toISOString(),
       })
       .eq("id", proposal.id);
@@ -70,7 +76,13 @@ export default function ClientPortal() {
         event_type: "accept",
         metadata: { clientName },
       });
-      setProposal({ ...proposal, status: "won", is_locked: true, client_signed_name: clientName });
+      setProposal({
+        ...proposal,
+        status: "won",
+        is_locked: true,
+        client_signed_name: clientName,
+        client_signature_data: clientSignature,
+      });
       setShowAcceptModal(false);
       toast.success("Proposal accepted!");
     } else {
@@ -117,7 +129,15 @@ export default function ClientPortal() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Signed watermark */}
+      {isAccepted && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+          <span className="text-[120px] font-display font-extrabold text-indigo-500/[0.04] -rotate-45 select-none">
+            SIGNED
+          </span>
+        </div>
+      )}
+
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <img src={proposalLogo} alt="ProposalKit" className="h-8 w-auto" />
@@ -125,7 +145,6 @@ export default function ClientPortal() {
         </div>
       </header>
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-6 py-10">
         {isAccepted && (
           <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm flex items-center gap-2">
@@ -153,7 +172,6 @@ export default function ClientPortal() {
           </p>
         </div>
 
-        {/* Proposal Content */}
         <div className="prose prose-gray max-w-none">
           <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-base" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             {proposal.generated_content}
@@ -163,7 +181,7 @@ export default function ClientPortal() {
         {/* Signature Block */}
         {isAccepted && (
           <div className="mt-12 border-t-2 border-gray-200 pt-8">
-            <h3 className="text-sm font-mono uppercase tracking-wider text-gray-400 mb-4">Signatures</h3>
+            <h3 className="text-sm font-mono uppercase tracking-wider text-gray-400 mb-6">Signatures</h3>
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <p className="text-xs text-gray-400 mb-2">Prepared by</p>
@@ -174,6 +192,9 @@ export default function ClientPortal() {
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-2">Accepted by</p>
+                {proposal.client_signature_data && (
+                  <img src={proposal.client_signature_data} alt="Client signature" className="h-12 object-contain mb-2" />
+                )}
                 <div className="border-b border-gray-300 pb-2 mb-2">
                   <p className="font-medium text-gray-900">{proposal.client_signed_name}</p>
                 </div>
@@ -206,29 +227,47 @@ export default function ClientPortal() {
         )}
       </main>
 
-      {/* Accept Modal */}
+      {/* Accept Modal with Signature */}
       {showAcceptModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
               Confirm Your Acceptance
             </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Type your full name to confirm you accept this proposal and its terms.
+            <p className="text-sm text-gray-500 mb-4">
+              Please sign below to confirm you accept this proposal.
             </p>
-            <Input
-              placeholder="Your full name"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              className="mb-4 border-gray-300"
-            />
+
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Your Signature</label>
+              <SignatureCanvas
+                onSignatureChange={setClientSignature}
+                height={120}
+                lightMode
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Full Name</label>
+              <Input
+                placeholder="Your full name"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="border-gray-300"
+              />
+            </div>
+
             <p className="text-xs text-gray-400 mb-6">Date: {new Date().toLocaleDateString()}</p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowAcceptModal(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={handleAccept} disabled={submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Acceptance"}
+              <Button
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleAccept}
+                disabled={submitting || !clientName.trim() || !clientSignature}
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Sign"}
               </Button>
             </div>
           </div>

@@ -8,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles } from "lucide-react";
+import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool } from "lucide-react";
+import { SignatureCanvas } from "@/components/SignatureCanvas";
 
 export default function Settings() {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
@@ -25,13 +27,14 @@ export default function Settings() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, company_name")
+        .select("display_name, company_name, signature_data")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           if (data) {
             setDisplayName(data.display_name || "");
             setCompanyName(data.company_name || "");
+            setSignatureData(data.signature_data || null);
           }
           setLoadingProfile(false);
         });
@@ -43,7 +46,11 @@ export default function Settings() {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, company_name: companyName })
+      .update({
+        display_name: displayName,
+        company_name: companyName,
+        signature_data: signatureData,
+      })
       .eq("user_id", user.id);
     if (error) {
       toast.error("Failed to update profile");
@@ -129,7 +136,7 @@ export default function Settings() {
             </TabsList>
 
             {/* Profile Tab */}
-            <TabsContent value="profile">
+            <TabsContent value="profile" className="space-y-6">
               <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5">
                 <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
                   <User className="h-5 w-5 text-primary" /> Profile Information
@@ -162,11 +169,35 @@ export default function Settings() {
                     />
                   </div>
                 </div>
-                <Button variant="hero" onClick={handleSaveProfile} disabled={saving} className="gap-2">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {saving ? "Saving..." : "Save Profile"}
-                </Button>
               </div>
+
+              {/* Signature Section */}
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-4">
+                <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
+                  <PenTool className="h-5 w-5 text-primary" /> Your Signature
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Your signature will be automatically applied to all proposals you create.
+                </p>
+
+                {signatureData && (
+                  <div className="rounded-lg border border-border bg-background p-4">
+                    <p className="text-xs text-muted-foreground mb-2">Current signature:</p>
+                    <img src={signatureData} alt="Your signature" className="h-16 object-contain" />
+                  </div>
+                )}
+
+                <SignatureCanvas
+                  onSignatureChange={setSignatureData}
+                  initialData={signatureData}
+                  height={120}
+                />
+              </div>
+
+              <Button variant="hero" onClick={handleSaveProfile} disabled={saving} className="gap-2">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? "Saving..." : "Save Profile"}
+              </Button>
             </TabsContent>
 
             {/* Security Tab */}
@@ -211,7 +242,6 @@ export default function Settings() {
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="space-y-6">
-              {/* Current Plan */}
               <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
                 <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground mb-4">
                   <CreditCard className="h-5 w-5 text-primary" /> Current Plan
@@ -226,7 +256,6 @@ export default function Settings() {
                 </p>
               </div>
 
-              {/* Upgrade Cards */}
               <div className="grid sm:grid-cols-2 gap-4">
                 {plans.map((plan) => (
                   <div
