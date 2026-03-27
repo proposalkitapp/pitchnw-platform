@@ -12,7 +12,7 @@ const publicNavLinks = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Marketplace", href: "#marketplace" },
+  { label: "Templates", href: "#marketplace" },
 ];
 
 const authNavLinks = [
@@ -26,8 +26,15 @@ export function Navbar() {
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -67,7 +74,11 @@ export function Navbar() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-background/85 backdrop-blur-xl border-b border-border/50"
+          : "bg-transparent border-b border-transparent"
+      }`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-4">
@@ -87,7 +98,6 @@ export function Navbar() {
         </div>
 
         {user ? (
-          /* Authenticated nav */
           <nav className="hidden md:flex items-center gap-1">
             {authNavLinks.map((link) => {
               const isActive = location.pathname === link.path;
@@ -106,7 +116,6 @@ export function Navbar() {
             })}
           </nav>
         ) : (
-          /* Public nav */
           <nav className="hidden md:flex items-center gap-8">
             {publicNavLinks.map((link) => (
               <a
@@ -137,14 +146,22 @@ export function Navbar() {
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (
-            <Button
-              variant="hero"
-              size="sm"
-              className="hidden md:inline-flex"
-              onClick={() => navigate("/auth?mode=signup")}
-            >
-              Get Started Free
-            </Button>
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/auth?mode=login")}
+              >
+                Sign in
+              </Button>
+              <Button
+                variant="hero"
+                size="sm"
+                onClick={() => navigate("/auth?mode=signup")}
+              >
+                Get Started Free
+              </Button>
+            </div>
           )}
 
           <Button
