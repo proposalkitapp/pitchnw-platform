@@ -14,11 +14,14 @@ import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [currentPlan, setCurrentPlan] = useState("free");
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
