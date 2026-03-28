@@ -1,11 +1,89 @@
 import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Zap, LayoutTemplate, BarChart3, Brain, Send, Shield } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
+
+/* ── Typing animation for AI Generator card ── */
+function TypingEffect() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const [text, setText] = useState("");
+  const fullText = "Generating proposal for Acme Corp…";
+
+  useEffect(() => {
+    if (!isInView) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setText(fullText.slice(0, i + 1));
+      i++;
+      if (i >= fullText.length) clearInterval(interval);
+    }, 45);
+    return () => clearInterval(interval);
+  }, [isInView]);
+
+  return (
+    <div ref={ref} className="mt-4 rounded-lg bg-secondary/60 border border-border/40 p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+        <span className="text-[10px] font-mono text-muted-foreground">AI Engine</span>
+      </div>
+      <p className="text-xs font-mono text-primary leading-relaxed min-h-[1.25rem]">
+        {text}
+        {isInView && text.length < fullText.length && (
+          <motion.span
+            animate={{ opacity: [1, 0] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+            className="inline-block w-[2px] h-3 bg-primary ml-0.5 align-middle"
+          />
+        )}
+      </p>
+    </div>
+  );
+}
+
+/* ── Animated bar chart for Analytics card ── */
+function AnimatedBarChart() {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+
+  const bars = [
+    { height: "60%", label: "Mon", delay: 0 },
+    { height: "85%", label: "Tue", delay: 0.1 },
+    { height: "45%", label: "Wed", delay: 0.2 },
+    { height: "95%", label: "Thu", delay: 0.3 },
+    { height: "70%", label: "Fri", delay: 0.4 },
+  ];
+
+  return (
+    <div ref={ref} className="mt-4 rounded-lg bg-secondary/60 border border-border/40 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-mono text-muted-foreground">Views this week</span>
+        <span className="text-[10px] font-mono text-primary font-semibold">+42%</span>
+      </div>
+      <div className="flex items-end gap-1.5 h-16">
+        {bars.map((bar, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+            <motion.div
+              className="w-full rounded-sm bg-primary/70"
+              initial={{ height: 0 }}
+              animate={isInView ? { height: bar.height } : { height: 0 }}
+              transition={{ duration: 0.6, delay: bar.delay, ease: "easeOut" }}
+              style={{ maxHeight: bar.height }}
+            />
+            <span className="text-[8px] font-mono text-muted-foreground/60">{bar.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const features = [
   {
     icon: Zap,
     title: "AI Proposal Generator",
     description: "Fill a short form, get a complete professional proposal with executive summary, scope, pricing, and timeline.",
+    widget: "typing" as const,
   },
   {
     icon: LayoutTemplate,
@@ -21,6 +99,7 @@ const features = [
     icon: BarChart3,
     title: "Smart Analytics",
     description: "Track every view, scroll depth, and time spent. Know exactly when your client opens your proposal.",
+    widget: "chart" as const,
   },
   {
     icon: Brain,
@@ -58,6 +137,8 @@ export function FeaturesSection() {
                 </div>
                 <h3 className="font-display text-lg font-semibold mb-2 text-card-foreground">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                {feature.widget === "typing" && <TypingEffect />}
+                {feature.widget === "chart" && <AnimatedBarChart />}
               </div>
             </FadeInView>
           ))}
