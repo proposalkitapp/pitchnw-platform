@@ -12,19 +12,31 @@ serve(async (req) => {
   }
 
   try {
-    const { formData } = await req.json();
+    const { formData, templatePrompt, templateSections } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are a professional business proposal writer. You write in clean, formal, polished English. You never use markdown formatting characters (no **, no ##, no backticks, no dashes as bullet points, no quotation marks around headings). You write proposals that sound like they were written by a senior consultant at a top agency. Your tone is confident, specific, and persuasive. Always write in full sentences and paragraphs unless creating a structured list, in which case use clean numbered items only.
-
-Include these sections:
-- Executive Summary
+    const defaultSections = `- Executive Summary
 - Project Scope and Objectives
 - Deliverables
 - Timeline and Milestones
 - Budget and Pricing
-- Terms and Next Steps
+- Terms and Next Steps`;
+
+    const sectionsText = templateSections
+      ? templateSections.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")
+      : defaultSections;
+
+    const baseSystemPrompt = `You are a professional business proposal writer. You write in clean, formal, polished English. You never use markdown formatting characters (no **, no ##, no backticks, no dashes as bullet points, no quotation marks around headings). You write proposals that sound like they were written by a senior consultant at a top agency. Your tone is confident, specific, and persuasive. Always write in full sentences and paragraphs unless creating a structured list, in which case use clean numbered items only.`;
+
+    const templateContext = templatePrompt
+      ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}`
+      : "";
+
+    const systemPrompt = `${baseSystemPrompt}${templateContext}
+
+Include these sections:
+${sectionsText}
 
 Write in a ${formData.tone || "professional"} tone. Be specific, detailed, and persuasive. Make the proposal feel tailored and high-quality.`;
 

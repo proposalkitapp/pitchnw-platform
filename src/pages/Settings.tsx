@@ -10,14 +10,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool } from "lucide-react";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [currentPlan, setCurrentPlan] = useState("free");
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -27,7 +31,7 @@ export default function Settings() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, company_name, signature_data")
+        .select("display_name, company_name, signature_data, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
@@ -35,6 +39,7 @@ export default function Settings() {
             setDisplayName(data.display_name || "");
             setCompanyName(data.company_name || "");
             setSignatureData(data.signature_data || null);
+            setCurrentPlan(data.plan || "free");
           }
           setLoadingProfile(false);
         });
@@ -81,6 +86,25 @@ export default function Settings() {
       toast.error(err.message || "Failed to change password");
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleUpgrade = async (planName: string) => {
+    if (!user) return;
+    setUpgradingPlan(planName);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paystack-subscription", {
+        body: { plan: planName, userEmail: user.email, userId: user.id },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error("No authorization URL returned");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start payment");
+      setUpgradingPlan(null);
     }
   };
 
@@ -247,12 +271,18 @@ export default function Settings() {
                   <CreditCard className="h-5 w-5 text-primary" /> Current Plan
                 </h2>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="inline-block text-xs font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-secondary text-muted-foreground">
-                    Free Plan
+                  <span className={`inline-block text-xs font-mono uppercase tracking-wider px-3 py-1 rounded-full ${
+                    currentPlan === "free" ? "bg-secondary text-muted-foreground" :
+                    currentPlan === "pro" ? "bg-primary/10 text-primary" :
+                    "bg-success/10 text-success"
+                  }`}>
+                    {currentPlan === "free" ? "Free Plan" : currentPlan === "pro" ? "Pro Plan" : "Standard Plan"}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  3 proposals/month · Free templates only · 3 analytics views
+                  {currentPlan === "free" ? "3 proposals/month · Free templates only · 3 analytics views" :
+                   currentPlan === "pro" ? "Unlimited proposals · All templates · Full analytics" :
+                   "Everything in Pro + Template Builder + AI Win-Rate Coach"}
                 </p>
               </div>
 
@@ -275,9 +305,18 @@ export default function Settings() {
                         </li>
                       ))}
                     </ul>
-                    <Button variant="hero" className="w-full gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      Upgrade to {plan.name}
+                    <Button
+                      variant="hero"
+                      className="w-full gap-2"
+                      disabled={currentPlan === plan.name.toLowerCase() || upgradingPlan !== null}
+                      onClick={() => handleUpgrade(plan.name.toLowerCase())}
+                    >
+                      {upgradingPlan === plan.name.toLowerCase() ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {currentPlan === plan.name.toLowerCase() ? "Current Plan" : `Upgrade to ${plan.name}`}
                     </Button>
                   </div>
                 ))}

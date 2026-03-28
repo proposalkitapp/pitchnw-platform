@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download } from "lucide-react";
+import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
-
+import { getTemplateById, type Template } from "@/lib/templates";
 interface FormData {
   clientName: string;
   clientEmail: string;
@@ -60,6 +60,16 @@ export default function ProposalGenerator() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get("template");
+  const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
+
+  useEffect(() => {
+    if (templateId) {
+      const t = getTemplateById(templateId);
+      if (t) setActiveTemplate(t);
+    }
+  }, [templateId]);
 
   const update = (field: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -81,7 +91,11 @@ export default function ProposalGenerator() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ formData: form }),
+          body: JSON.stringify({
+            formData: form,
+            templatePrompt: activeTemplate?.aiPrompt || null,
+            templateSections: activeTemplate?.sections || null,
+          }),
         }
       );
 
@@ -189,6 +203,26 @@ export default function ProposalGenerator() {
             Fill in the details and let AI craft a professional, persuasive proposal in seconds.
           </p>
         </motion.div>
+
+        {/* Template banner */}
+        {activeTemplate && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center justify-between rounded-lg border px-4 py-3"
+            style={{
+              borderColor: `hsl(${activeTemplate.accentColor} / 0.3)`,
+              backgroundColor: `hsl(${activeTemplate.accentColor} / 0.05)`,
+            }}
+          >
+            <span className="text-sm font-medium text-foreground">
+              Using template: <span style={{ color: `hsl(${activeTemplate.accentColor})` }}>{activeTemplate.name}</span>
+            </span>
+            <button onClick={() => setActiveTemplate(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-10 max-w-md mx-auto">
