@@ -204,6 +204,26 @@ export default function ProposalGenerator() {
           </p>
         </motion.div>
 
+        {/* Template banner */}
+        {activeTemplate && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center justify-between rounded-lg border px-4 py-3"
+            style={{
+              borderColor: `hsl(${activeTemplate.accentColor} / 0.3)`,
+              backgroundColor: `hsl(${activeTemplate.accentColor} / 0.05)`,
+            }}
+          >
+            <span className="text-sm font-medium text-foreground">
+              Using template: <span style={{ color: `hsl(${activeTemplate.accentColor})` }}>{activeTemplate.name}</span>
+            </span>
+            <button onClick={() => setActiveTemplate(null)} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )
+
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-10 max-w-md mx-auto">
           {steps.map((step, i) => (
