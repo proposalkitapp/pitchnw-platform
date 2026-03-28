@@ -16,6 +16,7 @@ import CRM from "./pages/CRM.tsx";
 import Admin from "./pages/Admin.tsx";
 import TemplateDetail from "./pages/TemplateDetail.tsx";
 import ClientPortal from "./pages/ClientPortal.tsx";
+import PaymentCallback from "./pages/PaymentCallback.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
