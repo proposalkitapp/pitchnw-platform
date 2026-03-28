@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool } from "lucide-react";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { user } = useAuth();
