@@ -222,7 +222,7 @@ export default function ProposalGenerator() {
               <X className="h-4 w-4" />
             </button>
           </motion.div>
-        )
+        )}
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-10 max-w-md mx-auto">
