@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download } from "lucide-react";
+import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
-
+import { getTemplateById, type Template } from "@/lib/templates";
 interface FormData {
   clientName: string;
   clientEmail: string;
