@@ -91,7 +91,11 @@ export default function ProposalGenerator() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ formData: form }),
+          body: JSON.stringify({
+            formData: form,
+            templatePrompt: activeTemplate?.aiPrompt || null,
+            templateSections: activeTemplate?.sections || null,
+          }),
         }
       );
 
