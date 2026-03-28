@@ -60,6 +60,16 @@ export default function ProposalGenerator() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get("template");
+  const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
+
+  useEffect(() => {
+    if (templateId) {
+      const t = getTemplateById(templateId);
+      if (t) setActiveTemplate(t);
+    }
+  }, [templateId]);
 
   const update = (field: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
