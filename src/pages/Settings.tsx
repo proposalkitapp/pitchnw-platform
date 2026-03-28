@@ -89,6 +89,25 @@ export default function Settings() {
     }
   };
 
+  const handleUpgrade = async (planName: string) => {
+    if (!user) return;
+    setUpgradingPlan(planName);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paystack-subscription", {
+        body: { plan: planName, userEmail: user.email, userId: user.id },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error("No authorization URL returned");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start payment");
+      setUpgradingPlan(null);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <AuthLayout>
