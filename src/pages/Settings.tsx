@@ -31,7 +31,7 @@ export default function Settings() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, company_name, signature_data")
+        .select("display_name, company_name, signature_data, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
@@ -39,6 +39,7 @@ export default function Settings() {
             setDisplayName(data.display_name || "");
             setCompanyName(data.company_name || "");
             setSignatureData(data.signature_data || null);
+            setCurrentPlan(data.plan || "free");
           }
           setLoadingProfile(false);
         });
