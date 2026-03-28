@@ -271,12 +271,18 @@ export default function Settings() {
                   <CreditCard className="h-5 w-5 text-primary" /> Current Plan
                 </h2>
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="inline-block text-xs font-mono uppercase tracking-wider px-3 py-1 rounded-full bg-secondary text-muted-foreground">
-                    Free Plan
+                  <span className={`inline-block text-xs font-mono uppercase tracking-wider px-3 py-1 rounded-full ${
+                    currentPlan === "free" ? "bg-secondary text-muted-foreground" :
+                    currentPlan === "pro" ? "bg-primary/10 text-primary" :
+                    "bg-success/10 text-success"
+                  }`}>
+                    {currentPlan === "free" ? "Free Plan" : currentPlan === "pro" ? "Pro Plan" : "Standard Plan"}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  3 proposals/month · Free templates only · 3 analytics views
+                  {currentPlan === "free" ? "3 proposals/month · Free templates only · 3 analytics views" :
+                   currentPlan === "pro" ? "Unlimited proposals · All templates · Full analytics" :
+                   "Everything in Pro + Template Builder + AI Win-Rate Coach"}
                 </p>
               </div>
 
