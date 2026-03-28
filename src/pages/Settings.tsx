@@ -305,9 +305,18 @@ export default function Settings() {
                         </li>
                       ))}
                     </ul>
-                    <Button variant="hero" className="w-full gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      Upgrade to {plan.name}
+                    <Button
+                      variant="hero"
+                      className="w-full gap-2"
+                      disabled={currentPlan === plan.name.toLowerCase() || upgradingPlan !== null}
+                      onClick={() => handleUpgrade(plan.name.toLowerCase())}
+                    >
+                      {upgradingPlan === plan.name.toLowerCase() ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {currentPlan === plan.name.toLowerCase() ? "Current Plan" : `Upgrade to ${plan.name}`}
                     </Button>
                   </div>
                 ))}
