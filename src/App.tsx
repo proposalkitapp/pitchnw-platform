@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/p/:slug" element={<ClientPortal />} />
+            <Route path="/payment/callback" element={<PaymentCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
