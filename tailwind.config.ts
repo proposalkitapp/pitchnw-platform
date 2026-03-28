@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      height: {
+        "21": "84px",
+      },
       fontFamily: {
         display: ["Syne", "sans-serif"],
         body: ["DM Sans", "sans-serif"],

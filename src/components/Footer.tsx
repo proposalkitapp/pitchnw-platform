@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={proposalLogo} alt="ProposalKit" className="h-7 w-auto" />
+              <img src={proposalLogo} alt="ProposalKit" className="h-16 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Generate. Customize. Close. The AI-powered proposal platform for freelancers.
