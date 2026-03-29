@@ -455,40 +455,17 @@ export default function ProposalGenerator() {
                 {isGenerating ? "Crafting your proposal..." : "Your Proposal"}
               </h2>
               {!isGenerating && generatedProposal && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setGeneratedProposal(null);
-                      setCurrentStep(0);
-                      setForm(initialForm);
-                    }}
-                  >
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => { setGeneratedProposal(null); setCurrentStep(0); setForm(initialForm); }}>
                     Start Over
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigator.clipboard.writeText(generatedProposal).then(() => toast.success("Copied!"))}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(generatedProposal).then(() => toast.success("Copied!"))}>
                     Copy
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => exportProposalAsPdf(form.projectTitle || "Proposal", generatedProposal)}
-                  >
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => exportProposalAsPdf(form.projectTitle || "Proposal", generatedProposal)}>
                     <Download className="h-4 w-4" /> PDF
                   </Button>
-                  <Button
-                    variant="hero"
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="gap-2"
-                  >
+                  <Button variant="hero" size="sm" onClick={handleSave} disabled={isSaving} className="gap-2">
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     {isSaving ? "Saving..." : "Save Proposal"}
                   </Button>
@@ -503,17 +480,53 @@ export default function ProposalGenerator() {
               </div>
             )}
 
-            <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-              <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
-                {generatedProposal || ""}
-                {isGenerating && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                    className="inline-block w-2 h-4 bg-primary ml-0.5 align-middle"
-                  />
-                )}
-              </pre>
+            <div className="grid lg:grid-cols-4 gap-6">
+              {/* Proposal Preview */}
+              <div className="lg:col-span-3">
+                {(() => {
+                  const theme = getThemeById(appearance.theme);
+                  return (
+                    <div
+                      className="rounded-xl border p-6 sm:p-8 transition-colors"
+                      style={{
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                        color: theme.bodyText,
+                      }}
+                    >
+                      <pre
+                        className="whitespace-pre-wrap text-sm leading-relaxed"
+                        style={{
+                          fontFamily: appearance.fontStyle === "modern" ? "'Syne', 'DM Sans', sans-serif" :
+                            appearance.fontStyle === "classic" ? "'Playfair Display', 'Lora', serif" :
+                            appearance.fontStyle === "clean" ? "'DM Sans', sans-serif" :
+                            "'Syne', sans-serif",
+                          color: theme.bodyText,
+                        }}
+                      >
+                        {generatedProposal || ""}
+                        {isGenerating && (
+                          <motion.span
+                            animate={{ opacity: [1, 0] }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                            className="inline-block w-2 h-4 ml-0.5 align-middle"
+                            style={{ backgroundColor: theme.accent }}
+                          />
+                        )}
+                      </pre>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Customizer Panel */}
+              {!isGenerating && generatedProposal && (
+                <div className="lg:col-span-1">
+                  <div className="rounded-xl border border-border bg-card p-4 sticky top-20">
+                    <ProposalCustomizer settings={appearance} onChange={setAppearance} />
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
