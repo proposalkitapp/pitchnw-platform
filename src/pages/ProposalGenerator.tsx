@@ -71,6 +71,8 @@ export default function ProposalGenerator() {
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
   const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
   const [budgetError, setBudgetError] = useState("");
+
+  useEffect(() => {
     if (templateId) {
       const t = getTemplateById(templateId);
       if (t) setActiveTemplate(t);
