@@ -19,13 +19,18 @@ import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { getTemplateById, type Template } from "@/lib/templates";
+import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
+import { ProposalCustomizer } from "@/components/ProposalCustomizer";
+import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
+
 interface FormData {
   clientName: string;
   clientEmail: string;
   projectTitle: string;
   industry: string;
   projectType: string;
-  budget: string;
+  budgetAmount: string;
+  budgetCurrency: string;
   timeline: string;
   description: string;
   deliverables: string;
@@ -38,7 +43,8 @@ const initialForm: FormData = {
   projectTitle: "",
   industry: "",
   projectType: "",
-  budget: "",
+  budgetAmount: "",
+  budgetCurrency: "USD",
   timeline: "",
   description: "",
   deliverables: "",
