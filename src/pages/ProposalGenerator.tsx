@@ -174,7 +174,7 @@ export default function ProposalGenerator() {
       client_email: form.clientEmail || null,
       industry: form.industry || null,
       project_type: form.projectType || null,
-      budget: form.budget || null,
+      budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${form.budgetAmount}` : null,
       timeline: form.timeline || null,
       description: form.description || null,
       deliverables: form.deliverables || null,
