@@ -69,8 +69,8 @@ export default function ProposalGenerator() {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get("template");
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
-
-  useEffect(() => {
+  const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
+  const [budgetError, setBudgetError] = useState("");
     if (templateId) {
       const t = getTemplateById(templateId);
       if (t) setActiveTemplate(t);
