@@ -100,9 +100,13 @@ export default function ProposalGenerator() {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            formData: form,
+            formData: {
+              ...form,
+              budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "",
+            },
             templatePrompt: activeTemplate?.aiPrompt || null,
             templateSections: activeTemplate?.sections || null,
+            currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
           }),
         }
       );
