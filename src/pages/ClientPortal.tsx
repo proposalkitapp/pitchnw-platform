@@ -140,7 +140,7 @@ export default function ClientPortal() {
 
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src={proposalLogo} alt="ProposalKit" className="h-8 w-auto" />
+          <img src={proposalLogo} alt="ProposalKit" className="h-24 w-auto" />
           <span className="text-xs text-gray-400 font-mono">Proposal</span>
         </div>
       </header>
