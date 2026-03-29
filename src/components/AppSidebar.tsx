@@ -65,7 +65,7 @@ export function AppSidebar() {
               <img
                 src={proposalLogo}
                 alt="ProposalKit"
-                className={collapsed ? "h-8 w-auto" : "h-12 w-auto"}
+                className={collapsed ? "h-10 w-auto" : "h-24 w-auto"}
               />
             </a>
           </div>

@@ -19,13 +19,18 @@ import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { getTemplateById, type Template } from "@/lib/templates";
+import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
+import { ProposalCustomizer } from "@/components/ProposalCustomizer";
+import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
+
 interface FormData {
   clientName: string;
   clientEmail: string;
   projectTitle: string;
   industry: string;
   projectType: string;
-  budget: string;
+  budgetAmount: string;
+  budgetCurrency: string;
   timeline: string;
   description: string;
   deliverables: string;
@@ -38,7 +43,8 @@ const initialForm: FormData = {
   projectTitle: "",
   industry: "",
   projectType: "",
-  budget: "",
+  budgetAmount: "",
+  budgetCurrency: "USD",
   timeline: "",
   description: "",
   deliverables: "",
@@ -63,6 +69,8 @@ export default function ProposalGenerator() {
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get("template");
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
+  const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
+  const [budgetError, setBudgetError] = useState("");
 
   useEffect(() => {
     if (templateId) {
@@ -92,9 +100,13 @@ export default function ProposalGenerator() {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            formData: form,
+            formData: {
+              ...form,
+              budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "",
+            },
             templatePrompt: activeTemplate?.aiPrompt || null,
             templateSections: activeTemplate?.sections || null,
+            currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
           }),
         }
       );
@@ -166,7 +178,7 @@ export default function ProposalGenerator() {
       client_email: form.clientEmail || null,
       industry: form.industry || null,
       project_type: form.projectType || null,
-      budget: form.budget || null,
+      budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${form.budgetAmount}` : null,
       timeline: form.timeline || null,
       description: form.description || null,
       deliverables: form.deliverables || null,
@@ -186,7 +198,7 @@ export default function ProposalGenerator() {
 
   return (
     <AuthLayout>
-      <div className="p-6 lg:p-8 max-w-3xl mx-auto">
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -320,15 +332,41 @@ export default function ProposalGenerator() {
             {currentStep === 2 && (
               <div className="space-y-5">
                 <div>
-                  <Label htmlFor="budget">Budget Range</Label>
-                  <Select value={form.budget} onValueChange={(v) => update("budget", v)}>
-                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select budget range" /></SelectTrigger>
+                  <Label>Currency</Label>
+                  <Select value={form.budgetCurrency} onValueChange={(v) => update("budgetCurrency", v)}>
+                    <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["$500 - $1,000", "$1,000 - $5,000", "$5,000 - $10,000", "$10,000 - $25,000", "$25,000 - $50,000", "$50,000+"].map((b) => (
-                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      {currencies.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>{c.symbol} — {c.label} ({c.code})</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="budgetAmount">Estimated Budget</Label>
+                  <div className="relative mt-1.5">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">
+                      {getCurrencyByCode(form.budgetCurrency).symbol}
+                    </span>
+                    <Input
+                      id="budgetAmount"
+                      type="number"
+                      min={50}
+                      placeholder="e.g. 500"
+                      value={form.budgetAmount}
+                      onChange={(e) => {
+                        update("budgetAmount", e.target.value);
+                        const val = parseFloat(e.target.value);
+                        if (e.target.value && val < 50) {
+                          setBudgetError(`Minimum budget is ${getCurrencyByCode(form.budgetCurrency).symbol}50`);
+                        } else {
+                          setBudgetError("");
+                        }
+                      }}
+                      className={`pl-10 ${budgetError ? "border-destructive" : ""}`}
+                    />
+                  </div>
+                  {budgetError && <p className="text-xs text-destructive mt-1">{budgetError}</p>}
                 </div>
                 <div>
                   <Label htmlFor="timeline">Timeline</Label>
@@ -370,7 +408,7 @@ export default function ProposalGenerator() {
                     { label: "Project", value: form.projectTitle || "—" },
                     { label: "Industry", value: form.industry || "—" },
                     { label: "Type", value: form.projectType || "—" },
-                    { label: "Budget", value: form.budget || "—" },
+                    { label: "Budget", value: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "—" },
                     { label: "Timeline", value: form.timeline || "—" },
                     { label: "Tone", value: form.tone || "—" },
                   ].map((item) => (
@@ -417,40 +455,17 @@ export default function ProposalGenerator() {
                 {isGenerating ? "Crafting your proposal..." : "Your Proposal"}
               </h2>
               {!isGenerating && generatedProposal && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setGeneratedProposal(null);
-                      setCurrentStep(0);
-                      setForm(initialForm);
-                    }}
-                  >
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant="outline" size="sm" onClick={() => { setGeneratedProposal(null); setCurrentStep(0); setForm(initialForm); }}>
                     Start Over
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigator.clipboard.writeText(generatedProposal).then(() => toast.success("Copied!"))}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(generatedProposal).then(() => toast.success("Copied!"))}>
                     Copy
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => exportProposalAsPdf(form.projectTitle || "Proposal", generatedProposal)}
-                  >
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => exportProposalAsPdf(form.projectTitle || "Proposal", generatedProposal)}>
                     <Download className="h-4 w-4" /> PDF
                   </Button>
-                  <Button
-                    variant="hero"
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="gap-2"
-                  >
+                  <Button variant="hero" size="sm" onClick={handleSave} disabled={isSaving} className="gap-2">
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     {isSaving ? "Saving..." : "Save Proposal"}
                   </Button>
@@ -465,17 +480,53 @@ export default function ProposalGenerator() {
               </div>
             )}
 
-            <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-              <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
-                {generatedProposal || ""}
-                {isGenerating && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                    className="inline-block w-2 h-4 bg-primary ml-0.5 align-middle"
-                  />
-                )}
-              </pre>
+            <div className="grid lg:grid-cols-4 gap-6">
+              {/* Proposal Preview */}
+              <div className="lg:col-span-3">
+                {(() => {
+                  const theme = getThemeById(appearance.theme);
+                  return (
+                    <div
+                      className="rounded-xl border p-6 sm:p-8 transition-colors"
+                      style={{
+                        backgroundColor: theme.background,
+                        borderColor: theme.border,
+                        color: theme.bodyText,
+                      }}
+                    >
+                      <pre
+                        className="whitespace-pre-wrap text-sm leading-relaxed"
+                        style={{
+                          fontFamily: appearance.fontStyle === "modern" ? "'Syne', 'DM Sans', sans-serif" :
+                            appearance.fontStyle === "classic" ? "'Playfair Display', 'Lora', serif" :
+                            appearance.fontStyle === "clean" ? "'DM Sans', sans-serif" :
+                            "'Syne', sans-serif",
+                          color: theme.bodyText,
+                        }}
+                      >
+                        {generatedProposal || ""}
+                        {isGenerating && (
+                          <motion.span
+                            animate={{ opacity: [1, 0] }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                            className="inline-block w-2 h-4 ml-0.5 align-middle"
+                            style={{ backgroundColor: theme.accent }}
+                          />
+                        )}
+                      </pre>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Customizer Panel */}
+              {!isGenerating && generatedProposal && (
+                <div className="lg:col-span-1">
+                  <div className="rounded-xl border border-border bg-card p-4 sticky top-20">
+                    <ProposalCustomizer settings={appearance} onChange={setAppearance} />
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

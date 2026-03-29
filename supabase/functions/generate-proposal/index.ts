@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { formData, templatePrompt, templateSections } = await req.json();
+    const { formData, templatePrompt, templateSections, currencySymbol } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -33,7 +33,11 @@ serve(async (req) => {
       ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}`
       : "";
 
-    const systemPrompt = `${baseSystemPrompt}${templateContext}
+    const currencyInstruction = currencySymbol && currencySymbol !== "$"
+      ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal. Do not use $ unless the client specifically uses USD.`
+      : "";
+
+    const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}
 
 Include these sections:
 ${sectionsText}
