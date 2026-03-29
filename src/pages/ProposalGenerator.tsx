@@ -328,15 +328,41 @@ export default function ProposalGenerator() {
             {currentStep === 2 && (
               <div className="space-y-5">
                 <div>
-                  <Label htmlFor="budget">Budget Range</Label>
-                  <Select value={form.budget} onValueChange={(v) => update("budget", v)}>
-                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select budget range" /></SelectTrigger>
+                  <Label>Currency</Label>
+                  <Select value={form.budgetCurrency} onValueChange={(v) => update("budgetCurrency", v)}>
+                    <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["$500 - $1,000", "$1,000 - $5,000", "$5,000 - $10,000", "$10,000 - $25,000", "$25,000 - $50,000", "$50,000+"].map((b) => (
-                        <SelectItem key={b} value={b}>{b}</SelectItem>
+                      {currencies.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>{c.symbol} — {c.label} ({c.code})</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="budgetAmount">Estimated Budget</Label>
+                  <div className="relative mt-1.5">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">
+                      {getCurrencyByCode(form.budgetCurrency).symbol}
+                    </span>
+                    <Input
+                      id="budgetAmount"
+                      type="number"
+                      min={50}
+                      placeholder="e.g. 500"
+                      value={form.budgetAmount}
+                      onChange={(e) => {
+                        update("budgetAmount", e.target.value);
+                        const val = parseFloat(e.target.value);
+                        if (e.target.value && val < 50) {
+                          setBudgetError(`Minimum budget is ${getCurrencyByCode(form.budgetCurrency).symbol}50`);
+                        } else {
+                          setBudgetError("");
+                        }
+                      }}
+                      className={`pl-10 ${budgetError ? "border-destructive" : ""}`}
+                    />
+                  </div>
+                  {budgetError && <p className="text-xs text-destructive mt-1">{budgetError}</p>}
                 </div>
                 <div>
                   <Label htmlFor="timeline">Timeline</Label>
