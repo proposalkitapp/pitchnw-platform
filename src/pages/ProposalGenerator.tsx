@@ -404,7 +404,7 @@ export default function ProposalGenerator() {
                     { label: "Project", value: form.projectTitle || "—" },
                     { label: "Industry", value: form.industry || "—" },
                     { label: "Type", value: form.projectType || "—" },
-                    { label: "Budget", value: form.budget || "—" },
+                    { label: "Budget", value: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "—" },
                     { label: "Timeline", value: form.timeline || "—" },
                     { label: "Tone", value: form.tone || "—" },
                   ].map((item) => (
