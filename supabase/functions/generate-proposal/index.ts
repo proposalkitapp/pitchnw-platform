@@ -33,7 +33,11 @@ serve(async (req) => {
       ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}`
       : "";
 
-    const systemPrompt = `${baseSystemPrompt}${templateContext}
+    const currencyInstruction = currencySymbol && currencySymbol !== "$"
+      ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal. Do not use $ unless the client specifically uses USD.`
+      : "";
+
+    const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}
 
 Include these sections:
 ${sectionsText}
