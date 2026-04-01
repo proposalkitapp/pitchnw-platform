@@ -91,13 +91,21 @@ export default function ProposalGenerator() {
     toast.loading("Generating your proposal...", { id: "gen" });
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        toast.error("Please sign in to generate proposals", { id: "gen" });
+        navigate("/auth");
+        return;
+      }
+
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-proposal`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             formData: {
@@ -113,6 +121,11 @@ export default function ProposalGenerator() {
 
       if (!resp.ok) {
         const err = await resp.json();
+        if (err.code === "LIMIT_REACHED") {
+          toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
+          navigate("/settings");
+          return;
+        }
         throw new Error(err.error || "Failed to generate proposal");
       }
 

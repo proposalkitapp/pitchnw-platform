@@ -43,11 +43,12 @@ export default function Dashboard() {
       fetchProposals();
       supabase
         .from("profiles")
-        .select("display_name, onboarding_completed")
+        .select("display_name, onboarding_completed, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name?.split(" ")[0] || "there");
+          setPlan(data?.plan || "free");
           if (data && !data.onboarding_completed) {
             setShowOnboarding(true);
           }
