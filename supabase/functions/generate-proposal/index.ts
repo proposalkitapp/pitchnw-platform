@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,58 @@ serve(async (req) => {
     const { formData, templatePrompt, templateSections, currencySymbol } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // --- Free plan enforcement ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check plan
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("user_id", user.id)
+      .single();
+
+    const plan = profile?.plan || "free";
+
+    if (plan === "free") {
+      // Count existing proposals
+      const { count, error: countError } = await supabase
+        .from("proposals")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (countError) {
+        console.error("Count error:", countError);
+      }
+
+      if ((count ?? 0) >= 3) {
+        return new Response(
+          JSON.stringify({ error: "Free plan limit reached. You've used all 3 free proposals. Upgrade to Pro for unlimited proposals.", code: "LIMIT_REACHED" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    // --- End free plan enforcement ---
 
     const defaultSections = `- Executive Summary
 - Project Scope and Objectives
