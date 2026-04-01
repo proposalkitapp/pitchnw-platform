@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2 } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,16 +36,19 @@ export default function Dashboard() {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [plan, setPlan] = useState("free");
+
   useEffect(() => {
     if (user) {
       fetchProposals();
       supabase
         .from("profiles")
-        .select("display_name, onboarding_completed")
+        .select("display_name, onboarding_completed, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name?.split(" ")[0] || "there");
+          setPlan(data?.plan || "free");
           if (data && !data.onboarding_completed) {
             setShowOnboarding(true);
           }
@@ -146,12 +149,67 @@ export default function Dashboard() {
               ))}
         </div>
 
+        {/* Free Plan Usage Bar */}
+        {plan === "free" && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl border border-border bg-card p-5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-card-foreground">Free Plan Usage</span>
+              </div>
+              <span className="text-xs font-mono text-muted-foreground">
+                {Math.min(totalProposals, 3)} / 3 proposals
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((totalProposals / 3) * 100, 100)}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className={`h-full rounded-full ${
+                  totalProposals >= 3 ? "bg-destructive" : "bg-primary"
+                }`}
+              />
+            </div>
+            {totalProposals >= 3 ? (
+              <div className="mt-3 flex items-center justify-between">
+                <p className="text-xs text-destructive font-medium">
+                  Limit reached — upgrade to continue generating proposals
+                </p>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => navigate("/settings")}
+                  className="gap-1 text-xs"
+                >
+                  Upgrade to Pro
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-2">
+                {3 - totalProposals} proposal{3 - totalProposals !== 1 ? "s" : ""} remaining on your free plan
+              </p>
+            )}
+          </motion.div>
+        )}
+
         {/* Quick Action */}
         <Button
           variant="hero"
           size="lg"
           className="w-full mb-8 gap-2"
-          onClick={() => navigate("/generate")}
+          onClick={() => {
+            if (plan === "free" && totalProposals >= 3) {
+              toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
+              navigate("/settings");
+              return;
+            }
+            navigate("/generate");
+          }}
         >
           <Plus className="h-5 w-5" /> New Proposal
         </Button>
