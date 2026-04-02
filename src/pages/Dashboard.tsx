@@ -295,6 +295,15 @@ export default function Dashboard() {
                         <span className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[proposal.status] || "bg-secondary text-muted-foreground"}`}>
                           {proposal.status}
                         </span>
+                        {proposal.proposal_mode && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            proposal.proposal_mode === "sales_pitch"
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : "bg-secondary text-muted-foreground"
+                          }`}>
+                            {proposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal"}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-4">
