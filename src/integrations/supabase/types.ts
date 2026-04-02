@@ -103,6 +103,7 @@ export type Database = {
           industry: string | null
           is_locked: boolean
           project_type: string | null
+          proposal_mode: string
           public_slug: string | null
           signed_at: string | null
           status: string
@@ -126,6 +127,7 @@ export type Database = {
           industry?: string | null
           is_locked?: boolean
           project_type?: string | null
+          proposal_mode?: string
           public_slug?: string | null
           signed_at?: string | null
           status?: string
@@ -149,6 +151,7 @@ export type Database = {
           industry?: string | null
           is_locked?: boolean
           project_type?: string | null
+          proposal_mode?: string
           public_slug?: string | null
           signed_at?: string | null
           status?: string

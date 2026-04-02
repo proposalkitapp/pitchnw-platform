@@ -19,6 +19,7 @@ interface Proposal {
   created_at: string;
   generated_content: string;
   public_slug: string | null;
+  proposal_mode: string | null;
 }
 
 function getGreeting(): string {
@@ -59,7 +60,7 @@ export default function Dashboard() {
   const fetchProposals = async () => {
     const { data, error } = await supabase
       .from("proposals")
-      .select("id, title, client_name, status, created_at, generated_content, public_slug")
+      .select("id, title, client_name, status, created_at, generated_content, public_slug, proposal_mode")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -294,6 +295,15 @@ export default function Dashboard() {
                         <span className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[proposal.status] || "bg-secondary text-muted-foreground"}`}>
                           {proposal.status}
                         </span>
+                        {proposal.proposal_mode && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            proposal.proposal_mode === "sales_pitch"
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : "bg-secondary text-muted-foreground"
+                          }`}>
+                            {proposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal"}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-4">
