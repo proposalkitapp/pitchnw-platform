@@ -7,17 +7,76 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const SALES_PITCH_SYSTEM = `You are a world-class sales copywriter who specialises in writing proposals that close deals. You understand buyer psychology at a deep level.
+
+Your writing rules:
+- Open with the client's world, not yours. Make them feel immediately understood before you say anything about yourself
+- Every paragraph must earn its place by either establishing authority, addressing a fear, or moving the client closer to saying yes
+- Write to OUTCOMES not deliverables. Clients do not want a website — they want more customers. They do not want a logo — they want to look credible. Always translate the work into the result it creates
+- Preemptively neutralise objections before they arise. Address price, timeline risk, and quality concerns inside the proposal itself
+- Use specific, concrete language. Avoid vague words like 'quality', 'professional', 'passionate'. Replace them with evidence and specificity
+- Your pricing section must feel like an investment decision not a cost. Frame every price against the value it returns
+- Create urgency that feels earned and real — based on timeline constraints or capacity — never fake
+- Your call to action must feel like the natural, obvious, low-risk next step — not a sales push
+- NEVER use markdown characters, asterisks, hashes, backticks, or quotation marks around headings
+- Write in clean, flowing professional English
+- Return ONLY valid raw JSON with no wrapper text`;
+
+const TRADITIONAL_SYSTEM = `You are a senior business proposal writer at a top-tier professional services firm. You write clear, structured, and comprehensive proposals that meet corporate and institutional standards.
+
+Your writing rules:
+- Use formal, precise, and neutral language
+- Structure every section with clear headings and logical flow
+- State deliverables, timelines, and terms explicitly and without ambiguity
+- Write from a position of professional credibility rather than sales persuasion
+- Avoid emotional language — focus on facts, process, and outcomes
+- The pricing section must be transparent, itemised, and clearly justified
+- Terms and conditions must be comprehensive and professionally worded
+- NEVER use markdown characters, asterisks, hashes, backticks, or quotation marks around headings
+- Write in clean, formal professional English
+- Return ONLY valid raw JSON with no wrapper text`;
+
+const SALES_PITCH_JSON_SCHEMA = `Return a JSON object with exactly these keys:
+{
+  "executiveSummary": "Opens with client's world and challenge. Builds immediate empathy. Bridges to your solution.",
+  "problemStatement": "Articulates exactly what is at stake for the client if this problem goes unsolved. Specific and felt.",
+  "proposedSolution": "Your approach framed as the intelligent answer. Specific methodology. Sounds intentional.",
+  "uniqueAdvantage": "What separates you. Written with confidence and evidence.",
+  "scopeOfWork": { "included": ["..."], "notIncluded": ["..."] },
+  "timeline": [{ "phase": "", "duration": "", "deliverables": ["..."] }],
+  "pricing": [{ "item": "", "description": "", "amount": "" }],
+  "investmentJustification": "Why this price is an investment, not a cost. ROI framing.",
+  "urgencyStatement": "Genuine urgency based on timeline or capacity.",
+  "termsAndConditions": "Clear and fair terms.",
+  "callToAction": "The natural, obvious next step. Low-risk and confident."
+}`;
+
+const TRADITIONAL_JSON_SCHEMA = `Return a JSON object with exactly these keys:
+{
+  "executiveSummary": "Formal overview of the engagement and its objectives.",
+  "projectBackground": "Context and background of the client's situation.",
+  "proposedApproach": "Methodology and approach, formally stated.",
+  "scopeOfWork": { "included": ["..."], "notIncluded": ["..."] },
+  "timeline": [{ "phase": "", "duration": "", "deliverables": ["..."] }],
+  "pricing": [{ "item": "", "description": "", "amount": "" }],
+  "teamAndCredentials": "Professional background and relevant experience.",
+  "termsAndConditions": "Comprehensive professional terms.",
+  "acceptanceAndNextSteps": "Formal instructions for proceeding."
+}`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { formData, templatePrompt, templateSections, currencySymbol } = await req.json();
+    const { formData, proposalMode, templatePrompt, templateSections, currencySymbol } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // --- Free plan enforcement ---
+    const mode = proposalMode === "traditional" ? "traditional" : "sales_pitch";
+
+    // --- Auth & free plan enforcement ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -40,7 +99,6 @@ serve(async (req) => {
       );
     }
 
-    // Check plan
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")
@@ -50,15 +108,12 @@ serve(async (req) => {
     const plan = profile?.plan || "free";
 
     if (plan === "free") {
-      // Count existing proposals
       const { count, error: countError } = await supabase
         .from("proposals")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id);
 
-      if (countError) {
-        console.error("Count error:", countError);
-      }
+      if (countError) console.error("Count error:", countError);
 
       if ((count ?? 0) >= 3) {
         return new Response(
@@ -67,24 +122,12 @@ serve(async (req) => {
         );
       }
     }
-    // --- End free plan enforcement ---
 
-    const defaultSections = `- Executive Summary
-- Project Scope and Objectives
-- Deliverables
-- Timeline and Milestones
-- Budget and Pricing
-- Terms and Next Steps`;
+    // --- Build prompts based on mode ---
+    const baseSystemPrompt = mode === "sales_pitch" ? SALES_PITCH_SYSTEM : TRADITIONAL_SYSTEM;
+    const jsonSchema = mode === "sales_pitch" ? SALES_PITCH_JSON_SCHEMA : TRADITIONAL_JSON_SCHEMA;
 
-    const sectionsText = templateSections
-      ? templateSections.map((s: string, i: number) => `${i + 1}. ${s}`).join("\n")
-      : defaultSections;
-
-    const baseSystemPrompt = `You are a professional business proposal writer. You write in clean, formal, polished English. You never use markdown formatting characters (no **, no ##, no backticks, no dashes as bullet points, no quotation marks around headings). You write proposals that sound like they were written by a senior consultant at a top agency. Your tone is confident, specific, and persuasive. Always write in full sentences and paragraphs unless creating a structured list, in which case use clean numbered items only.`;
-
-    const templateContext = templatePrompt
-      ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}`
-      : "";
+    const templateContext = templatePrompt ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}` : "";
 
     const currencyInstruction = currencySymbol && currencySymbol !== "$"
       ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal. Do not use $ unless the client specifically uses USD.`
@@ -92,8 +135,7 @@ serve(async (req) => {
 
     const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}
 
-Include these sections:
-${sectionsText}
+${jsonSchema}
 
 Write in a ${formData.tone || "professional"} tone. Be specific, detailed, and persuasive. Make the proposal feel tailored and high-quality.`;
 
@@ -109,7 +151,7 @@ Timeline: ${formData.timeline || "To be determined"}
 Description: ${formData.description || "No additional description provided."}
 Key Deliverables: ${formData.deliverables || "As discussed with client."}
 
-Generate a complete, ready-to-send proposal. Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets. Write clean, professional prose with numbered lists where appropriate.`;
+Generate a complete, ready-to-send proposal as a valid JSON object. Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets. Write clean, professional prose with numbered lists where appropriate.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

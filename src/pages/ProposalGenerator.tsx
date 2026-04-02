@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X } from "lucide-react";
+import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { getTemplateById, type Template } from "@/lib/templates";
 import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
 import { ProposalCustomizer } from "@/components/ProposalCustomizer";
 import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
+import { Badge } from "@/components/ui/badge";
 
 interface FormData {
   clientName: string;
@@ -35,6 +36,7 @@ interface FormData {
   description: string;
   deliverables: string;
   tone: string;
+  proposalMode: "sales_pitch" | "traditional";
 }
 
 const initialForm: FormData = {
@@ -49,14 +51,43 @@ const initialForm: FormData = {
   description: "",
   deliverables: "",
   tone: "professional",
+  proposalMode: "sales_pitch",
 };
 
 const steps = [
   { title: "Client Info", description: "Who is this proposal for?" },
   { title: "Project Details", description: "Describe the project scope" },
-  { title: "Preferences", description: "Customize your proposal style" },
+  { title: "Budget & Timeline", description: "Set budget and timeline" },
+  { title: "Tone & Mode", description: "Choose style and generation mode" },
   { title: "Generate", description: "Review and generate your proposal" },
 ];
+
+const stepValidation: Record<number, (form: FormData) => string | null> = {
+  0: (f) => {
+    if (!f.clientName.trim()) return "Client Name is required";
+    if (!f.clientEmail.trim()) return "Client Email is required";
+    if (!f.industry) return "Please select an industry";
+    return null;
+  },
+  1: (f) => {
+    if (!f.projectTitle.trim()) return "Project Title is required";
+    if (!f.projectType) return "Please select a project type";
+    if (!f.description.trim()) return "Project Description is required";
+    if (!f.deliverables.trim()) return "Key Deliverables are required";
+    return null;
+  },
+  2: (f) => {
+    if (!f.budgetAmount.trim()) return "Estimated Budget is required";
+    if (parseFloat(f.budgetAmount) < 50) return "Minimum budget is 50";
+    if (!f.timeline) return "Please select a timeline";
+    return null;
+  },
+  3: (f) => {
+    if (!f.tone) return "Please select a tone";
+    if (!f.proposalMode) return "Please select a proposal mode";
+    return null;
+  },
+};
 
 export default function ProposalGenerator() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -82,7 +113,17 @@ export default function ProposalGenerator() {
   const update = (field: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const next = () => setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
+  const next = () => {
+    const validator = stepValidation[currentStep];
+    if (validator) {
+      const error = validator(form);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+    }
+    setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
+  };
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
 
   const handleGenerate = async () => {
@@ -112,6 +153,7 @@ export default function ProposalGenerator() {
               ...form,
               budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "",
             },
+            proposalMode: form.proposalMode,
             templatePrompt: activeTemplate?.aiPrompt || null,
             templateSections: activeTemplate?.sections || null,
             currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
@@ -184,7 +226,7 @@ export default function ProposalGenerator() {
     if (!generatedProposal) return;
 
     setIsSaving(true);
-    const { error } = await supabase.from("proposals").insert({
+    const { data, error } = await supabase.from("proposals").insert({
       user_id: user.id,
       title: form.projectTitle || "Untitled Proposal",
       client_name: form.clientName || null,
@@ -198,12 +240,18 @@ export default function ProposalGenerator() {
       tone: form.tone,
       generated_content: generatedProposal,
       status: "draft",
-    });
+      proposal_mode: form.proposalMode,
+    } as any).select("id, public_slug").single();
 
     if (error) {
       toast.error("Failed to save proposal");
     } else {
       toast.success("Proposal saved ✓");
+      if (data?.public_slug) {
+        const link = `${window.location.origin}/p/${data.public_slug}`;
+        navigator.clipboard.writeText(link);
+        toast.success("Shareable link copied to clipboard! 🔗");
+      }
       navigate("/dashboard");
     }
     setIsSaving(false);
@@ -250,7 +298,7 @@ export default function ProposalGenerator() {
         )}
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-10 max-w-md mx-auto">
+        <div className="flex items-center justify-between mb-10 max-w-lg mx-auto">
           {steps.map((step, i) => (
             <div key={i} className="flex items-center">
               <div
@@ -266,7 +314,7 @@ export default function ProposalGenerator() {
               </div>
               {i < steps.length - 1 && (
                 <div
-                  className={`w-8 sm:w-12 h-0.5 mx-1 transition-colors ${
+                  className={`w-6 sm:w-10 h-0.5 mx-1 transition-colors ${
                     i < currentStep ? "bg-primary" : "bg-border"
                   }`}
                 />
@@ -293,15 +341,15 @@ export default function ProposalGenerator() {
             {currentStep === 0 && (
               <div className="space-y-5">
                 <div>
-                  <Label htmlFor="clientName">Client Name</Label>
+                  <Label htmlFor="clientName">Client Name <span className="text-destructive">*</span></Label>
                   <Input id="clientName" placeholder="e.g. Acme Corp" value={form.clientName} onChange={(e) => update("clientName", e.target.value)} className="mt-1.5" />
                 </div>
                 <div>
-                  <Label htmlFor="clientEmail">Client Email</Label>
+                  <Label htmlFor="clientEmail">Client Email <span className="text-destructive">*</span></Label>
                   <Input id="clientEmail" type="email" placeholder="client@example.com" value={form.clientEmail} onChange={(e) => update("clientEmail", e.target.value)} className="mt-1.5" />
                 </div>
                 <div>
-                  <Label htmlFor="industry">Industry</Label>
+                  <Label htmlFor="industry">Industry <span className="text-destructive">*</span></Label>
                   <Select value={form.industry} onValueChange={(v) => update("industry", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select industry" /></SelectTrigger>
                     <SelectContent>
@@ -317,11 +365,11 @@ export default function ProposalGenerator() {
             {currentStep === 1 && (
               <div className="space-y-5">
                 <div>
-                  <Label htmlFor="projectTitle">Project Title</Label>
+                  <Label htmlFor="projectTitle">Project Title <span className="text-destructive">*</span></Label>
                   <Input id="projectTitle" placeholder="e.g. Website Redesign" value={form.projectTitle} onChange={(e) => update("projectTitle", e.target.value)} className="mt-1.5" />
                 </div>
                 <div>
-                  <Label htmlFor="projectType">Project Type</Label>
+                  <Label htmlFor="projectType">Project Type <span className="text-destructive">*</span></Label>
                   <Select value={form.projectType} onValueChange={(v) => update("projectType", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
@@ -332,11 +380,11 @@ export default function ProposalGenerator() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="description">Project Description</Label>
+                  <Label htmlFor="description">Project Description <span className="text-destructive">*</span></Label>
                   <Textarea id="description" placeholder="Describe the project goals, requirements, and any special considerations..." rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} className="mt-1.5" />
                 </div>
                 <div>
-                  <Label htmlFor="deliverables">Key Deliverables</Label>
+                  <Label htmlFor="deliverables">Key Deliverables <span className="text-destructive">*</span></Label>
                   <Textarea id="deliverables" placeholder="List the main deliverables, one per line..." rows={3} value={form.deliverables} onChange={(e) => update("deliverables", e.target.value)} className="mt-1.5" />
                 </div>
               </div>
@@ -356,7 +404,7 @@ export default function ProposalGenerator() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="budgetAmount">Estimated Budget</Label>
+                  <Label htmlFor="budgetAmount">Estimated Budget <span className="text-destructive">*</span></Label>
                   <div className="relative mt-1.5">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">
                       {getCurrencyByCode(form.budgetCurrency).symbol}
@@ -382,7 +430,7 @@ export default function ProposalGenerator() {
                   {budgetError && <p className="text-xs text-destructive mt-1">{budgetError}</p>}
                 </div>
                 <div>
-                  <Label htmlFor="timeline">Timeline</Label>
+                  <Label htmlFor="timeline">Timeline <span className="text-destructive">*</span></Label>
                   <Select value={form.timeline} onValueChange={(v) => update("timeline", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select timeline" /></SelectTrigger>
                     <SelectContent>
@@ -392,8 +440,13 @@ export default function ProposalGenerator() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-6">
                 <div>
-                  <Label htmlFor="tone">Proposal Tone</Label>
+                  <Label htmlFor="tone">Proposal Tone <span className="text-destructive">*</span></Label>
                   <Select value={form.tone} onValueChange={(v) => update("tone", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select tone" /></SelectTrigger>
                     <SelectContent>
@@ -408,10 +461,72 @@ export default function ProposalGenerator() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Proposal Mode Selection */}
+                <div>
+                  <Label className="text-base font-semibold">How should your proposal read? <span className="text-destructive">*</span></Label>
+                  <p className="text-sm text-muted-foreground mt-1 mb-4">Choose the generation style for your proposal</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Sales Pitch Card */}
+                    <button
+                      type="button"
+                      onClick={() => update("proposalMode", "sales_pitch")}
+                      className={`relative text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                        form.proposalMode === "sales_pitch"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <span className="text-3xl">🎯</span>
+                        <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/15 text-[10px]">
+                          Converts Better
+                        </Badge>
+                      </div>
+                      <h4 className="font-display font-semibold text-card-foreground mb-2">Sales Pitch</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Written like a premium sales document. Speaks directly to the client's fears, positions you as the expert, and makes saying yes feel obvious. Best for competitive pitches and new clients.
+                      </p>
+                      {form.proposalMode === "sales_pitch" && (
+                        <div className="absolute top-3 right-3">
+                          <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Traditional Proposal Card */}
+                    <button
+                      type="button"
+                      onClick={() => update("proposalMode", "traditional")}
+                      className={`relative text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                        form.proposalMode === "traditional"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="mb-3">
+                        <span className="text-3xl">📄</span>
+                      </div>
+                      <h4 className="font-display font-semibold text-card-foreground mb-2">Formal Proposal</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        A structured, professional document covering scope, timeline, and deliverables in a clear and formal format. Best for corporate clients, tenders, and RFP responses.
+                      </p>
+                      {form.proposalMode === "traditional" && (
+                        <div className="absolute top-3 right-3">
+                          <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {currentStep === 3 && (
+            {currentStep === 4 && (
               <div className="space-y-4">
                 <h3 className="font-display text-lg font-semibold text-card-foreground">Review Your Details</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -424,6 +539,7 @@ export default function ProposalGenerator() {
                     { label: "Budget", value: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "—" },
                     { label: "Timeline", value: form.timeline || "—" },
                     { label: "Tone", value: form.tone || "—" },
+                    { label: "Mode", value: form.proposalMode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal Proposal" },
                   ].map((item) => (
                     <div key={item.label} className="rounded-lg bg-secondary/50 p-3">
                       <div className="text-xs text-muted-foreground font-mono uppercase tracking-wider">{item.label}</div>
@@ -466,6 +582,11 @@ export default function ProposalGenerator() {
               <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
                 {isGenerating ? "Crafting your proposal..." : "Your Proposal"}
+                {!isGenerating && (
+                  <Badge className={form.proposalMode === "sales_pitch" ? "bg-emerald-500/15 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/15" : "bg-secondary text-muted-foreground hover:bg-secondary"}>
+                    {form.proposalMode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal Proposal"}
+                  </Badge>
+                )}
               </h2>
               {!isGenerating && generatedProposal && (
                 <div className="flex gap-2 flex-wrap">
