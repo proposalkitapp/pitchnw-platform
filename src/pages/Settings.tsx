@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool } from "lucide-react";
+import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool, Image, Upload } from "lucide-react";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { useNavigate } from "react-router-dom";
 
@@ -17,11 +17,15 @@ export default function Settings() {
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [brandLogoUrl, setBrandLogoUrl] = useState("");
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [currentPlan, setCurrentPlan] = useState("free");
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -31,7 +35,7 @@ export default function Settings() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, company_name, signature_data, plan")
+        .select("display_name, company_name, signature_data, plan, brand_name, brand_logo_url")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
@@ -40,11 +44,43 @@ export default function Settings() {
             setCompanyName(data.company_name || "");
             setSignatureData(data.signature_data || null);
             setCurrentPlan(data.plan || "free");
+            setBrandName((data as any).brand_name || "");
+            setBrandLogoUrl((data as any).brand_logo_url || "");
           }
           setLoadingProfile(false);
         });
     }
   }, [user]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo must be under 2MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      // Convert to base64 data URL for storage in profile
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBrandLogoUrl(reader.result as string);
+        setUploadingLogo(false);
+        toast.success("Logo uploaded! Don't forget to save.");
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Failed to upload logo");
+      setUploadingLogo(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -55,7 +91,9 @@ export default function Settings() {
         display_name: displayName,
         company_name: companyName,
         signature_data: signatureData,
-      })
+        brand_name: brandName,
+        brand_logo_url: brandLogoUrl,
+      } as any)
       .eq("user_id", user.id);
     if (error) {
       toast.error("Failed to update profile");
@@ -129,6 +167,7 @@ export default function Settings() {
         "Full proposal analytics",
         "CRM pipeline dashboard",
         "Client accept/decline flow",
+        "Delete & manage proposals",
       ],
     },
     {
@@ -191,6 +230,70 @@ export default function Settings() {
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="pl-10"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Brand Customization */}
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5">
+                <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
+                  <Image className="h-5 w-5 text-primary" /> Brand Customization
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Your brand name and logo will appear on proposals generated from templates.
+                </p>
+                <div>
+                  <Label htmlFor="brandName">Brand Name</Label>
+                  <Input
+                    id="brandName"
+                    placeholder="e.g. Acme Design Studio"
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label>Brand Logo</Label>
+                  <div className="mt-1.5 space-y-3">
+                    {brandLogoUrl && (
+                      <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-4">
+                        <img
+                          src={brandLogoUrl}
+                          alt="Brand logo"
+                          className="h-12 w-auto max-w-[200px] object-contain"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive text-xs"
+                          onClick={() => setBrandLogoUrl("")}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                    >
+                      {uploadingLogo ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {uploadingLogo ? "Uploading..." : "Upload Logo"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, or SVG. Max 2MB.</p>
                   </div>
                 </div>
               </div>
@@ -280,7 +383,7 @@ export default function Settings() {
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {currentPlan === "free" ? "3 proposals/month · Free templates only · 3 analytics views" :
+                  {currentPlan === "free" ? "3 proposals · Free templates only · Cannot delete proposals" :
                    currentPlan === "pro" ? "Unlimited proposals · All templates · Full analytics" :
                    "Everything in Pro + Template Builder + AI Win-Rate Coach"}
                 </p>
@@ -290,7 +393,7 @@ export default function Settings() {
                 {plans.map((plan) => (
                   <div
                     key={plan.name}
-                    className="rounded-xl border border-border bg-card p-6 hover:border-primary/30 transition-colors"
+                    className="rounded-xl border border-border bg-card p-6 hover:border-primary/20 transition-colors"
                   >
                     <h3 className="font-display text-xl font-bold text-card-foreground">{plan.name}</h3>
                     <div className="mt-2 mb-4">
@@ -300,7 +403,7 @@ export default function Settings() {
                     <ul className="space-y-2 mb-6">
                       {plan.features.map((f, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                          <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                           {f}
                         </li>
                       ))}

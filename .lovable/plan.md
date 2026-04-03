@@ -1,37 +1,30 @@
+## Plan
 
+### 1. Database Migration
+- Add `brand_name` and `brand_logo_url` columns to `profiles` table
 
-# Google OAuth for ProposalKit
+### 2. Default Light Mode
+- Change `use-theme.ts` to default to light mode
 
-## Overview
-Add a "Continue with Google" button to the auth page (both login and signup modes), create an `/auth/callback` route, and handle error states.
+### 3. Redesign Landing Page (RedLeads-inspired, light mode)
+- **Navbar**: Clean pill-style nav with logo left, links center, CTA right
+- **HeroSection**: Bold headline, subtitle, input-style CTA or button CTA with social proof avatars, feature badges below
+- **TrustMarquee**: Keep as-is, works well
+- **FeaturesSection**: Clean icon cards in grid, keep interactive widgets
+- **HowItWorksSection**: Numbered steps with visual cards (similar to RedLeads 3-step)
+- **PricingSection**: Clean 3-column pricing with highlighted card
+- **CTASection**: Bold CTA with gradient background
+- **Footer**: Clean footer
 
-## Important Note
-Since this is a **Lovable Cloud project**, we must use the managed Google OAuth via `lovable.auth.signInWithOAuth("google", ...)` instead of raw `supabase.auth.signInWithOAuth`. This requires running the **Configure Social Auth tool** first to generate the `src/integrations/lovable/` module and install `@lovable.dev/cloud-auth-js`.
+### 4. Free Users Cannot Delete Proposals
+- In Dashboard, hide/disable delete button when `plan === "free"`
+- Show tooltip explaining why
 
-## Steps
+### 5. Fix Proposal JSON Rendering
+- Parse the generated JSON content and render structured, readable sections
+- Different rendering for sales_pitch vs traditional modes
+- Handle both JSON and raw text gracefully
 
-### 1. Configure Social Auth (tool call)
-Run the Configure Social Login tool for Google. This auto-generates the lovable auth module at `src/integrations/lovable/`.
-
-### 2. Create `src/pages/AuthCallback.tsx`
-- Minimal loading page with ProposalKit logo (h-21, pulse animation), "Signing you in..." text, and a Loader2 spinner
-- On mount: call `supabase.auth.getSession()` — if session exists, navigate to `/dashboard`; if error or no session, navigate to `/auth?error=auth_failed`
-- Profile auto-creation is already handled by the existing `handle_new_user` database trigger, so no manual insert needed
-
-### 3. Update `src/App.tsx`
-- Import `AuthCallback` and add route: `<Route path="/auth/callback" element={<AuthCallback />} />`
-
-### 4. Update `src/pages/AuthPage.tsx`
-- Add `googleLoading` state
-- Add `handleGoogleSignIn` function using `lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + '/auth/callback' })`
-- Insert **Google button** (white bg, Google logo SVG, 48px height, styled per spec) above the email fields
-- Insert **divider** ("or continue with email") between Google button and email fields
-- On mount: check for `?error=auth_failed` search param and show error toast
-
-### 5. Files Changed
-| File | Action |
-|------|--------|
-| `src/pages/AuthCallback.tsx` | Create |
-| `src/pages/AuthPage.tsx` | Edit — add Google button, divider, error handling |
-| `src/App.tsx` | Edit — add `/auth/callback` route |
-
+### 6. Brand Settings in Profile
+- Add brand name and logo upload fields in Settings > Profile tab
+- Store brand_logo_url in storage bucket + profiles table

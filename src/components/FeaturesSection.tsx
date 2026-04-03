@@ -3,7 +3,6 @@ import { Zap, LayoutTemplate, BarChart3, Brain, Send, Shield } from "lucide-reac
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
-/* ── Typing animation for AI Generator card ── */
 function TypingEffect() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
@@ -22,7 +21,7 @@ function TypingEffect() {
   }, [isInView]);
 
   return (
-    <div ref={ref} className="mt-4 rounded-lg bg-secondary/60 border border-border/40 p-3">
+    <div ref={ref} className="mt-4 rounded-lg bg-muted/50 border border-border p-3">
       <div className="flex items-center gap-2 mb-2">
         <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
         <span className="text-[10px] font-mono text-muted-foreground">AI Engine</span>
@@ -41,7 +40,6 @@ function TypingEffect() {
   );
 }
 
-/* ── Animated bar chart for Analytics card ── */
 function AnimatedBarChart() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
@@ -55,7 +53,7 @@ function AnimatedBarChart() {
   ];
 
   return (
-    <div ref={ref} className="mt-4 rounded-lg bg-secondary/60 border border-border/40 p-3">
+    <div ref={ref} className="mt-4 rounded-lg bg-muted/50 border border-border p-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-mono text-muted-foreground">Views this week</span>
         <span className="text-[10px] font-mono text-primary font-semibold">+42%</span>
@@ -64,7 +62,7 @@ function AnimatedBarChart() {
         {bars.map((bar, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-1">
             <motion.div
-              className="w-full rounded-sm bg-primary/70"
+              className="w-full rounded-sm bg-primary/60"
               initial={{ height: 0 }}
               animate={isInView ? { height: bar.height } : { height: 0 }}
               transition={{ duration: 0.6, delay: bar.delay, ease: "easeOut" }}
@@ -115,27 +113,27 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <ParallaxSection id="features" className="py-24 lg:py-32" speed={0.15}>
+    <ParallaxSection id="features" className="py-20 lg:py-28" speed={0.15}>
       <div className="container mx-auto px-4">
-        <FadeInView className="text-center mb-16">
-          <span className="text-sm font-mono text-primary tracking-widest uppercase">Features</span>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-4">
+        <FadeInView className="text-center mb-14">
+          <span className="inline-block text-xs font-semibold text-primary tracking-widest uppercase bg-primary/5 border border-primary/10 rounded-full px-3 py-1 mb-4">Features</span>
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 mb-4">
             Everything you need to{" "}
             <span className="text-gradient">win more deals</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-base lg:text-lg max-w-2xl mx-auto">
             From AI generation to client tracking — ProposalKit is the all-in-one platform for freelancers who mean business.
           </p>
         </FadeInView>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature, i) => (
-            <FadeInView key={i} delay={i * 0.1}>
-              <div className="group relative rounded-xl border border-border bg-card p-6 lg:p-8 transition-all duration-300 hover:border-primary/30 hover:shadow-glow">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <feature.icon className="h-6 w-6" />
+            <FadeInView key={i} delay={i * 0.08}>
+              <div className="group relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/[0.03]">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <feature.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-lg font-semibold mb-2 text-card-foreground">{feature.title}</h3>
+                <h3 className="font-display text-base font-semibold mb-2 text-card-foreground">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                 {feature.widget === "typing" && <TypingEffect />}
                 {feature.widget === "chart" && <AnimatedBarChart />}

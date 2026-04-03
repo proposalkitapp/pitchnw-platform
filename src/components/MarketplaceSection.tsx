@@ -19,38 +19,38 @@ export function MarketplaceSection() {
   const { user } = useAuth();
 
   return (
-    <ParallaxSection id="marketplace" className="py-24 lg:py-32" speed={0.15}>
+    <ParallaxSection id="marketplace" className="py-20 lg:py-28 bg-muted/30" speed={0.15}>
       <div className="container mx-auto px-4">
-        <FadeInView className="text-center mb-16">
-          <span className="text-sm font-mono text-primary tracking-widest uppercase">Marketplace</span>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-4">
+        <FadeInView className="text-center mb-14">
+          <span className="inline-block text-xs font-semibold text-primary tracking-widest uppercase bg-primary/5 border border-primary/10 rounded-full px-3 py-1 mb-4">Marketplace</span>
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mt-2 mb-4">
             Templates that <span className="text-gradient">win deals</span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-base lg:text-lg max-w-xl mx-auto">
             Browse templates built by top-earning freelancers. All templates are currently free.
           </p>
         </FadeInView>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {templates.map((template, i) => (
             <FadeInView key={i} delay={i * 0.08}>
               <motion.div
-                whileHover={{ y: -4 }}
-                className="group rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-glow cursor-pointer"
+                whileHover={{ y: -3 }}
+                className="group rounded-2xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/[0.03] cursor-pointer"
                 onClick={() => navigate(user ? "/marketplace" : "/auth?mode=signup")}
               >
-                <div className="h-36 bg-secondary/50 flex items-center justify-center border-b border-border">
+                <div className="h-32 bg-muted/30 flex items-center justify-center border-b border-border">
                   <div className="w-3/4 space-y-2">
-                    <div className="h-3 rounded bg-muted-foreground/10 w-full" />
-                    <div className="h-3 rounded bg-muted-foreground/10 w-4/5" />
-                    <div className="h-3 rounded bg-muted-foreground/10 w-3/5" />
-                    <div className="h-2 rounded bg-primary/20 w-1/3 mt-3" />
+                    <div className="h-3 rounded bg-muted w-full" />
+                    <div className="h-3 rounded bg-muted w-4/5" />
+                    <div className="h-3 rounded bg-muted w-3/5" />
+                    <div className="h-2 rounded bg-primary/15 w-1/3 mt-3" />
                   </div>
                 </div>
-                <div className="p-5">
+                <div className="p-4">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-display text-sm font-semibold text-card-foreground">{template.name}</h3>
-                    <span className="text-xs font-semibold text-success px-2 py-0.5 rounded-full bg-success/10">
+                    <span className="text-[10px] font-semibold text-primary px-2 py-0.5 rounded-full bg-primary/10">
                       Free
                     </span>
                   </div>

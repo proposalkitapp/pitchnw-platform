@@ -76,7 +76,7 @@ export function Navbar() {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-background/85 backdrop-blur-xl border-b border-border/50"
+          ? "bg-background/90 backdrop-blur-xl border-b border-border"
           : "bg-transparent border-b border-transparent"
       }`}
     >
@@ -87,7 +87,7 @@ export function Navbar() {
             onClick={(e) => { e.preventDefault(); navigate("/"); }}
             className="flex items-center gap-2"
           >
-            <img src={proposalLogo} alt="ProposalKit" className="h-24 w-auto" />
+            <img src={proposalLogo} alt="ProposalKit" className="h-20 w-auto" />
           </a>
 
           {user && displayName && (
@@ -116,13 +116,13 @@ export function Navbar() {
             })}
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
             {publicNavLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
               >
                 {link.label}
               </a>
@@ -130,8 +130,8 @@ export function Navbar() {
           </nav>
         )}
 
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground h-9 w-9">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
@@ -139,7 +139,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="hidden md:inline-flex text-muted-foreground"
+              className="hidden md:inline-flex text-muted-foreground h-9 w-9"
               onClick={handleSignOut}
               title="Sign out"
             >
@@ -159,7 +159,7 @@ export function Navbar() {
                 size="sm"
                 onClick={() => navigate("/auth?mode=signup")}
               >
-                Get Started Free
+                Get Started
               </Button>
             </div>
           )}
@@ -167,7 +167,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-foreground"
+            className="md:hidden text-foreground h-9 w-9"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -182,7 +182,7 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl overflow-hidden"
+            className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl overflow-hidden"
           >
             <div className="flex flex-col gap-1 p-4">
               {user ? (
@@ -211,7 +211,7 @@ export function Navbar() {
                       key={link.href}
                       href={link.href}
                       onClick={(e) => handleNavClick(e, link.href)}
-                      className="rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                      className="rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
                       {link.label}
                     </a>
