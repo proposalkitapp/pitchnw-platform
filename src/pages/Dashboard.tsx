@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap } from "lucide-react";
+import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Proposal {
   id: string;
@@ -27,6 +28,225 @@ function getGreeting(): string {
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
+}
+
+function parseProposalContent(content: string): Record<string, any> | null {
+  try {
+    // Try to extract JSON from possible markdown code blocks
+    let jsonStr = content.trim();
+    if (jsonStr.startsWith("```")) {
+      jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+    }
+    return JSON.parse(jsonStr);
+  } catch {
+    return null;
+  }
+}
+
+function formatSectionTitle(key: string): string {
+  const titles: Record<string, string> = {
+    executiveSummary: "Executive Summary",
+    problemStatement: "Problem Statement",
+    proposedSolution: "Proposed Solution",
+    uniqueAdvantage: "Unique Advantage",
+    scopeOfWork: "Scope of Work",
+    timeline: "Timeline",
+    pricing: "Pricing",
+    investmentJustification: "Investment Justification",
+    urgencyStatement: "Why This Matters Now",
+    termsAndConditions: "Terms & Conditions",
+    callToAction: "Next Steps",
+    projectBackground: "Project Background",
+    proposedApproach: "Proposed Approach",
+    teamAndCredentials: "Team & Credentials",
+    acceptanceAndNextSteps: "Acceptance & Next Steps",
+  };
+  return titles[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+}
+
+function ProposalRenderer({ content, mode }: { content: string; mode: string | null }) {
+  const parsed = parseProposalContent(content);
+  
+  if (!parsed) {
+    // Fallback to raw text display
+    return (
+      <div className="prose prose-sm max-w-none">
+        <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
+          {content}
+        </pre>
+      </div>
+    );
+  }
+
+  const isSalesPitch = mode === "sales_pitch";
+
+  return (
+    <div className="space-y-8">
+      {Object.entries(parsed).map(([key, value]) => {
+        if (!value) return null;
+
+        // Scope of Work - special rendering
+        if (key === "scopeOfWork" && typeof value === "object" && !Array.isArray(value)) {
+          const scope = value as { included?: string[]; notIncluded?: string[] };
+          return (
+            <div key={key} className="space-y-4">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                {formatSectionTitle(key)}
+              </h3>
+              {scope.included && scope.included.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">✅ Included</h4>
+                  <ul className="space-y-1.5">
+                    {scope.included.map((item, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {scope.notIncluded && scope.notIncluded.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">❌ Not Included</h4>
+                  <ul className="space-y-1.5">
+                    {scope.notIncluded.map((item, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <span className="text-destructive mt-0.5">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Timeline - table rendering
+        if (key === "timeline" && Array.isArray(value)) {
+          return (
+            <div key={key} className="space-y-3">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                {formatSectionTitle(key)}
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 pr-4 font-semibold text-foreground">Phase</th>
+                      <th className="text-left py-2 pr-4 font-semibold text-foreground">Duration</th>
+                      <th className="text-left py-2 font-semibold text-foreground">Deliverables</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {value.map((phase: any, i: number) => (
+                      <tr key={i} className="border-b border-border/50">
+                        <td className="py-3 pr-4 text-card-foreground font-medium">{phase.phase}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">{phase.duration}</td>
+                        <td className="py-3 text-muted-foreground">
+                          {Array.isArray(phase.deliverables) ? phase.deliverables.join(", ") : phase.deliverables}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+
+        // Pricing - table rendering
+        if (key === "pricing" && Array.isArray(value)) {
+          return (
+            <div key={key} className="space-y-3">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                {formatSectionTitle(key)}
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 pr-4 font-semibold text-foreground">Item</th>
+                      <th className="text-left py-2 pr-4 font-semibold text-foreground">Description</th>
+                      <th className="text-right py-2 font-semibold text-foreground">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {value.map((item: any, i: number) => (
+                      <tr key={i} className="border-b border-border/50">
+                        <td className="py-3 pr-4 text-card-foreground font-medium">{item.item}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">{item.description}</td>
+                        <td className="py-3 text-right text-card-foreground font-semibold font-mono">{item.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        }
+
+        // Investment Justification - special green card for sales pitch
+        if (key === "investmentJustification" && isSalesPitch && typeof value === "string") {
+          return (
+            <div key={key} className="space-y-3">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                💰 {formatSectionTitle(key)}
+              </h3>
+              <div className="rounded-xl border border-success/20 bg-success/5 p-5">
+                <p className="text-sm text-card-foreground leading-relaxed">{value}</p>
+              </div>
+            </div>
+          );
+        }
+
+        // Urgency Statement - highlighted card for sales pitch
+        if (key === "urgencyStatement" && isSalesPitch && typeof value === "string") {
+          return (
+            <div key={key} className="space-y-3">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                ⏰ {formatSectionTitle(key)}
+              </h3>
+              <div className="rounded-xl border border-warning/20 bg-warning/5 p-5">
+                <p className="text-sm text-card-foreground leading-relaxed font-medium italic">
+                  "{value}"
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Call to Action - bold card for sales pitch
+        if (key === "callToAction" && isSalesPitch && typeof value === "string") {
+          return (
+            <div key={key} className="space-y-3">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                🚀 {formatSectionTitle(key)}
+              </h3>
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                <p className="text-sm text-card-foreground leading-relaxed font-medium">{value}</p>
+              </div>
+            </div>
+          );
+        }
+
+        // Default text section
+        if (typeof value === "string") {
+          return (
+            <div key={key} className="space-y-2">
+              <h3 className="font-display text-lg font-semibold text-card-foreground border-b border-border pb-2">
+                {formatSectionTitle(key)}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{value}</p>
+            </div>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -72,6 +292,10 @@ export default function Dashboard() {
   };
 
   const deleteProposal = async (id: string) => {
+    if (plan === "free") {
+      toast.error("Free plan users cannot delete proposals. Upgrade to Pro to manage your proposals.");
+      return;
+    }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete proposal");
@@ -105,6 +329,8 @@ export default function Dashboard() {
     won: "bg-success/10 text-success",
     lost: "bg-destructive/10 text-destructive",
   };
+
+  const canCreateProposal = plan !== "free" || totalProposals < 3;
 
   return (
     <AuthLayout>
@@ -204,7 +430,7 @@ export default function Dashboard() {
           size="lg"
           className="w-full mb-8 gap-2"
           onClick={() => {
-            if (plan === "free" && totalProposals >= 3) {
+            if (!canCreateProposal) {
               toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
               navigate("/settings");
               return;
@@ -233,14 +459,24 @@ export default function Dashboard() {
               >
                 <Download className="h-4 w-4" /> Export PDF
               </Button>
+              {selectedProposal.proposal_mode && (
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  selectedProposal.proposal_mode === "sales_pitch"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-secondary text-muted-foreground"
+                }`}>
+                  {selectedProposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal Proposal"}
+                </span>
+              )}
             </div>
             <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="font-display text-xl font-semibold mb-4 text-card-foreground">
+              <h2 className="font-display text-2xl font-bold mb-6 text-card-foreground">
                 {selectedProposal.title}
               </h2>
-              <pre className="whitespace-pre-wrap font-body text-sm text-card-foreground leading-relaxed">
-                {selectedProposal.generated_content}
-              </pre>
+              <ProposalRenderer
+                content={selectedProposal.generated_content}
+                mode={selectedProposal.proposal_mode}
+              />
             </div>
           </motion.div>
         ) : (
@@ -280,13 +516,13 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="rounded-xl border border-border bg-card p-4 flex items-center justify-between hover:border-primary/30 transition-colors"
+                    className="rounded-xl border border-border bg-card p-4 flex items-center justify-between hover:border-primary/20 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-semibold text-card-foreground truncate text-sm">
                         {proposal.title}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                         {proposal.client_name && <span>{proposal.client_name}</span>}
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -298,7 +534,7 @@ export default function Dashboard() {
                         {proposal.proposal_mode && (
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
                             proposal.proposal_mode === "sales_pitch"
-                              ? "bg-emerald-500/10 text-emerald-600"
+                              ? "bg-primary/10 text-primary"
                               : "bg-secondary text-muted-foreground"
                           }`}>
                             {proposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal"}
@@ -328,14 +564,32 @@ export default function Dashboard() {
                           <Link2 className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => deleteProposal(proposal.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {plan === "free" ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground/40 cursor-not-allowed"
+                              disabled
+                            >
+                              <Lock className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Upgrade to Pro to delete proposals</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => deleteProposal(proposal.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
