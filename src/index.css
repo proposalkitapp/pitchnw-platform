@@ -124,8 +124,8 @@
   }
 }
 
-/* Grain overlay */
-body::before {
+/* Grain overlay - only in dark mode */
+.dark body::before {
   content: '';
   position: fixed;
   inset: 0;
