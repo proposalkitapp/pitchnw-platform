@@ -2,12 +2,12 @@ import proposalLogo from "@/assets/proposal-logo.png";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-12">
+    <footer className="border-t border-border py-12 bg-muted/20">
       <div className="container mx-auto px-4">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src={proposalLogo} alt="ProposalKit" className="h-20 w-auto" />
+              <img src={proposalLogo} alt="ProposalKit" className="h-16 w-auto" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Generate. Customize. Close. The AI-powered proposal platform for freelancers.
@@ -47,7 +47,7 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} ProposalKit AI. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground font-mono">
+          <p className="text-xs text-muted-foreground">
             Built for freelancers who mean business.
           </p>
         </div>

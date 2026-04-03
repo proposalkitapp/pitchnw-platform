@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 
 export function useTheme() {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window === "undefined") return true;
+    if (typeof window === "undefined") return false;
     const stored = localStorage.getItem("proposalkit-theme");
     if (stored) return stored === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return false; // Default to light mode
   });
 
   useEffect(() => {
