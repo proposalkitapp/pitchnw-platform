@@ -19,6 +19,7 @@ import ClientPortal from "./pages/ClientPortal.tsx";
 import PaymentCallback from "./pages/PaymentCallback.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Testimonials from "./pages/Testimonials.tsx";
 
 const queryClient = new QueryClient();
 
