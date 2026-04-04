@@ -36,9 +36,7 @@ export default function ClientPortal() {
 
   const fetchProposal = async () => {
     const { data, error } = await supabase
-      .from("proposals")
-      .select("*")
-      .eq("public_slug", slug)
+      .rpc("get_proposal_by_slug", { slug_param: slug })
       .single();
 
     if (error || !data) {
