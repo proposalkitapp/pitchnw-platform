@@ -15,7 +15,7 @@ export function useTheme() {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("proposalkit-theme", isDark ? "dark" : "light");
+    localStorage.setItem("pitchnw-theme", isDark ? "dark" : "light");
   }, [isDark]);
 
   const toggle = () => setIsDark((prev) => !prev);

@@ -64,6 +64,25 @@ const TRADITIONAL_JSON_SCHEMA = `Return a JSON object with exactly these keys:
   "acceptanceAndNextSteps": "Formal instructions for proceeding."
 }`;
 
+const PROJECT_TYPE_CONTEXT: Record<string, string> = {
+  "Web Design & Development":
+    "Use technical web development terminology. Reference phases like Discovery, Wireframing, Design, Development, Testing, and Launch. Mention responsive design, CMS, browser compatibility, performance optimization.",
+  "Brand Identity & Logo":
+    "Focus on brand strategy, visual identity, color psychology, typography, logo variations, and brand guidelines. Reference deliverables like primary logo, alternate versions, brand style guide, file formats.",
+  "Copywriting & Content":
+    "Reference content strategy, brand voice, tone of voice, editorial calendar, SEO, word counts, content types, and usage rights.",
+  Photography:
+    "Reference shot lists, lighting setups, location scouting, post-processing, image licensing, RAW files, delivery formats, and usage rights.",
+  "Social Media Management":
+    "Reference platforms by name, posting frequency, content pillars, engagement strategy, community management, analytics reporting, and monthly deliverables.",
+  "Video Production":
+    "Reference pre-production, production days, post-production, color grading, sound design, revisions, delivery formats, and distribution rights.",
+  "Business Consulting":
+    "Reference stakeholder interviews, situation analysis, strategic frameworks, implementation roadmap, deliverables matrix, and measurable KPIs.",
+  "SEO & Digital Marketing":
+    "Reference keyword research, technical SEO audit, backlink strategy, content optimization, Google Analytics, monthly reporting, and ranking disclaimers.",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -76,7 +95,6 @@ serve(async (req) => {
 
     const mode = proposalMode === "traditional" ? "traditional" : "sales_pitch";
 
-    // --- Auth & free plan enforcement ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -123,7 +141,6 @@ serve(async (req) => {
       }
     }
 
-    // --- Build prompts based on mode ---
     const baseSystemPrompt = mode === "sales_pitch" ? SALES_PITCH_SYSTEM : TRADITIONAL_SYSTEM;
     const jsonSchema = mode === "sales_pitch" ? SALES_PITCH_JSON_SCHEMA : TRADITIONAL_JSON_SCHEMA;
 
@@ -133,7 +150,14 @@ serve(async (req) => {
       ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal. Do not use $ unless the client specifically uses USD.`
       : "";
 
-    const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}
+    // Project type specific context
+    const projectType = formData.projectType || "General";
+    const projectTypeCtx = PROJECT_TYPE_CONTEXT[projectType] || "";
+    const projectTypeInstruction = projectTypeCtx
+      ? `\n\nIMPORTANT: This is a ${projectType} project. Write content that is highly specific to this type of work. Use terminology, deliverables, and framing that is native to ${projectType} professionals. Do not write a generic proposal that could apply to any project type. Every section must reflect the specific nature of ${projectType} work.\n\nINDUSTRY CONTEXT: ${projectTypeCtx}`
+      : "";
+
+    const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}${projectTypeInstruction}
 
 ${jsonSchema}
 
