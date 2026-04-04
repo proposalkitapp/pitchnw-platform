@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import proposalLogo from "@/assets/proposal-logo.png";
+import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 import {
   Sidebar,
@@ -63,9 +63,9 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 px-2 py-3 mb-2">
             <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
               <img
-                src={proposalLogo}
-                alt="ProposalKit"
-                className={collapsed ? "h-10 w-auto" : "h-24 w-auto"}
+                src={pitchnwLogo}
+                alt="Pitchnw"
+                className={`${collapsed ? "h-10" : "h-24"} w-auto object-contain`}
               />
             </a>
           </div>
