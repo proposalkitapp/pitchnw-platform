@@ -174,6 +174,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_proposal_by_slug: {
+        Args: { slug_param: string }
+        Returns: {
+          budget: string | null
+          client_email: string | null
+          client_name: string | null
+          client_signature_data: string | null
+          client_signed_name: string | null
+          created_at: string
+          deliverables: string | null
+          description: string | null
+          generated_content: string
+          id: string
+          industry: string | null
+          is_locked: boolean
+          project_type: string | null
+          proposal_mode: string
+          public_slug: string | null
+          signed_at: string | null
+          status: string
+          timeline: string | null
+          title: string
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "proposals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
