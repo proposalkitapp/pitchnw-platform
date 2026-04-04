@@ -43,7 +43,7 @@ serve(async (req) => {
       );
     }
 
-    const callbackUrl = Deno.env.get("CALLBACK_URL") || "https://proposalkits.lovable.app/payment/callback";
+    const callbackUrl = Deno.env.get("CALLBACK_URL") || "https://pitchnw.lovable.app/payment/callback";
 
     const response = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
