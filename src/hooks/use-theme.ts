@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 export function useTheme() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === "undefined") return false;
-    const stored = localStorage.getItem("proposalkit-theme");
+    const stored = localStorage.getItem("pitchnw-theme");
     if (stored) return stored === "dark";
     return false; // Default to light mode
   });
