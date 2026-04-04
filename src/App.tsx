@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/p/:slug" element={<ClientPortal />} />
             <Route path="/payment/callback" element={<PaymentCallback />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/testimonials" element={<Testimonials />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
