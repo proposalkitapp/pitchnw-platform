@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import proposalLogo from "@/assets/proposal-logo.png";
+import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 const publicNavLinks = [
   { label: "Features", href: "#features" },
@@ -87,7 +87,7 @@ export function Navbar() {
             onClick={(e) => { e.preventDefault(); navigate("/"); }}
             className="flex items-center gap-2"
           >
-            <img src={proposalLogo} alt="ProposalKit" className="h-20 w-auto" />
+            <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
           </a>
 
           {user && displayName && (

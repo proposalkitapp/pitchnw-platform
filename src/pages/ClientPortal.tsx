@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Check, X, Loader2 } from "lucide-react";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
-import proposalLogo from "@/assets/proposal-logo.png";
+import { ProposalRenderer } from "@/components/ProposalRenderer";
+import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 export default function ClientPortal() {
   const { slug } = useParams();
@@ -38,7 +39,6 @@ export default function ClientPortal() {
     const { data, error } = await supabase
       .rpc("get_proposal_by_slug", { slug_param: slug })
       .single();
-
     if (error || !data) {
       setNotFound(true);
     } else {
@@ -48,14 +48,8 @@ export default function ClientPortal() {
   };
 
   const handleAccept = async () => {
-    if (!clientName.trim()) {
-      toast.error("Please enter your full name");
-      return;
-    }
-    if (!clientSignature) {
-      toast.error("Please provide your signature");
-      return;
-    }
+    if (!clientName.trim()) { toast.error("Please enter your full name"); return; }
+    if (!clientSignature) { toast.error("Please provide your signature"); return; }
     setSubmitting(true);
     const { error } = await supabase
       .from("proposals")
@@ -74,13 +68,7 @@ export default function ClientPortal() {
         event_type: "accept",
         metadata: { clientName },
       });
-      setProposal({
-        ...proposal,
-        status: "won",
-        is_locked: true,
-        client_signed_name: clientName,
-        client_signature_data: clientSignature,
-      });
+      setProposal({ ...proposal, status: "won", is_locked: true, client_signed_name: clientName, client_signature_data: clientSignature });
       setShowAcceptModal(false);
       toast.success("Proposal accepted!");
     } else {
@@ -127,18 +115,15 @@ export default function ClientPortal() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Signed watermark */}
       {isAccepted && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-          <span className="text-[120px] font-display font-extrabold text-indigo-500/[0.04] -rotate-45 select-none">
-            SIGNED
-          </span>
+          <span className="text-[120px] font-display font-extrabold text-indigo-500/[0.04] -rotate-45 select-none">SIGNED</span>
         </div>
       )}
 
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src={proposalLogo} alt="ProposalKit" className="h-24 w-auto" />
+          <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
           <span className="text-xs text-gray-400 font-mono">Proposal</span>
         </div>
       </header>
@@ -170,13 +155,11 @@ export default function ClientPortal() {
           </p>
         </div>
 
-        <div className="prose prose-gray max-w-none">
-          <div className="whitespace-pre-wrap text-gray-700 leading-relaxed text-base" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            {proposal.generated_content}
-          </div>
-        </div>
+        <ProposalRenderer
+          content={proposal.generated_content}
+          mode={proposal.proposal_mode}
+        />
 
-        {/* Signature Block */}
         {isAccepted && (
           <div className="mt-12 border-t-2 border-gray-200 pt-8">
             <h3 className="text-sm font-mono uppercase tracking-wider text-gray-400 mb-6">Signatures</h3>
@@ -200,12 +183,11 @@ export default function ClientPortal() {
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
-              <Check className="h-3 w-3" /> Digitally signed via ProposalKit AI
+              <Check className="h-3 w-3" /> Digitally signed via Pitchnw
             </p>
           </div>
         )}
 
-        {/* Action Buttons */}
         {!isAccepted && !isDeclined && (
           <div className="mt-12 pt-8 border-t border-gray-200 space-y-3">
             <Button
@@ -225,46 +207,23 @@ export default function ClientPortal() {
         )}
       </main>
 
-      {/* Accept Modal with Signature */}
       {showAcceptModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
-              Confirm Your Acceptance
-            </h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Please sign below to confirm you accept this proposal.
-            </p>
-
+            <h2 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>Confirm Your Acceptance</h2>
+            <p className="text-sm text-gray-500 mb-4">Please sign below to confirm you accept this proposal.</p>
             <div className="mb-4">
               <label className="text-sm font-medium text-gray-700 mb-2 block">Your Signature</label>
-              <SignatureCanvas
-                onSignatureChange={setClientSignature}
-                height={120}
-                lightMode
-              />
+              <SignatureCanvas onSignatureChange={setClientSignature} height={120} lightMode />
             </div>
-
             <div className="mb-4">
               <label className="text-sm font-medium text-gray-700 mb-1 block">Full Name</label>
-              <Input
-                placeholder="Your full name"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="border-gray-300"
-              />
+              <Input placeholder="Your full name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="border-gray-300" />
             </div>
-
             <p className="text-xs text-gray-400 mb-6">Date: {new Date().toLocaleDateString()}</p>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowAcceptModal(false)} className="flex-1">
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleAccept}
-                disabled={submitting || !clientName.trim() || !clientSignature}
-              >
+              <Button variant="outline" onClick={() => setShowAcceptModal(false)} className="flex-1">Cancel</Button>
+              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={handleAccept} disabled={submitting || !clientName.trim() || !clientSignature}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Sign"}
               </Button>
             </div>
@@ -272,13 +231,10 @@ export default function ClientPortal() {
         </div>
       )}
 
-      {/* Decline Modal */}
       {showDeclineModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
-              Decline Proposal
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>Decline Proposal</h2>
             <p className="text-sm text-gray-500 mb-4">Let us know why (optional)</p>
             <textarea
               className="w-full border border-gray-300 rounded-lg p-3 text-sm mb-4 resize-none"
@@ -288,9 +244,7 @@ export default function ClientPortal() {
               onChange={(e) => setDeclineReason(e.target.value)}
             />
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowDeclineModal(false)} className="flex-1">
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setShowDeclineModal(false)} className="flex-1">Cancel</Button>
               <Button className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={handleDecline} disabled={submitting}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Decline"}
               </Button>

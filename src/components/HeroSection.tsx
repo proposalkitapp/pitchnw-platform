@@ -20,14 +20,10 @@ export function HeroSection() {
 
   return (
     <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
-      {/* Subtle gradient bg */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />
-      
-      {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border)/0.08)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border)/0.08)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,black_20%,transparent_100%)]" />
 
       <div className="container relative z-10 mx-auto px-4 text-center">
-        {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -41,7 +37,6 @@ export function HeroSection() {
           <span className="text-xs font-medium text-primary tracking-wide">Now live — Free to start</span>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -53,18 +48,16 @@ export function HeroSection() {
           into <span className="text-gradient">winning proposals</span>
         </motion.h1>
 
-        {/* Subheading */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="mx-auto max-w-[540px] text-base lg:text-lg text-muted-foreground leading-relaxed mb-10"
         >
-          ProposalKit generates professional, branded proposals in 60 seconds — then tracks
+          Pitchnw generates professional, branded proposals in 60 seconds — then tracks
           every interaction so you know exactly when to follow up.
         </motion.p>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -85,7 +78,6 @@ export function HeroSection() {
           </Button>
         </motion.div>
 
-        {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -100,7 +92,6 @@ export function HeroSection() {
           ))}
         </motion.div>
 
-        {/* Product mockup */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -108,7 +99,6 @@ export function HeroSection() {
           className="mt-16 max-w-4xl mx-auto"
         >
           <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl shadow-primary/[0.04]">
-            {/* Browser chrome */}
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-destructive/40" />
@@ -117,11 +107,10 @@ export function HeroSection() {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1 rounded-md bg-background text-xs font-mono text-muted-foreground border border-border">
-                  proposalkit.app/dashboard
+                  pitchnw.lovable.app/dashboard
                 </div>
               </div>
             </div>
-            {/* Dashboard mockup */}
             <div className="p-6 grid grid-cols-4 gap-4">
               <div className="col-span-1 space-y-3 hidden sm:block">
                 <div className="h-4 rounded bg-primary/15 w-3/4" />

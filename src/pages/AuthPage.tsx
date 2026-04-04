@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 const GoogleLogo = () => (
   <svg width="18" height="18" viewBox="0 0 18 18">
@@ -44,7 +45,6 @@ export default function AuthPage() {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin + "/auth/callback",
       });
-
       if (result.error) {
         toast.error("Google sign in failed. Please try again.");
       }
@@ -69,7 +69,7 @@ export default function AuthPage() {
         navigate("/dashboard");
       } else {
         await signUp(email, password, displayName);
-        toast.success("Account created! Welcome to ProposalKit 🎉");
+        toast.success("Account created! Welcome to Pitchnw 🎉");
         navigate("/dashboard");
       }
     } catch (err: any) {
@@ -96,18 +96,16 @@ export default function AuthPage() {
           className="w-full max-w-md mx-auto px-4"
         >
           <div className="text-center mb-8">
+            <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold mb-2">
               {isLogin ? "Welcome back" : "Create your account"}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin
-                ? "Sign in to manage your proposals"
-                : "Start generating AI-powered proposals"}
+              {isLogin ? "Sign in to manage your proposals" : "Start generating AI-powered proposals"}
             </p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5">
-            {/* Google OAuth Button */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
@@ -127,30 +125,19 @@ export default function AuthPage() {
               )}
             </button>
 
-            {/* Divider */}
             <div className="flex items-center gap-3 my-4">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                or continue with email
-              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">or continue with email</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
-            {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
                 <div>
                   <Label htmlFor="displayName">Display Name</Label>
                   <div className="relative mt-1.5">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="displayName"
-                      placeholder="John Doe"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
+                    <Input id="displayName" placeholder="John Doe" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10" required />
                   </div>
                 </div>
               )}
@@ -159,15 +146,7 @@ export default function AuthPage() {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative mt-1.5">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="pl-10"
-                  />
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10" />
                 </div>
               </div>
 
@@ -175,56 +154,27 @@ export default function AuthPage() {
                 <Label htmlFor="password">Password</Label>
                 <div className="relative mt-1.5">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={isLogin ? 1 : 8}
-                    className="pl-10"
-                  />
+                  <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={isLogin ? 1 : 8} className="pl-10" />
                 </div>
-                {!isLogin && (
-                  <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters</p>
-                )}
+                {!isLogin && <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters</p>}
               </div>
 
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full gap-2"
-                type="submit"
-                disabled={loading}
-              >
+              <Button variant="hero" size="lg" className="w-full gap-2" type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading
-                  ? "Please wait..."
-                  : isLogin
-                  ? "Sign In"
-                  : "Create Account"}
+                {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
               {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary hover:underline font-medium"
-              >
+              <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline font-medium">
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
             </p>
 
             {isLogin && (
               <p className="text-center text-sm">
-                <button
-                  type="button"
-                  onClick={() => navigate("/forgot-password")}
-                  className="text-muted-foreground hover:text-primary hover:underline transition-colors"
-                >
+                <button type="button" onClick={() => navigate("/forgot-password")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
                   Forgot your password?
                 </button>
               </p>

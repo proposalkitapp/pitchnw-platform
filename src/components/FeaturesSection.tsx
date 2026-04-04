@@ -122,7 +122,7 @@ export function FeaturesSection() {
             <span className="text-gradient">win more deals</span>
           </h2>
           <p className="text-muted-foreground text-base lg:text-lg max-w-2xl mx-auto">
-            From AI generation to client tracking — ProposalKit is the all-in-one platform for freelancers who mean business.
+            From AI generation to client tracking — Pitchnw is the all-in-one platform for freelancers who mean business.
           </p>
         </FadeInView>
 
