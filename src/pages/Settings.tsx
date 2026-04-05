@@ -19,6 +19,8 @@ export default function Settings() {
   const [companyName, setCompanyName] = useState("");
   const [brandName, setBrandName] = useState("");
   const [brandLogoUrl, setBrandLogoUrl] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [portfolioError, setPortfolioError] = useState("");
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -35,7 +37,7 @@ export default function Settings() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, company_name, signature_data, plan, brand_name, brand_logo_url")
+        .select("display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
@@ -44,8 +46,9 @@ export default function Settings() {
             setCompanyName(data.company_name || "");
             setSignatureData(data.signature_data || null);
             setCurrentPlan(data.plan || "free");
-            setBrandName((data as any).brand_name || "");
-            setBrandLogoUrl((data as any).brand_logo_url || "");
+            setBrandName(data.brand_name || "");
+            setBrandLogoUrl(data.brand_logo_url || "");
+            setPortfolioUrl(data.portfolio_url || "");
           }
           setLoadingProfile(false);
         });
@@ -84,6 +87,11 @@ export default function Settings() {
 
   const handleSaveProfile = async () => {
     if (!user) return;
+    if (portfolioUrl && !portfolioUrl.startsWith("http://") && !portfolioUrl.startsWith("https://")) {
+      setPortfolioError("Please enter a valid URL starting with https://");
+      return;
+    }
+    setPortfolioError("");
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
@@ -93,7 +101,8 @@ export default function Settings() {
         signature_data: signatureData,
         brand_name: brandName,
         brand_logo_url: brandLogoUrl,
-      } as any)
+        portfolio_url: portfolioUrl || null,
+      })
       .eq("user_id", user.id);
     if (error) {
       toast.error("Failed to update profile");
