@@ -177,6 +177,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_creator_branding: {
+        Args: { creator_user_id: string }
+        Returns: {
+          brand_logo_url: string
+          brand_name: string
+          company_name: string
+          display_name: string
+          portfolio_url: string
+        }[]
+      }
       get_proposal_by_slug: {
         Args: { slug_param: string }
         Returns: {
