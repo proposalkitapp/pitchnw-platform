@@ -40,17 +40,26 @@ export default function Dashboard() {
   const [displayName, setDisplayName] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [plan, setPlan] = useState("free");
+  const [userBranding, setUserBranding] = useState<ProposalBranding>({});
 
   useEffect(() => {
     if (user) {
       fetchProposals();
       supabase
         .from("profiles")
-        .select("display_name, onboarding_completed, plan")
+        .select("display_name, onboarding_completed, plan, brand_logo_url, brand_name, company_name, portfolio_url")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
           setDisplayName(data?.display_name?.split(" ")[0] || "there");
+          setPlan(data?.plan || "free");
+          setUserBranding({
+            logoUrl: data?.brand_logo_url,
+            headerTitle: data?.brand_name,
+            companyName: data?.company_name,
+            displayName: data?.display_name,
+            portfolioUrl: data?.portfolio_url,
+          });
           setPlan(data?.plan || "free");
           if (data && !data.onboarding_completed) {
             setShowOnboarding(true);
@@ -258,6 +267,7 @@ export default function Dashboard() {
               <ProposalRenderer
                 content={selectedProposal.generated_content}
                 mode={selectedProposal.proposal_mode}
+                branding={userBranding}
               />
             </div>
           </motion.div>
