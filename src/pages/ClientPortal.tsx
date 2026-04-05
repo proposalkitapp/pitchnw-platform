@@ -32,13 +32,11 @@ export default function ClientPortal() {
         event_type: "open",
         metadata: { userAgent: navigator.userAgent },
       });
-      // Fetch creator's profile for branding
+      // Fetch creator's profile for branding via secure RPC
       supabase
-        .from("profiles")
-        .select("brand_logo_url, brand_name, company_name, display_name, portfolio_url")
-        .eq("user_id", proposal.user_id)
+        .rpc("get_creator_branding", { creator_user_id: proposal.user_id })
         .single()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (data) {
             setCreatorBranding({
               logoUrl: data.brand_logo_url,
