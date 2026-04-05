@@ -11,7 +11,7 @@ import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ProposalRenderer } from "@/components/ProposalRenderer";
+import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
 
 interface Proposal {
   id: string;
