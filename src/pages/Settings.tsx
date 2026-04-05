@@ -239,8 +239,26 @@ export default function Settings() {
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="pl-10"
                     />
-                  </div>
                 </div>
+                <div>
+                  <Label htmlFor="portfolioUrl">Portfolio Link (optional)</Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      id="portfolioUrl"
+                      type="url"
+                      placeholder="https://yourportfolio.com"
+                      value={portfolioUrl}
+                      onChange={(e) => { setPortfolioUrl(e.target.value); setPortfolioError(""); }}
+                      className={portfolioError ? "border-destructive" : ""}
+                    />
+                  </div>
+                  {portfolioError ? (
+                    <p className="text-xs text-destructive mt-1">{portfolioError}</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">Share your work with clients. This will appear on your proposals if added.</p>
+                  )}
+                </div>
+              </div>
               </div>
 
               {/* Brand Customization */}
