@@ -26,6 +26,7 @@ export type Database = {
           is_admin: boolean
           onboarding_completed: boolean
           plan: string
+          portfolio_url: string | null
           signature_data: string | null
           updated_at: string
           user_id: string
@@ -41,6 +42,7 @@ export type Database = {
           is_admin?: boolean
           onboarding_completed?: boolean
           plan?: string
+          portfolio_url?: string | null
           signature_data?: string | null
           updated_at?: string
           user_id: string
@@ -56,6 +58,7 @@ export type Database = {
           is_admin?: boolean
           onboarding_completed?: boolean
           plan?: string
+          portfolio_url?: string | null
           signature_data?: string | null
           updated_at?: string
           user_id?: string
@@ -174,6 +177,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_creator_branding: {
+        Args: { creator_user_id: string }
+        Returns: {
+          brand_logo_url: string
+          brand_name: string
+          company_name: string
+          display_name: string
+          portfolio_url: string
+        }[]
+      }
       get_proposal_by_slug: {
         Args: { slug_param: string }
         Returns: {

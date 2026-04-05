@@ -1,5 +1,3 @@
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
-
 const SECTION_TITLES: Record<string, string> = {
   executiveSummary: "Executive Summary",
   problemStatement: "Problem Statement",
@@ -152,7 +150,6 @@ function PricingTable({ value }: { value: any[] }) {
             <tr className="border-t-2 border-primary/30 bg-primary/5">
               <td colSpan={2} className="py-3 px-4 font-bold text-[#374151]" style={{ fontFamily: "'Syne', sans-serif" }}>Total</td>
               <td className="py-3 px-4 text-right font-bold text-primary font-mono">
-                {/* Sum amounts if they look numeric */}
                 {(() => {
                   const amounts = value.map((v: any) => {
                     const num = parseFloat(String(v.amount).replace(/[^0-9.]/g, ""));
@@ -174,13 +171,21 @@ function PricingTable({ value }: { value: any[] }) {
   );
 }
 
+export interface ProposalBranding {
+  logoUrl?: string | null;
+  headerTitle?: string | null;
+  companyName?: string | null;
+  displayName?: string | null;
+  portfolioUrl?: string | null;
+}
+
 interface ProposalRendererProps {
   content: string;
   mode: string | null;
-  brandHeaderTitle?: string;
+  branding?: ProposalBranding;
 }
 
-export function ProposalRenderer({ content, mode, brandHeaderTitle }: ProposalRendererProps) {
+export function ProposalRenderer({ content, mode, branding }: ProposalRendererProps) {
   const parsed = parseContent(content);
 
   if (!parsed) {
@@ -195,17 +200,39 @@ export function ProposalRenderer({ content, mode, brandHeaderTitle }: ProposalRe
 
   const isSalesPitch = mode === "sales_pitch";
 
+  const brandLabel = branding?.headerTitle || branding?.companyName || branding?.displayName;
+
   return (
     <div className="space-y-10">
-      {/* Pitchnw Brand Header */}
-      <div className="pb-6 border-b-2 border-primary">
-        <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mb-2" />
-        {brandHeaderTitle && (
-          <p className="text-sm font-medium text-muted-foreground mt-1" style={{ fontFamily: "'Syne', sans-serif" }}>
-            {brandHeaderTitle}
-          </p>
-        )}
-      </div>
+      {/* User Brand Header */}
+      {branding && (
+        <div className="pb-4">
+          {branding.logoUrl && (
+            <img
+              src={branding.logoUrl}
+              alt={brandLabel || "Brand"}
+              className="max-h-16 w-auto object-contain mb-2"
+            />
+          )}
+          {brandLabel && (
+            <p
+              className="text-lg font-bold text-foreground"
+              style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700 }}
+            >
+              {brandLabel}
+            </p>
+          )}
+          {branding.portfolioUrl && (
+            <p className="text-[13px] font-medium text-primary mt-1" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+              🔗{" "}
+              <a href={branding.portfolioUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                View Portfolio
+              </a>
+            </p>
+          )}
+          <div className="mt-3 h-[3px] w-full bg-primary rounded-full" />
+        </div>
+      )}
 
       {Object.entries(parsed).map(([key, value]) => {
         if (!value) return null;
