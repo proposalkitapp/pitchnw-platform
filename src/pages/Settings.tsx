@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Building, Save, Lock, Loader2, CreditCard, Check, Sparkles, PenTool, Image, Upload } from "lucide-react";
+import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { useNavigate } from "react-router-dom";
 
@@ -24,8 +25,12 @@ export default function Settings() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState("free");
-  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [dodoSubscriptionId, setDodoSubscriptionId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,27 +38,35 @@ export default function Settings() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setDisplayName(data.display_name || "");
-            setCompanyName(data.company_name || "");
-            setSignatureData(data.signature_data || null);
-            setCurrentPlan(data.plan || "free");
-            setBrandName(data.brand_name || "");
-            setBrandLogoUrl(data.brand_logo_url || "");
-            setPortfolioUrl(data.portfolio_url || "");
-          }
-          setLoadingProfile(false);
-        });
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+    setLoadingProfile(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select(
+        "display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
+      )
+      .eq("user_id", user.id)
+      .single();
+    if (data) {
+      setDisplayName(data.display_name || "");
+      setCompanyName(data.company_name || "");
+      setSignatureData(data.signature_data || null);
+      setCurrentPlan(data.plan ?? "free");
+      setBrandName(data.brand_name || "");
+      setBrandLogoUrl(data.brand_logo_url || "");
+      setPortfolioUrl(data.portfolio_url || "");
+      setSubscriptionStatus(data.subscription_status);
+      setSubscriptionPeriodEnd(data.subscription_period_end);
+      setTrialEndsAt(data.trial_ends_at);
+      setDodoSubscriptionId(data.dodo_subscription_id);
     }
+    setLoadingProfile(false);
   }, [user]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,24 +149,49 @@ export default function Settings() {
     }
   };
 
-  const handleUpgrade = async (planName: string) => {
+  const handleCancel = async () => {
     if (!user) return;
-    setUpgradingPlan(planName);
+    setCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-paystack-subscription", {
-        body: { plan: planName, userEmail: user.email, userId: user.id },
-      });
-      if (error) throw new Error(error.message);
-      if (data?.authorization_url) {
-        window.location.href = data.authorization_url;
-      } else {
-        throw new Error("No authorization URL returned");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in again.");
+        return;
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start payment");
-      setUpgradingPlan(null);
+      const { error } = await supabase.functions.invoke("cancel-subscription", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      if (error) {
+        toast.error("Cancellation failed. Please try again.");
+        return;
+      }
+      toast.success(
+        "Subscription cancelled. You keep access until the end of your billing period.",
+      );
+      await loadProfile();
+    } catch {
+      toast.error("Cancellation failed. Please try again.");
+    } finally {
+      setCancelling(false);
     }
   };
+
+  const trialActive =
+    trialEndsAt &&
+    new Date(trialEndsAt) > new Date() &&
+    (currentPlan === "free" || currentPlan === null) &&
+    subscriptionStatus !== "active";
+  const trialExpired =
+    trialEndsAt &&
+    new Date(trialEndsAt) <= new Date() &&
+    (currentPlan === "free" || currentPlan === null);
+  const trialDaysLeft = trialActive
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   if (loadingProfile) {
     return (
@@ -239,6 +277,7 @@ export default function Settings() {
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="pl-10"
                     />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="portfolioUrl">Portfolio Link (optional)</Label>
@@ -258,7 +297,6 @@ export default function Settings() {
                     <p className="text-xs text-muted-foreground mt-1">Share your work with clients. This will appear on your proposals if added.</p>
                   )}
                 </div>
-              </div>
               </div>
 
               {/* Brand Customization */}
@@ -396,60 +434,143 @@ export default function Settings() {
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="space-y-6">
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-                <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground mb-4">
-                  <CreditCard className="h-5 w-5 text-primary" /> Current Plan
+              {subscriptionStatus === "past_due" && (
+                <Alert className="border-warning/50 bg-warning/10 text-foreground">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  <AlertTitle>Payment failed</AlertTitle>
+                  <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
+                    <span>Your last payment failed. Update your payment method in Dodo Payments checkout.</span>
+                    <Button size="sm" variant="hero" onClick={() => navigate("/checkout")}>
+                      Retry payment
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-3">
+                <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
+                  <CreditCard className="h-5 w-5 text-primary" /> Billing & subscription
                 </h2>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className={`inline-block text-xs font-mono uppercase tracking-wider px-3 py-1 rounded-full ${
-                    currentPlan === "free" ? "bg-secondary text-muted-foreground" :
-                    currentPlan === "pro" ? "bg-primary/10 text-primary" :
-                    "bg-success/10 text-success"
-                  }`}>
-                    {currentPlan === "free" ? "Free Plan" : currentPlan === "pro" ? "Pro Plan" : "Standard Plan"}
-                  </span>
-                </div>
                 <p className="text-sm text-muted-foreground">
-                  {currentPlan === "free" ? "3 proposals · Free templates only · Cannot delete proposals" :
-                   currentPlan === "pro" ? "Unlimited proposals · All templates · Full analytics" :
-                   "Everything in Pro + Template Builder + AI Win-Rate Coach"}
+                  Payments are processed securely by Dodo Payments.
                 </p>
+
+                {currentPlan === "pro" && subscriptionStatus === "active" && (
+                  <div className="space-y-1 pt-2">
+                    <p className="font-medium text-foreground">💜 Pro Plan · Active</p>
+                    <p className="text-sm text-muted-foreground">Renews monthly</p>
+                    {subscriptionPeriodEnd && (
+                      <p className="text-xs text-muted-foreground">
+                        Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
+                      </p>
+                    )}
+                    {dodoSubscriptionId && (
+                      <button
+                        type="button"
+                        className="text-sm text-primary hover:underline mt-2"
+                        disabled={cancelling}
+                        onClick={handleCancel}
+                      >
+                        {cancelling ? "Cancelling…" : "Cancel subscription"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {currentPlan === "standard" && subscriptionStatus === "active" && (
+                  <div className="space-y-1 pt-2">
+                    <p className="font-medium text-foreground">⭐ Standard Plan · Active</p>
+                    <p className="text-sm text-muted-foreground">Renews monthly</p>
+                    {subscriptionPeriodEnd && (
+                      <p className="text-xs text-muted-foreground">
+                        Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
+                      </p>
+                    )}
+                    {dodoSubscriptionId && (
+                      <button
+                        type="button"
+                        className="text-sm text-primary hover:underline mt-2"
+                        disabled={cancelling}
+                        onClick={handleCancel}
+                      >
+                        {cancelling ? "Cancelling…" : "Cancel subscription"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {subscriptionStatus === "cancelled" && (currentPlan === "pro" || currentPlan === "standard") && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-sm text-muted-foreground">Cancels at end of billing period.</p>
+                    <Button variant="hero-outline" size="sm" onClick={() => navigate("/checkout")}>
+                      Reactivate
+                    </Button>
+                  </div>
+                )}
+
+                {trialActive && (
+                  <div className="pt-2 space-y-1">
+                    <p className="font-medium text-foreground">Trial active</p>
+                    <p className="text-sm text-muted-foreground">
+                      {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} remaining on your trial.
+                    </p>
+                  </div>
+                )}
+
+                {trialExpired && (
+                  <div className="pt-2 space-y-3">
+                    <p className="font-medium text-foreground">Your trial has ended</p>
+                    <Button variant="hero" size="sm" onClick={() => navigate("/checkout")}>
+                      Choose a plan
+                    </Button>
+                  </div>
+                )}
+
+                {(currentPlan === "free" || currentPlan === null) &&
+                  subscriptionStatus !== "active" &&
+                  !trialActive &&
+                  !trialExpired && (
+                    <div className="pt-2 space-y-1">
+                      <p className="text-sm text-muted-foreground">
+                        3 proposals · Free templates only · Cannot delete proposals
+                      </p>
+                    </div>
+                  )}
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
-                {plans.map((plan) => (
-                  <div
-                    key={plan.name}
-                    className="rounded-xl border border-border bg-card p-6 hover:border-primary/20 transition-colors"
-                  >
-                    <h3 className="font-display text-xl font-bold text-card-foreground">{plan.name}</h3>
-                    <div className="mt-2 mb-4">
-                      <span className="font-display text-3xl font-extrabold text-card-foreground">{plan.price}</span>
-                      <span className="text-sm text-muted-foreground">{plan.period}</span>
-                    </div>
-                    <ul className="space-y-2 mb-6">
-                      {plan.features.map((f, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button
-                      variant="hero"
-                      className="w-full gap-2"
-                      disabled={currentPlan === plan.name.toLowerCase() || upgradingPlan !== null}
-                      onClick={() => handleUpgrade(plan.name.toLowerCase())}
+                {plans.map((plan) => {
+                  const key = plan.name.toLowerCase();
+                  const isCurrent = currentPlan === key && subscriptionStatus === "active";
+                  return (
+                    <div
+                      key={plan.name}
+                      className="rounded-xl border border-border bg-card p-6 hover:border-primary/20 transition-colors"
                     >
-                      {upgradingPlan === plan.name.toLowerCase() ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-4 w-4" />
-                      )}
-                      {currentPlan === plan.name.toLowerCase() ? "Current Plan" : `Upgrade to ${plan.name}`}
-                    </Button>
-                  </div>
-                ))}
+                      <h3 className="font-display text-xl font-bold text-card-foreground">{plan.name}</h3>
+                      <div className="mt-2 mb-4">
+                        <span className="font-display text-3xl font-extrabold text-card-foreground">{plan.price}</span>
+                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      </div>
+                      <ul className="space-y-2 mb-6">
+                        {plan.features.map((f, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        variant="hero"
+                        className="w-full gap-2"
+                        disabled={isCurrent}
+                        onClick={() => navigate(`/checkout?plan=${key}`)}
+                      >
+                        {isCurrent ? "Current plan" : `Upgrade to ${plan.name}`}
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </TabsContent>
           </Tabs>

@@ -22,12 +22,17 @@ export type Database = {
           company_name: string | null
           created_at: string
           display_name: string | null
+          dodo_customer_id: string | null
+          dodo_subscription_id: string | null
           id: string
           is_admin: boolean
           onboarding_completed: boolean
-          plan: string
+          plan: string | null
           portfolio_url: string | null
           signature_data: string | null
+          subscription_period_end: string | null
+          subscription_status: string | null
+          trial_ends_at: string | null
           updated_at: string
           user_id: string
         }
@@ -38,12 +43,17 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           display_name?: string | null
+          dodo_customer_id?: string | null
+          dodo_subscription_id?: string | null
           id?: string
           is_admin?: boolean
           onboarding_completed?: boolean
-          plan?: string
+          plan?: string | null
           portfolio_url?: string | null
           signature_data?: string | null
+          subscription_period_end?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -54,12 +64,17 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           display_name?: string | null
+          dodo_customer_id?: string | null
+          dodo_subscription_id?: string | null
           id?: string
           is_admin?: boolean
           onboarding_completed?: boolean
-          plan?: string
+          plan?: string | null
           portfolio_url?: string | null
           signature_data?: string | null
+          subscription_period_end?: string | null
+          subscription_status?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
         }

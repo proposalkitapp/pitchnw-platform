@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 const GoogleLogo = () => (
@@ -42,10 +42,13 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     try {
       setGoogleLoading(true);
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/auth/callback",
-      });
-      if (result.error) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback'
+        }
+      })
+      if (error) {
         toast.error("Google sign in failed. Please try again.");
       }
     } catch (err) {
@@ -55,6 +58,8 @@ export default function AuthPage() {
     }
   };
 
+  const redirectTo = searchParams.get("redirect");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLogin && password.length < 8) {
@@ -63,14 +68,15 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
+      const next = redirectTo?.startsWith("/") ? redirectTo : "/dashboard";
       if (isLogin) {
         await signIn(email, password);
         toast.success("Welcome back!");
-        navigate("/dashboard");
+        navigate(next);
       } else {
         await signUp(email, password, displayName);
         toast.success("Account created! Welcome to Pitchnw 🎉");
-        navigate("/dashboard");
+        navigate(next);
       }
     } catch (err: any) {
       const msg = err.message || "";

@@ -16,7 +16,8 @@ import CRM from "./pages/CRM.tsx";
 import Admin from "./pages/Admin.tsx";
 import TemplateDetail from "./pages/TemplateDetail.tsx";
 import ClientPortal from "./pages/ClientPortal.tsx";
-import PaymentCallback from "./pages/PaymentCallback.tsx";
+import Checkout from "./pages/Checkout.tsx";
+import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Testimonials from "./pages/Testimonials.tsx";
@@ -43,7 +44,8 @@ const App = () => (
             <Route path="/crm" element={<CRM />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/p/:slug" element={<ClientPortal />} />
-            <Route path="/payment/callback" element={<PaymentCallback />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/testimonials" element={<Testimonials />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
