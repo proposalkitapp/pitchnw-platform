@@ -35,7 +35,8 @@ export default function AuthPage() {
   const { signIn, signUp, session } = useAuth();
   const navigate = useNavigate();
 
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const redirectParam = searchParams.get("redirect");
+  const redirectTo = redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/dashboard";
 
   useEffect(() => {
     if (session) {

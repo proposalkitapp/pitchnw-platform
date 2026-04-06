@@ -3,11 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import DodoPayments from "npm:dodopayments@2.26.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+
 
 function dodoEnvironment(): "live_mode" | "test_mode" {
   const mode = Deno.env.get("DODO_PAYMENTS_ENVIRONMENT");
@@ -16,6 +12,13 @@ function dodoEnvironment(): "live_mode" | "test_mode" {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const isAllowed = origin && (origin.startsWith("http://localhost:") || origin === "https://pitchnw.app");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "https://pitchnw.app",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
