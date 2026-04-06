@@ -35,12 +35,12 @@ export function OnboardingModal({ displayName, onComplete }: Props) {
   const firstName = displayName?.split(" ")[0] || "there";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-md" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-background/40 backdrop-blur-xl" />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 w-full max-w-lg mx-4 rounded-2xl border border-border bg-card p-8 shadow-2xl"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative z-10 w-full max-w-xl rounded-2xl border border-white/10 bg-card/60 backdrop-blur-2xl p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] clay-shadow"
       >
         <div className="flex justify-center gap-2 mb-8">
           {[0, 1, 2, 3].map((i) => (

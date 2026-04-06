@@ -76,13 +76,19 @@ export default function Checkout() {
       });
 
       if (error || !data?.checkout_url) {
-        toast.error("Could not create checkout. Please try again.");
+        console.error("Full checkout error details:", error, data);
+        toast.error(
+          error?.message || 
+          data?.message || 
+          "Could not create checkout. Please try again."
+        );
         return;
       }
 
       window.location.href = data.checkout_url as string;
-    } catch {
-      toast.error("Something went wrong. Please try again.");
+    } catch (err: any) {
+      console.error("Checkout exception:", err);
+      toast.error(err?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(null);
     }

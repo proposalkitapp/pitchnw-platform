@@ -32,7 +32,7 @@ function getGreeting(): string {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,45 +42,56 @@ export default function Dashboard() {
   const [plan, setPlan] = useState("free");
   const [userBranding, setUserBranding] = useState<ProposalBranding>({});
 
+  const fetchProposals = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("proposals")
+        .select("id, title, client_name, status, created_at, generated_content, public_slug, proposal_mode")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast.error("Failed to load proposals");
+      } else {
+        setProposals(data || []);
+      }
+    } catch (err) {
+      console.error("fetchProposals error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (user) {
-      fetchProposals();
+    if (session?.user?.id) {
+      fetchProposals(session.user.id);
+      
       supabase
         .from("profiles")
         .select("display_name, onboarding_completed, plan, brand_logo_url, brand_name, company_name, portfolio_url")
-        .eq("user_id", user.id)
+        .eq("user_id", session.user.id)
         .single()
         .then(({ data }) => {
-          setDisplayName(data?.display_name?.split(" ")[0] || "there");
-          setPlan(data?.plan || "free");
-          setUserBranding({
-            logoUrl: data?.brand_logo_url,
-            headerTitle: data?.brand_name,
-            companyName: data?.company_name,
-            displayName: data?.display_name,
-            portfolioUrl: data?.portfolio_url,
-          });
-          setPlan(data?.plan || "free");
-          if (data && !data.onboarding_completed) {
-            setShowOnboarding(true);
+          if (data) {
+            setDisplayName(data.display_name?.split(" ")[0] || "there");
+            setPlan(data.plan || "free");
+            setUserBranding({
+              logoUrl: data.brand_logo_url,
+              headerTitle: data.brand_name,
+              companyName: data.company_name,
+              displayName: data.display_name,
+              portfolioUrl: data.portfolio_url,
+            });
+            if (!data.onboarding_completed) {
+              setShowOnboarding(true);
+            }
           }
         });
+    } else if (session === null) {
+      // Session has been checked and is null
+      setLoading(false);
     }
-  }, [user]);
-
-  const fetchProposals = async () => {
-    const { data, error } = await supabase
-      .from("proposals")
-      .select("id, title, client_name, status, created_at, generated_content, public_slug, proposal_mode")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load proposals");
-    } else {
-      setProposals(data || []);
-    }
-    setLoading(false);
-  };
+  }, [session]);
 
   const deleteProposal = async (id: string) => {
     if (plan === "free") {

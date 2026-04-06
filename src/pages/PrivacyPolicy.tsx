@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
         <p>We use administrative, technical, and physical security measures to help protect your personal information. All API interactions (including payments and auth) are handled securely using encrypted communication channels.</p>
 
         <div className="mt-12 pt-6 border-t border-border">
-          <p>If you have questions or comments about this Privacy Policy, please contact us at <a href="mailto:support@pitchnw.com" className="text-primary hover:underline">support@pitchnw.com</a>.</p>
+          <p>If you have questions or comments about this Privacy Policy, please contact us at <a href="mailto:support@pitchnw.app" className="text-primary hover:underline">support@pitchnw.app</a>.</p>
           <div className="mt-4">
             <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
           </div>

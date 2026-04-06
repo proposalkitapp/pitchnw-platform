@@ -32,7 +32,7 @@ export default function TermsOfService() {
         <p>Pitchnw provides this service "as is" and makes no guarantees regarding win rates, business outcomes, or uninterrupted availability. We shall not be held liable for any damages arising out of your use of the service or client interactions.</p>
 
         <div className="mt-12 pt-6 border-t border-border">
-          <p>If you have any questions about these Terms, please contact us at <a href="mailto:support@pitchnw.com" className="text-primary hover:underline">support@pitchnw.com</a>.</p>
+          <p>If you have any questions about these Terms, please contact us at <a href="mailto:support@pitchnw.app" className="text-primary hover:underline">support@pitchnw.app</a>.</p>
           <div className="mt-4">
             <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
           </div>

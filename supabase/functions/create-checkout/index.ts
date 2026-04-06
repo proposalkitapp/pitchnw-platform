@@ -53,8 +53,24 @@ serve(async (req) => {
     const { plan } = await req.json();
 
     if (!plan || !["pro", "standard"].includes(plan)) {
-      return new Response(JSON.stringify({ error: "Invalid plan" }), {
+      return new Response(JSON.stringify({ error: "Invalid plan", message: "A valid plan (pro or standard) is required." }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const apiKey = Deno.env.get("DODO_PAYMENTS_API_KEY");
+    const proProductId = Deno.env.get("DODO_PRO_PRODUCT_ID");
+    const standardProductId = Deno.env.get("DODO_STANDARD_PRODUCT_ID");
+    const appUrl = (Deno.env.get("APP_URL") || "").replace(/\/$/, "");
+
+    if (!apiKey || !proProductId || !standardProductId || !appUrl) {
+      console.error("Missing configuration:", { apiKey: !!apiKey, proProductId, standardProductId, appUrl });
+      return new Response(JSON.stringify({ 
+        error: "configuration_error", 
+        message: "Payment system not configured correctly. Please check environment variables (API Key, Product IDs, or APP_URL)." 
+      }), {
+        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -65,37 +81,12 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
-    const apiKey = Deno.env.get("DODO_PAYMENTS_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "Dodo Payments is not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const dodo = new DodoPayments({
       bearerToken: apiKey,
       environment: dodoEnvironment(),
     });
 
-    const productId = plan === "pro"
-      ? Deno.env.get("DODO_PRO_PRODUCT_ID")!
-      : Deno.env.get("DODO_STANDARD_PRODUCT_ID")!;
-
-    if (!productId) {
-      return new Response(JSON.stringify({ error: "Product ID not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const appUrl = (Deno.env.get("APP_URL") || "").replace(/\/$/, "");
-    if (!appUrl) {
-      return new Response(JSON.stringify({ error: "APP_URL is not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const productId = plan === "pro" ? proProductId : standardProductId;
 
     const displayName = profile?.display_name?.trim() || user.email || "Customer";
 
@@ -118,7 +109,7 @@ serve(async (req) => {
 
     const checkoutUrl = session.checkout_url;
     if (!checkoutUrl) {
-      return new Response(JSON.stringify({ error: "No checkout URL returned" }), {
+      return new Response(JSON.stringify({ error: "no_checkout_url", message: "No checkout URL returned from payment provider." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -134,12 +125,13 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (error) {
-    console.error("Checkout error:", error);
+  } catch (error: any) {
+    console.error("Full checkout error:", error);
     return new Response(
       JSON.stringify({
         error: "checkout_failed",
-        message: "Failed to create checkout. Please try again.",
+        original_error: error.message,
+        message: error.message || "Failed to create checkout. Please try again.",
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

@@ -106,23 +106,31 @@ export default function Settings() {
     }
     setPortfolioError("");
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName,
-        company_name: companyName,
-        signature_data: signatureData,
-        brand_name: brandName,
-        brand_logo_url: brandLogoUrl,
-        portfolio_url: portfolioUrl || null,
-      })
-      .eq("user_id", user.id);
-    if (error) {
-      toast.error("Failed to update profile");
-    } else {
-      toast.success("Profile updated ✓");
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_name: displayName,
+          company_name: companyName,
+          signature_data: signatureData,
+          brand_name: brandName,
+          brand_logo_url: brandLogoUrl,
+          portfolio_url: portfolioUrl || null,
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast.error("Failed to save profile. Please try again.");
+      } else {
+        toast.success("Profile saved ✓");
+      }
+    } catch (err) {
+      console.error("Save profile error:", err);
+      toast.error("Failed to save profile. Please try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
