@@ -30,8 +30,16 @@ export default function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, session } = useAuth();
   const navigate = useNavigate();
+
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
+
+  useEffect(() => {
+    if (session) {
+      navigate(redirectTo);
+    }
+  }, [session, navigate, redirectTo]);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -58,7 +66,7 @@ export default function AuthPage() {
     }
   };
 
-  const redirectTo = searchParams.get("redirect");
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

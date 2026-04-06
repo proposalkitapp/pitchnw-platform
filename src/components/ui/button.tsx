@@ -8,14 +8,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default: "bg-primary text-primary-foreground shadow-[var(--clay-shadow-primary)] hover:shadow-[var(--clay-shadow-hover)] active:shadow-[var(--clay-shadow-active)] hover:scale-[1.01] transition-transform",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[var(--clay-shadow)] active:shadow-[var(--clay-shadow-active)]",
+        outline: "bg-background hover:bg-accent hover:text-accent-foreground shadow-[var(--clay-shadow)] hover:shadow-[var(--clay-shadow-hover)] active:shadow-[var(--clay-shadow-active)] border-transparent",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-[var(--clay-shadow)] active:shadow-[var(--clay-shadow-active)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-105 font-display font-semibold tracking-wide",
-        "hero-outline": "border-2 border-primary/30 text-foreground hover:border-primary hover:bg-primary/10 font-display font-semibold tracking-wide",
+        hero: "bg-primary text-primary-foreground hover:bg-primary/95 shadow-[var(--clay-shadow-primary)] hover:shadow-[0_0_80px_-12px_hsl(var(--primary)/0.5)] active:shadow-[var(--clay-shadow-active)] hover:scale-105 font-display font-semibold tracking-wide border-transparent",
+        "hero-outline": "bg-transparent text-foreground shadow-[var(--clay-shadow)] hover:shadow-[var(--clay-shadow-hover)] active:shadow-[var(--clay-shadow-active)] font-display font-semibold tracking-wide border-transparent",
       },
       size: {
         default: "h-10 px-4 py-2",
