@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const GoogleLogo = () => (
   <svg width="18" height="18" viewBox="0 0 18 18">
@@ -28,6 +29,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp, session } = useAuth();
@@ -70,6 +72,10 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && !termsAccepted) {
+      toast.error("You must agree to the Terms of Use and Privacy Policy to create an account.");
+      return;
+    }
     if (!isLogin && password.length < 8) {
       toast.error("Password must be at least 8 characters.");
       return;
@@ -173,7 +179,28 @@ export default function AuthPage() {
                 {!isLogin && <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters</p>}
               </div>
 
-              <Button variant="hero" size="lg" className="w-full gap-2" type="submit" disabled={loading}>
+              {!isLogin && (
+                <div className="flex items-center space-x-2 my-2">
+                  <Checkbox 
+                    id="terms" 
+                    checked={termsAccepted} 
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} 
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor="terms"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Accept terms and conditions
+                    </label>
+                    <p className="text-[13px] text-muted-foreground">
+                      I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Use</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <Button variant="hero" size="lg" className="w-full gap-2" type="submit" disabled={loading || (!isLogin && !termsAccepted)}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
               </Button>
