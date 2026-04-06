@@ -57,17 +57,22 @@ export default function Checkout() {
 
   const handleCheckout = async (plan: "pro" | "standard") => {
     try {
+      console.log("Starting checkout for plan:", plan);
       setLoading(plan);
 
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      
+      console.log("Session state:", !!session);
 
       if (!session) {
+        console.log("No session found, redirecting to auth");
         navigate("/auth?mode=signup&redirect=/checkout");
         return;
       }
 
+      console.log("Invoking create-checkout edge function...");
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { plan },
         headers: {
