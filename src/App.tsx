@@ -21,6 +21,8 @@ import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import AuthCallback from "./pages/AuthCallback.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Testimonials from "./pages/Testimonials.tsx";
+import TermsOfService from "./pages/TermsOfService.tsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +50,8 @@ const App = () => (
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/testimonials" element={<Testimonials />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

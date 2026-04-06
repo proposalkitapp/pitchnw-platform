@@ -41,11 +41,10 @@ const plans = [
     name: "Standard",
     price: "$29",
     period: "/month",
-    description: "Build, sell, and earn",
+    description: "Advanced features and templates",
     features: [
       "Everything in Pro",
       "Template Builder",
-      "Sell templates — earn 80%",
       "AI Win-Rate Coach",
       "Revenue dashboard",
       "Priority support",

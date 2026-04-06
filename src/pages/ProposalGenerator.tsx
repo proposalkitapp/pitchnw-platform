@@ -251,6 +251,7 @@ export default function ProposalGenerator() {
         const link = `${window.location.origin}/p/${data.public_slug}`;
         navigator.clipboard.writeText(link);
         toast.success("Shareable link copied to clipboard! 🔗");
+        toast.success("Proposal sent! Your client has been notified via email.");
       }
       navigate("/dashboard");
     }
