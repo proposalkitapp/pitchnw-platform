@@ -1,7 +1,9 @@
+"use client";
+
 import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/use-auth";
 
 const plans = [
@@ -56,15 +58,15 @@ const plans = [
 ];
 
 export function PricingSection() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
 
   const handlePlanClick = (planName: string) => {
     if (user) {
-      navigate("/settings");
+      router.push("/settings");
     } else {
       const intent = planName.toLowerCase();
-      navigate(intent === "free" ? "/auth?mode=signup" : `/auth?mode=signup&intent=${intent}`);
+      router.push(intent === "free" ? "/auth?mode=signup" : `/auth?mode=signup&intent=${intent}`);
     }
   };
 

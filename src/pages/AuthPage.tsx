@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
@@ -6,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +26,7 @@ const GoogleLogo = () => (
 );
 
 export default function AuthPage() {
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const defaultTab = searchParams.get("mode") === "signup" ? false : true;
   const [isLogin, setIsLogin] = useState(defaultTab);
   const [email, setEmail] = useState("");
@@ -33,16 +36,16 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp, session } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const redirectParam = searchParams.get("redirect");
   const redirectTo = redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/dashboard";
 
   useEffect(() => {
     if (session) {
-      navigate(redirectTo);
+      router.push(redirectTo);
     }
-  }, [session, navigate, redirectTo]);
+  }, [session, router, redirectTo]);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -199,7 +202,7 @@ export default function AuthPage() {
                       Accept terms and conditions
                     </label>
                     <p className="text-[13px] text-muted-foreground">
-                      I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Use</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                      I agree to the <Link href="/terms" className="text-primary hover:underline">Terms of Use</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                     </p>
                   </div>
                 </div>
@@ -220,7 +223,7 @@ export default function AuthPage() {
 
             {isLogin && (
               <p className="text-center text-sm">
-                <button type="button" onClick={() => navigate("/forgot-password")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
+                <button type="button" onClick={() => router.push("/forgot-password")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
                   Forgot your password?
                 </button>
               </p>

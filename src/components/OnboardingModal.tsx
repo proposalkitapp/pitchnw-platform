@@ -1,10 +1,12 @@
+"use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Sparkles, Rocket, X } from "lucide-react";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
@@ -17,7 +19,7 @@ interface Props {
 
 export function OnboardingModal({ displayName, onComplete }: Props) {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [companyName, setCompanyName] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
@@ -127,7 +129,7 @@ export function OnboardingModal({ displayName, onComplete }: Props) {
               <Button variant="hero" className="w-full gap-2" onClick={handleComplete}>
                 Start Using Pitchnw
               </Button>
-              <button onClick={() => { handleComplete(); navigate("/settings?tab=billing"); }} className="text-sm text-muted-foreground hover:text-primary mt-3 inline-block">
+              <button onClick={() => { handleComplete(); router.push("/settings?tab=billing"); }} className="text-sm text-muted-foreground hover:text-primary mt-3 inline-block">
                 See upgrade options
               </button>
             </motion.div>

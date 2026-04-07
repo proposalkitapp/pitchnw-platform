@@ -13,7 +13,7 @@ declare module "https://deno.land/std@0.168.0/http/server.ts" {
 
 declare module "https://esm.sh/@supabase/supabase-js@2.49.4" {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Edge stub for IDE only
-  export function createClient(supabaseUrl: string, supabaseKey: string): any;
+  export function createClient(supabaseUrl: string, supabaseKey: string, options?: any): any;
 }
 
 declare module "https://esm.sh/standardwebhooks@1.0.0" {

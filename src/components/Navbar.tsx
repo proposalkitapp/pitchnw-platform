@@ -1,10 +1,12 @@
+"use client";
+
 import { Moon, Sun, Menu, X, LogOut, LayoutDashboard, Settings, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from "@/integrations/supabase/client";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
@@ -27,8 +29,8 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const location = usePathname();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -53,8 +55,8 @@ export function Navbar() {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
-    if (location.pathname !== "/") {
-      navigate("/");
+    if (location !== "/") {
+      router.push("/");
       setTimeout(() => {
         document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -66,7 +68,7 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    router.push("/");
   };
 
   return (
@@ -84,7 +86,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <a
             href="/"
-            onClick={(e) => { e.preventDefault(); navigate("/"); }}
+            onClick={(e) => { e.preventDefault(); router.push("/"); }}
             className="flex items-center gap-2"
           >
             <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
@@ -100,14 +102,14 @@ export function Navbar() {
         {user ? (
           <nav className="hidden md:flex items-center gap-1">
             {authNavLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive = location === link.path;
               return (
                 <Button
                   key={link.path}
                   variant={isActive ? "secondary" : "ghost"}
                   size="sm"
                   className="gap-2"
-                  onClick={() => navigate(link.path)}
+                  onClick={() => router.push(link.path)}
                 >
                   <link.icon className="h-4 w-4" />
                   {link.label}
@@ -150,14 +152,14 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/auth?mode=login")}
+                onClick={() => router.push("/auth?mode=login")}
               >
                 Sign in
               </Button>
               <Button
                 variant="hero"
                 size="sm"
-                onClick={() => navigate("/auth?mode=signup")}
+                onClick={() => router.push("/auth?mode=signup")}
               >
                 Get Started
               </Button>
@@ -193,9 +195,9 @@ export function Navbar() {
                   {authNavLinks.map((link) => (
                     <Button
                       key={link.path}
-                      variant={location.pathname === link.path ? "secondary" : "ghost"}
+                      variant={location === link.path ? "secondary" : "ghost"}
                       className="justify-start gap-2"
-                      onClick={() => { navigate(link.path); setMobileOpen(false); }}
+                      onClick={() => { router.push(link.path); setMobileOpen(false); }}
                     >
                       <link.icon className="h-4 w-4" /> {link.label}
                     </Button>
@@ -216,7 +218,7 @@ export function Navbar() {
                       {link.label}
                     </a>
                   ))}
-                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}>
+                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { router.push("/auth?mode=signup"); setMobileOpen(false); }}>
                     Get Started Free
                   </Button>
                 </>

@@ -1,10 +1,12 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
@@ -33,7 +35,7 @@ function getGreeting(): string {
 
 export default function Dashboard() {
   const { session } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -214,7 +216,7 @@ export default function Dashboard() {
                 <Button
                   variant="hero"
                   size="sm"
-                  onClick={() => navigate("/settings")}
+                  onClick={() => router.push("/settings")}
                   className="gap-1 text-xs"
                 >
                   Upgrade to Pro
@@ -233,11 +235,11 @@ export default function Dashboard() {
           className="w-full mb-10 h-14 bg-[#0033ff] hover:bg-[#002be6] text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] rounded-xl font-semibold text-base transition-all duration-200"
           onClick={() => {
             if (!canCreateProposal) {
-              toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
-              navigate("/settings");
-              return;
-            }
-            navigate("/generate");
+            toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
+            router.push("/settings");
+            return;
+          }
+          router.push("/generate");
           }}
         >
           <Plus className="h-5 w-5 mr-2" /> CREATE NEW PROPOSAL
@@ -307,7 +309,7 @@ export default function Dashboard() {
                 <p className="text-slate-500 mb-6 text-sm">
                   Generate your first AI proposal in under 60 seconds.
                 </p>
-                <Button onClick={() => navigate("/generate")} className="bg-[#0033ff] hover:bg-[#002be6] h-11 px-8 rounded-full text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)]">
+                <Button onClick={() => router.push("/generate")} className="bg-[#0033ff] hover:bg-[#002be6] h-11 px-8 rounded-full text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)]">
                   <Plus className="h-4 w-4 mr-2" /> Create Proposal
                 </Button>
               </motion.div>

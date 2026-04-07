@@ -1,7 +1,9 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/use-auth";
 
 const badges = [
@@ -11,11 +13,11 @@ const badges = [
 ];
 
 export function HeroSection() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
 
   const handleGetStarted = () => {
-    navigate(user ? "/dashboard" : "/auth?mode=signup");
+    router.push(user ? "/dashboard" : "/auth?mode=signup");
   };
 
   return (
@@ -71,7 +73,7 @@ export function HeroSection() {
           <Button
             variant="hero-outline"
             size="xl"
-            onClick={() => navigate(user ? "/marketplace" : "/auth?mode=signup")}
+            onClick={() => router.push(user ? "/marketplace" : "/auth?mode=signup")}
             className="text-base"
           >
             Browse Templates

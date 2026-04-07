@@ -1,6 +1,8 @@
+"use client";
+
 import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,8 +31,8 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = usePathname();
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -53,7 +55,7 @@ export function AppSidebar() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    router.push("/");
   };
 
   return (
@@ -61,7 +63,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-black">
         <SidebarGroup>
           <div className="flex items-center gap-2 px-6 py-6 mb-4">
-            <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
+            <a href="/" onClick={(e) => { e.preventDefault(); router.push("/"); }}>
               <img
                 src={pitchnwLogo}
                 alt="Pitchnw"
@@ -80,7 +82,7 @@ export function AppSidebar() {
           <SidebarGroupContent className="px-3">
             <SidebarMenu className="space-y-1.5">
               {navItems.map((item) => {
-                const isActive = location.pathname === item.url;
+                const isActive = location === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} className="px-3 py-5 rounded-xl transition-all duration-200">
@@ -102,7 +104,7 @@ export function AppSidebar() {
             {isAdmin && (
               <SidebarMenu className="mt-6">
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location.pathname === "/admin"} className="px-3 py-5 rounded-xl transition-all duration-200">
+                  <SidebarMenuButton asChild isActive={location === "/admin"} className="px-3 py-5 rounded-xl transition-all duration-200">
                     <NavLink to="/admin" end className="text-slate-400 hover:text-white hover:bg-white/5" activeClassName="bg-amber-600 text-white font-medium">
                       <Shield className="h-5 w-5 mr-3" />
                       {!collapsed && <span className="text-sm">Admin Access</span>}

@@ -1,5 +1,7 @@
+"use client";
+
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
-import { Link } from "react-router-dom";
+import Link from 'next/link';
 
 export function Footer() {
   return (
@@ -18,26 +20,26 @@ export function Footer() {
           <div>
             <h4 className="font-display text-sm font-semibold text-foreground mb-4">Product</h4>
             <ul className="space-y-2">
-              <li><Link to="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link to="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link to="/marketplace" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Marketplace</Link></li>
-              <li><Link to="/#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</Link></li>
+              <li><Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
+              <li><Link href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link href="/marketplace" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Marketplace</Link></li>
+              <li><Link href="/#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-display text-sm font-semibold text-foreground mb-4">Account</h4>
             <ul className="space-y-2">
-              <li><Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign Up</Link></li>
-              <li><Link to="/auth?mode=login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></li>
+              <li><Link href="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign Up</Link></li>
+              <li><Link href="/auth?mode=login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-display text-sm font-semibold text-foreground mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Use</Link></li>
+              <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Use</Link></li>
               <li><a href="mailto:support@pitchnw.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
             </ul>
           </div>
