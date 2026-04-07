@@ -145,17 +145,17 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="font-display text-3xl font-bold">
+          <h1 className="font-sans text-2xl font-bold tracking-tight text-slate-900">
             {getGreeting()}, {displayName} 👋
           </h1>
-          <p className="text-muted-foreground mt-1">Here's your proposal overview.</p>
+          <p className="text-slate-500 mt-1 text-sm">Here is your proposal overview.</p>
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {loading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
+                <Skeleton key={i} className="h-[100px] rounded-2xl" />
               ))
             : stats.map((stat, i) => (
                 <motion.div
@@ -163,16 +163,18 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-border bg-card p-5"
+                  className={`${i === 3 ? 'bg-[#0033ff] text-white' : 'bg-white text-slate-900 border border-slate-100'} rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  <div className={`h-12 w-12 rounded-full border ${i === 3 ? 'border-white/20' : 'border-slate-100'} flex items-center justify-center shrink-0`}>
+                    <stat.icon className={`h-5 w-5 ${i === 3 ? 'text-white' : stat.color}`} />
+                  </div>
+                  <div>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${i === 3 ? 'text-white/80' : 'text-slate-400'}`}>
                       {stat.label}
                     </span>
-                    <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                  </div>
-                  <div className="font-display text-2xl font-bold text-card-foreground">
-                    {stat.value}
+                    <div className="text-xl font-bold mt-0.5">
+                      {stat.value}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -228,9 +230,7 @@ export default function Dashboard() {
 
         {/* Quick Action */}
         <Button
-          variant="hero"
-          size="lg"
-          className="w-full mb-8 gap-2"
+          className="w-full mb-10 h-14 bg-[#0033ff] hover:bg-[#002be6] text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] rounded-xl font-semibold text-base transition-all duration-200"
           onClick={() => {
             if (!canCreateProposal) {
               toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
@@ -240,7 +240,7 @@ export default function Dashboard() {
             navigate("/generate");
           }}
         >
-          <Plus className="h-5 w-5" /> New Proposal
+          <Plus className="h-5 w-5 mr-2" /> CREATE NEW PROPOSAL
         </Button>
 
         {selectedProposal ? (
@@ -284,8 +284,8 @@ export default function Dashboard() {
           </motion.div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-semibold text-foreground">
+            <div className="flex items-center justify-between mb-4 mt-6">
+              <h2 className="font-sans text-xl font-bold text-slate-900">
                 Recent Proposals
               </h2>
             </div>
@@ -293,72 +293,77 @@ export default function Dashboard() {
             {loading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-xl" />
+                  <Skeleton key={i} className="h-20 rounded-2xl" />
                 ))}
               </div>
             ) : proposals.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-20 rounded-xl border border-dashed border-border"
+                className="text-center py-24 rounded-2xl border border-dashed border-slate-200 bg-white"
               >
-                <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h2 className="font-display text-xl font-semibold mb-2">No proposals yet</h2>
-                <p className="text-muted-foreground mb-6">
+                <FileText className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+                <h2 className="font-sans text-xl font-bold mb-2 text-slate-800">No proposals yet</h2>
+                <p className="text-slate-500 mb-6 text-sm">
                   Generate your first AI proposal in under 60 seconds.
                 </p>
-                <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
-                  <Plus className="h-4 w-4" /> Create Your First Proposal
+                <Button onClick={() => navigate("/generate")} className="bg-[#0033ff] hover:bg-[#002be6] h-11 px-8 rounded-full text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)]">
+                  <Plus className="h-4 w-4 mr-2" /> Create Proposal
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {proposals.slice(0, 10).map((proposal, i) => (
                   <motion.div
                     key={proposal.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="rounded-xl border border-border bg-card p-4 flex items-center justify-between hover:border-primary/20 transition-colors"
+                    className="rounded-2xl border-none bg-white p-5 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] group"
                   >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold text-card-foreground truncate text-sm">
-                        {proposal.title}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                        {proposal.client_name && <span>{proposal.client_name}</span>}
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(proposal.created_at).toLocaleDateString()}
-                        </span>
-                        <span className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${statusColors[proposal.status] || "bg-secondary text-muted-foreground"}`}>
-                          {proposal.status}
-                        </span>
-                        {proposal.proposal_mode && (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                            proposal.proposal_mode === "sales_pitch"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-secondary text-muted-foreground"
-                          }`}>
-                            {proposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal"}
+                    <div className="flex-1 min-w-0 flex items-center gap-5">
+                      <div className="h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                        <FileText className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-sans font-semibold text-slate-900 truncate text-[15px]">
+                          {proposal.title}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 flex-wrap">
+                          {proposal.client_name && <span className="font-medium text-slate-700">{proposal.client_name}</span>}
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 opacity-70" />
+                            {new Date(proposal.created_at).toLocaleDateString()}
                           </span>
-                        )}
+                          <span className={`capitalize px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${statusColors[proposal.status] || "bg-slate-100 text-slate-500"}`}>
+                            {proposal.status}
+                          </span>
+                          {proposal.proposal_mode && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
+                              proposal.proposal_mode === "sales_pitch"
+                                ? "bg-[#0033ff]/10 text-[#0033ff]"
+                                : "bg-slate-100 text-slate-600"
+                            }`}>
+                              {proposal.proposal_mode === "sales_pitch" ? "🎯 SALES PITCH" : "📄 FORMAL"}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 ml-4">
+                    <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 rounded-full border-slate-200 text-slate-500 hover:text-[#0033ff] hover:bg-[#0033ff]/10 hover:border-[#0033ff]/20"
                         onClick={() => setSelectedProposal(proposal)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       {proposal.public_slug && (
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-full border-slate-200 text-slate-500 hover:text-[#0033ff] hover:bg-[#0033ff]/10 hover:border-[#0033ff]/20"
                           onClick={() => {
                             navigator.clipboard.writeText(`${window.location.origin}/p/${proposal.public_slug}`);
                             toast.success("Client link copied! 🔗");
@@ -372,22 +377,22 @@ export default function Dashboard() {
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground/40 cursor-not-allowed"
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-full text-slate-300 cursor-not-allowed"
                               disabled
                             >
                               <Lock className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Upgrade to Pro to delete proposals</p>
+                            <p>Upgrade to Pro to delete</p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => deleteProposal(proposal.id)}
                         >
                           <Trash2 className="h-4 w-4" />

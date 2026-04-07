@@ -83,15 +83,19 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      const next = redirectTo?.startsWith("/") ? redirectTo : "/dashboard";
       if (isLogin) {
         await signIn(email, password);
         toast.success("Welcome back!");
-        navigate(next);
+        // The useEffect will handle the redirect once the session updates
       } else {
-        await signUp(email, password, displayName);
-        toast.success("Account created! Welcome to Pitchnw 🎉");
-        navigate(next);
+        const data = await signUp(email, password, displayName);
+        if (data?.session) {
+          toast.success("Account created! Welcome to Pitchnw 🎉");
+          // useEffect will redirect
+        } else {
+          toast.success("Account created! Please check your email to verify your account.");
+          setIsLogin(true); // Switch to login view
+        }
       }
     } catch (err: any) {
       const msg = err.message || "";

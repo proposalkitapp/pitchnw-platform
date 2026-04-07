@@ -189,7 +189,7 @@ Generate a complete, ready-to-send proposal as a valid JSON object. Do not use a
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "anthropic/claude-3-5-sonnet-20241022",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },

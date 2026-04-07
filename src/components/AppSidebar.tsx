@@ -57,41 +57,41 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="border-r-0 dark bg-black text-slate-200">
+      <SidebarContent className="bg-black">
         <SidebarGroup>
-          <div className="flex items-center gap-2 px-2 py-3 mb-2">
+          <div className="flex items-center gap-2 px-6 py-6 mb-4">
             <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
               <img
                 src={pitchnwLogo}
                 alt="Pitchnw"
-                className={`${collapsed ? "h-10" : "h-24"} w-auto object-contain`}
+                className={`${collapsed ? "h-10" : "h-14"} w-auto object-contain filter brightness-0 invert`}
               />
             </a>
           </div>
 
           {!collapsed && displayName && (
-            <div className="px-3 py-2 mb-2">
-              <p className="text-xs text-muted-foreground">Welcome,</p>
-              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+            <div className="px-6 py-2 mb-4">
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Hello,</p>
+              <p className="text-sm font-semibold text-white truncate">{displayName}</p>
             </div>
           )}
 
-          <SidebarGroupContent>
-            <SidebarMenu>
+          <SidebarGroupContent className="px-3">
+            <SidebarMenu className="space-y-1.5">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
+                    <SidebarMenuButton asChild isActive={isActive} className="px-3 py-5 rounded-xl transition-all duration-200">
                       <NavLink
                         to={item.url}
                         end
-                        className="hover:bg-muted/50"
-                        activeClassName="bg-primary/10 text-primary font-medium"
+                        className="text-slate-400 hover:text-white hover:bg-white/5"
+                        activeClassName="bg-[#0033ff] text-white font-medium hover:bg-[#0033ff]/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-white"
                       >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
+                        <item.icon className="h-5 w-5 mr-3" />
+                        {!collapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -100,12 +100,12 @@ export function AppSidebar() {
             </SidebarMenu>
 
             {isAdmin && (
-              <SidebarMenu>
+              <SidebarMenu className="mt-6">
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location.pathname === "/admin"}>
-                    <NavLink to="/admin" end className="hover:bg-warning/10" activeClassName="bg-warning/10 text-warning font-medium">
-                      <Shield className="h-4 w-4" />
-                      {!collapsed && <span>Admin</span>}
+                  <SidebarMenuButton asChild isActive={location.pathname === "/admin"} className="px-3 py-5 rounded-xl transition-all duration-200">
+                    <NavLink to="/admin" end className="text-slate-400 hover:text-white hover:bg-white/5" activeClassName="bg-amber-600 text-white font-medium">
+                      <Shield className="h-5 w-5 mr-3" />
+                      {!collapsed && <span className="text-sm">Admin Access</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -115,31 +115,31 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleSignOut}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Sign Out</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
+      <SidebarFooter className="bg-black px-3 pb-6 border-t border-white/10 pt-4">
         {!collapsed && (
-          <div className="px-3 py-2 border-t border-border mt-1">
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            <span className={`inline-block mt-1 text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full ${
-              plan === "pro" ? "bg-primary/10 text-primary" :
-              plan === "standard" ? "bg-warning/10 text-warning" :
-              "bg-secondary text-muted-foreground"
+          <div className="px-3 py-3 mb-3 bg-white/5 rounded-xl">
+            <p className="text-[11px] text-slate-400 truncate mb-1">{user?.email}</p>
+            <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+              plan === "pro" ? "bg-[#0033ff]/20 text-[#0033ff]" :
+              plan === "standard" ? "bg-amber-500/20 text-amber-500" :
+              "bg-white/10 text-slate-300"
             }`}>
               {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro Plan" : "Standard Plan"}
             </span>
           </div>
         )}
+
+        <SidebarMenu>
+          <SidebarMenuItem>
+             <button
+               onClick={handleSignOut}
+               className={`w-full flex items-center ${collapsed ? 'justify-center p-3' : 'px-4 py-3'} rounded-xl bg-[#0033ff] text-white hover:bg-[#002be6] transition-all duration-200 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] mt-2 font-medium`}
+             >
+               <LogOut className={`h-5 w-5 ${!collapsed && "mr-3"}`} />
+               {!collapsed && <span>Logout</span>}
+             </button>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
