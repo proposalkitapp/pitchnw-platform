@@ -7,7 +7,7 @@ import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
+import pitchnwLogo from "../../assets/pitchnw-logo.png";
 
 
 export default function Checkout() {

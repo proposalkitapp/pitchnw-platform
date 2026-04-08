@@ -1,6 +1,6 @@
 "use client";
 
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
+import pitchnwLogo from "../assets/pitchnw-logo.png";
 import Link from 'next/link';
 
 export function Footer() {

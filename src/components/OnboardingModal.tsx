@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Sparkles, Rocket, X } from "lucide-react";
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
+import pitchnwLogo from "../assets/pitchnw-logo.png";
 
 const roles = ["Freelance Developer", "Web Designer", "Marketing Agency", "Copywriter", "Consultant", "Other"];
 

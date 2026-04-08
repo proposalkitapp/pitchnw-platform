@@ -1,3 +1,5 @@
+"use client";
+
 import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Zap, LayoutTemplate, BarChart3, Brain, Send, Shield } from "lucide-react";
 import { motion, useInView } from "framer-motion";

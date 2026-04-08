@@ -65,7 +65,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 px-6 py-6 mb-4">
             <a href="/" onClick={(e) => { e.preventDefault(); router.push("/"); }}>
               <img
-                src={pitchnwLogo}
+                src={pitchnwLogo.src || pitchnwLogo}
                 alt="Pitchnw"
                 className={`${collapsed ? "h-10" : "h-14"} w-auto object-contain filter brightness-0 invert`}
               />
@@ -122,11 +122,10 @@ export function AppSidebar() {
           <div className="px-3 py-3 mb-3 bg-white/5 rounded-xl">
             <p className="text-[11px] text-slate-400 truncate mb-1">{user?.email}</p>
             <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-              plan === "pro" ? "bg-[#0033ff]/20 text-[#0033ff]" :
               plan === "standard" ? "bg-amber-500/20 text-amber-500" :
               "bg-white/10 text-slate-300"
             }`}>
-              {plan === "free" ? "Free Plan" : plan === "pro" ? "Pro Plan" : "Standard Plan"}
+              {plan === "free" ? "Free Plan" : "Standard Plan"}
             </span>
           </div>
         )}

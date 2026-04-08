@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from "@/integrations/supabase/client";
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
+import pitchnwLogo from "../assets/pitchnw-logo.png";
 
 const publicNavLinks = [
   { label: "Features", href: "#features" },
