@@ -26,7 +26,7 @@ export default function Admin() {
   const [users, setUsers] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, standardUsers: 0, standardUsers: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, freeUsers: 0, standardUsers: 0 });
 
   useEffect(() => {
     if (user) checkAdmin();
@@ -61,7 +61,7 @@ export default function Admin() {
     setStats({
       totalUsers: profs.length,
       totalProposals: props.length,
-      standardUsers: profs.filter((p: any) => p.plan === "standard").length,
+      freeUsers: profs.filter((p: any) => !p.plan || p.plan === "free" || p.plan === "basic").length,
       standardUsers: profs.filter((p: any) => p.plan === "standard").length,
     });
     setLoading(false);
@@ -107,7 +107,7 @@ export default function Admin() {
   const overviewStats = [
     { label: "Total Users", value: stats.totalUsers, icon: Users, color: "text-primary" },
     { label: "Total Proposals", value: stats.totalProposals, icon: FileText, color: "text-success" },
-    { label: "Pro Users", value: stats.standardUsers, icon: Shield, color: "text-primary" },
+    { label: "Free Users", value: stats.freeUsers, icon: Shield, color: "text-primary" },
     { label: "Standard Users", value: stats.standardUsers, icon: Shield, color: "text-warning" },
   ];
 
@@ -136,14 +136,14 @@ export default function Admin() {
               {loading
                 ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
                 : overviewStats.map((stat, i) => (
-                    <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-xl border border-warning/20 bg-card p-5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{stat.label}</span>
-                        <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                      </div>
-                      <div className="font-display text-2xl font-bold text-card-foreground">{stat.value}</div>
-                    </motion.div>
-                  ))}
+                  <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-xl border border-warning/20 bg-card p-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{stat.label}</span>
+                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                    </div>
+                    <div className="font-display text-2xl font-bold text-card-foreground">{stat.value}</div>
+                  </motion.div>
+                ))}
             </div>
 
             {/* Recent Signups */}
@@ -242,12 +242,11 @@ export default function Admin() {
                       <TableCell className="font-medium text-card-foreground">{p.title}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{p.client_name || "—"}</TableCell>
                       <TableCell>
-                        <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-medium ${
-                          p.status === "won" ? "bg-success/10 text-success" :
+                        <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-medium ${p.status === "won" ? "bg-success/10 text-success" :
                           p.status === "lost" ? "bg-destructive/10 text-destructive" :
-                          p.status === "sent" ? "bg-blue-500/10 text-blue-400" :
-                          "bg-secondary text-muted-foreground"
-                        }`}>{p.status}</span>
+                            p.status === "sent" ? "bg-blue-500/10 text-blue-400" :
+                              "bg-secondary text-muted-foreground"
+                          }`}>{p.status}</span>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(p.created_at).toLocaleDateString()}
