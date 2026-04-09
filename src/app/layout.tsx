@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Inter } from "next/font/google";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
