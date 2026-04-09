@@ -20,6 +20,7 @@ export default function Settings() {
   const { user } = useAuth();
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [brandName, setBrandName] = useState("");
   const [brandLogoUrl, setBrandLogoUrl] = useState("");
@@ -47,12 +48,13 @@ export default function Settings() {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
+        "display_name, username, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
       )
       .eq("user_id", user.id)
       .single();
     if (data) {
       setDisplayName(data.display_name || "");
+      setUsername(data.username || "");
       setCompanyName(data.company_name || "");
       setSignatureData(data.signature_data || null);
       setCurrentPlan(data.plan ?? "free");
@@ -115,6 +117,7 @@ export default function Settings() {
         .from("profiles")
         .update({
           display_name: displayName,
+          username: username,
           company_name: companyName,
           signature_data: signatureData,
           brand_name: brandName,
@@ -259,6 +262,17 @@ export default function Settings() {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={user?.email || ""} disabled className="mt-1.5 bg-muted" />
                   <p className="text-xs text-muted-foreground mt-1">Contact support to change email</p>
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">No spaces allowed</p>
                 </div>
                 <div>
                   <Label htmlFor="displayName">Display Name</Label>

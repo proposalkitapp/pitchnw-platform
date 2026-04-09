@@ -123,12 +123,12 @@ export default function Dashboard() {
 
       supabase
         .from("profiles")
-        .select("display_name, onboarding_completed, plan, brand_logo_url, brand_name, company_name, portfolio_url")
+        .select("username, display_name, onboarding_completed, plan, brand_logo_url, brand_name, company_name, portfolio_url")
         .eq("user_id", session.user.id)
         .single()
         .then(({ data }) => {
           if (data) {
-            setDisplayName(data.display_name?.split(" ")[0] || "there");
+            setDisplayName(data.username || data.display_name?.split(" ")[0] || "there");
             setPlan(data.plan || "free");
             setUserBranding({
               logoUrl: data.brand_logo_url,

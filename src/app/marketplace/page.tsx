@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Star, ArrowRight, Search } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { templates, categories } from "@/lib/templates";
+import { TemplateCard } from "@/components/TemplateCard";
 
 export default function Marketplace() {
   const router = useRouter();
@@ -62,63 +63,14 @@ export default function Marketplace() {
           ))}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map((template, i) => (
-            <motion.div
+            <TemplateCard
               key={template.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileHover={{ y: -4 }}
-              className="group rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-glow cursor-pointer"
+              template={template}
+              index={i}
               onClick={() => router.push(`/marketplace/${template.id}`)}
-            >
-              {/* Accent top border */}
-              <div className="h-1" style={{ backgroundColor: `hsl(${template.accentColor})` }} />
-              {/* Preview area */}
-              <div className="h-36 bg-secondary/50 flex items-center justify-center border-b border-border relative">
-                <div className="w-3/4 space-y-2">
-                  {template.sections.slice(0, 4).map((s, j) => (
-                    <div key={j} className="flex items-center gap-2">
-                      <div
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: `hsl(${template.accentColor})` }}
-                      />
-                      <div className="h-2.5 rounded bg-muted-foreground/10 flex-1" />
-                    </div>
-                  ))}
-                  <div className="h-2 rounded w-1/3 mt-2" style={{ backgroundColor: `hsl(${template.accentColor} / 0.2)` }} />
-                </div>
-                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary flex items-center gap-1">
-                    View Template <ArrowRight className="h-3 w-3" />
-                  </span>
-                </div>
-              </div>
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-display text-sm font-semibold text-card-foreground">{template.name}</h3>
-                  <span className="text-xs font-semibold text-success px-2 py-0.5 rounded-full bg-success/10">Free</span>
-                </div>
-                <span
-                  className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 mb-2"
-                  style={{
-                    backgroundColor: `hsl(${template.accentColor} / 0.1)`,
-                    color: `hsl(${template.accentColor})`,
-                  }}
-                >
-                  {template.category}
-                </span>
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{template.forWhom}</p>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-warning text-warning" />
-                    <span>{template.rating}</span>
-                  </div>
-                  <span>{template.uses} uses</span>
-                </div>
-              </div>
-            </motion.div>
+            />
           ))}
         </div>
 

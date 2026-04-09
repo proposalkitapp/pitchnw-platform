@@ -155,6 +155,7 @@ export default function Admin() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Proposals</TableHead>
                     <TableHead>Joined</TableHead>
@@ -164,6 +165,7 @@ export default function Admin() {
                   {users.slice(0, 10).map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium text-card-foreground">{u.display_name || "—"}</TableCell>
+                      <TableCell className="text-sm font-mono text-primary">{u.username ? `@${u.username}` : "—"}</TableCell>
                       <TableCell>{planBadge(u.plan)}</TableCell>
                       <TableCell>{proposals.filter((p) => p.user_id === u.user_id).length}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
@@ -189,6 +191,7 @@ export default function Admin() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Company</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Proposals</TableHead>
@@ -200,6 +203,7 @@ export default function Admin() {
                   {filteredUsers.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium text-card-foreground">{u.display_name || "—"}</TableCell>
+                      <TableCell className="text-sm font-mono text-primary">{u.username ? `@${u.username}` : "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{u.company_name || "—"}</TableCell>
                       <TableCell>{planBadge(u.plan)}</TableCell>
                       <TableCell>{proposals.filter((p) => p.user_id === u.user_id).length}</TableCell>

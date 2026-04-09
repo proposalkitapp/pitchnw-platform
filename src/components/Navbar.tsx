@@ -42,11 +42,11 @@ export function Navbar() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, username")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
-          setDisplayName(data?.display_name || user.email?.split("@")[0] || "User");
+          setDisplayName(data?.username || data?.display_name || user.email?.split("@")[0] || "User");
         });
     } else {
       setDisplayName(null);

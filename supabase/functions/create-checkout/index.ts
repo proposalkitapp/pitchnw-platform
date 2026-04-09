@@ -57,8 +57,8 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('dodo_customer_id, full_name')
-      .eq('id', user.id)
+      .select('dodo_customer_id, display_name')
+      .eq('user_id', user.id)
       .single()
 
     const dodo = new DodoPayments({
@@ -75,7 +75,7 @@ serve(async (req) => {
         ? { customer_id: profile.dodo_customer_id }
         : {
             email: user.email!,
-            name: profile?.full_name || user.email!,
+            name: profile?.display_name || user.email!,
             create_new_customer: true
           },
       success_url: appUrl + '/payment/success?plan=standard&session_id={CHECKOUT_SESSION_ID}',
@@ -92,7 +92,7 @@ serve(async (req) => {
         .update({
           dodo_customer_id: session.customer.customer_id
         })
-        .eq('id', user.id)
+        .eq('user_id', user.id)
     }
 
     return new Response(

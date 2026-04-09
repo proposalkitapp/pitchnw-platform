@@ -35,6 +35,9 @@ export type Database = {
           trial_ends_at: string | null
           updated_at: string
           user_id: string
+          username: string | null
+          occupation: string | null
+          referral_source: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -56,6 +59,9 @@ export type Database = {
           trial_ends_at?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
+          occupation?: string | null
+          referral_source?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -77,6 +83,9 @@ export type Database = {
           trial_ends_at?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
+          occupation?: string | null
+          referral_source?: string | null
         }
         Relationships: []
       }

@@ -42,11 +42,11 @@ export function AppSidebar() {
     if (user) {
       supabase
         .from("profiles")
-        .select("display_name, is_admin, plan")
+        .select("username, display_name, is_admin, plan")
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
-          setDisplayName(data?.display_name || user.email?.split("@")[0] || "User");
+          setDisplayName(data?.username || data?.display_name || user.email?.split("@")[0] || "User");
           setIsAdmin(data?.is_admin || false);
           setPlan(data?.plan || "free");
         });

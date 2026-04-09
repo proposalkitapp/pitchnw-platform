@@ -240,7 +240,7 @@ export default function Checkout() {
               size="lg"
               className="w-full"
               disabled={busy}
-              onClick={() => handleCheckout("standard")}
+              onClick={() => handleCheckout()}
             >
               {loading === "standard" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Start Free Trial — 3 Days
