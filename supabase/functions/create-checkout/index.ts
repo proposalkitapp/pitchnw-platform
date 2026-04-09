@@ -1,138 +1,122 @@
-/// <reference path="../edge-modules.d.ts" />
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import DodoPayments from "npm:dodopayments@2.26.0";
+import { serve } from 'https://deno.land/std/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+import DodoPayments from 'https://esm.sh/dodopayments'
 
-
-
-function dodoEnvironment(): "live_mode" | "test_mode" {
-  const mode = Deno.env.get("DODO_PAYMENTS_ENVIRONMENT");
-  if (mode === "live_mode" || mode === "test_mode") return mode;
-  return "test_mode";
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin");
-  const isAllowed = origin && (origin.startsWith("http://localhost:") || origin === "https://pitchnw.app");
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "https://pitchnw.app",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    const apiKey = Deno.env.get('DODO_PAYMENTS_API_KEY')
+    const productId = Deno.env.get('DODO_STANDARD_PRODUCT_ID')
+    const appUrl = Deno.env.get('APP_URL')
+
+    if (!apiKey || !productId || !appUrl) {
+      console.error('Missing env vars:', {
+        hasApiKey: !!apiKey,
+        hasProductId: !!productId,
+        hasAppUrl: !!appUrl
+      })
+      return new Response(
+        JSON.stringify({
+          error: 'configuration_error',
+          message: 'Payment system not configured.'
+        }),
+        { status: 500, headers: corsHeaders }
+      )
+    }
+
+    const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: corsHeaders }
+      )
     }
 
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
 
-    const token = authHeader.replace("Bearer ", "");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(token);
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { plan } = await req.json();
-
-    if (!plan || plan !== "standard") {
-      return new Response(JSON.stringify({ error: "Invalid plan", message: "A valid plan (standard) is required." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const apiKey = Deno.env.get("DODO_PAYMENTS_API_KEY");
-    const standardProductId = Deno.env.get("DODO_STANDARD_PRODUCT_ID");
-    const appUrl = (Deno.env.get("APP_URL") || "").replace(/\/$/, "");
-
-    if (!apiKey || !standardProductId || !appUrl) {
-      console.error("Missing configuration:", { apiKey: !!apiKey, standardProductId, appUrl });
-      return new Response(JSON.stringify({ 
-        error: "configuration_error", 
-        message: "Payment system not configured correctly. Please check environment variables (API Key, Product IDs, or APP_URL)." 
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: corsHeaders }
+      )
     }
 
     const { data: profile } = await supabase
-      .from("profiles")
-      .select("dodo_customer_id, display_name, plan")
-      .eq("user_id", user.id)
-      .single();
+      .from('profiles')
+      .select('dodo_customer_id, full_name')
+      .eq('id', user.id)
+      .single()
 
     const dodo = new DodoPayments({
       bearerToken: apiKey,
-      environment: dodoEnvironment(),
-    });
-
-    const productId = standardProductId;
-
-    const displayName = profile?.display_name?.trim() || user.email || "Customer";
+      environment: 'live_mode'
+    })
 
     const session = await dodo.checkoutSessions.create({
-      product_cart: [{ product_id: productId, quantity: 1 }],
+      product_cart: [{
+        product_id: productId,
+        quantity: 1
+      }],
       customer: profile?.dodo_customer_id
         ? { customer_id: profile.dodo_customer_id }
         : {
-          email: user.email!,
-          name: displayName,
-          create_new_customer: true,
-        },
-      return_url: `${appUrl}/payment/success?plan=${encodeURIComponent(plan)}`,
-      cancel_url: `${appUrl}/settings`,
+            email: user.email!,
+            name: profile?.full_name || user.email!,
+            create_new_customer: true
+          },
+      success_url: appUrl + '/payment/success?plan=standard&session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: appUrl + '/checkout',
       metadata: {
         user_id: user.id,
-        plan,
-      },
-    });
+        plan: 'standard'
+      }
+    })
 
-    const checkoutUrl = session.checkout_url;
-    if (!checkoutUrl) {
-      return new Response(JSON.stringify({ error: "no_checkout_url", message: "No checkout URL returned from payment provider." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (session.customer?.customer_id && !profile?.dodo_customer_id) {
+      await supabase
+        .from('profiles')
+        .update({
+          dodo_customer_id: session.customer.customer_id
+        })
+        .eq('id', user.id)
     }
 
     return new Response(
       JSON.stringify({
-        checkout_url: checkoutUrl,
-        session_id: session.session_id,
+        checkout_url: session.payment_link,
+        session_id: session.checkout_session_id
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
-  } catch (error: any) {
-    console.error("Full checkout error:", error);
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+
+  } catch (error) {
+    console.error('Checkout error:', error)
     return new Response(
       JSON.stringify({
-        error: "checkout_failed",
-        original_error: error.message,
-        message: error.message || "Failed to create checkout. Please try again.",
+        error: 'checkout_failed',
+        message: error.message || 'Failed to create checkout.'
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+      { status: 500, headers: corsHeaders }
+    )
   }
-});
+})

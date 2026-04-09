@@ -57,49 +57,51 @@ export default function Checkout() {
     }
   };
 
-  const handleCheckout = async (plan: "standard") => {
+  const handleCheckout = async () => {
     try {
-      console.log("Starting checkout for plan:", plan);
-      setLoading(plan);
+      setLoading("standard")
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      
-      console.log("Session state:", !!session);
+      const { data: { session }, error: sessionError } =
+        await supabase.auth.getSession()
 
-      if (!session) {
-        console.log("No session found, redirecting to auth");
-        router.push("/auth?mode=signup&redirect=/checkout");
-        return;
+      if (sessionError || !session) {
+        router.push('/auth?mode=signup&redirect=/checkout')
+        return
       }
 
-      console.log("Invoking create-checkout edge function...");
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { plan },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const { data, error } =
+        await supabase.functions.invoke('create-checkout', {
+          body: { plan: 'standard' },
+          headers: {
+            Authorization:
+              `Bearer ${session.access_token}`
+          }
+        })
 
-      if (error || !data?.checkout_url) {
-        console.error("Full checkout error details:", error, data);
+      if (error) {
+        console.error('Edge function error:', error)
         toast.error(
-          error?.message || 
-          data?.message || 
-          "Could not create checkout. Please try again."
-        );
-        return;
+          'Checkout failed: ' +
+          (error.message || 'Please try again.')
+        )
+        return
       }
 
-      window.location.href = data.checkout_url as string;
-    } catch (err: any) {
-      console.error("Checkout exception:", err);
-      toast.error(err?.message || "Something went wrong. Please try again.");
+      if (!data?.checkout_url) {
+        console.error('No checkout URL returned:', data)
+        toast.error('Could not create checkout session.')
+        return
+      }
+
+      window.location.href = data.checkout_url
+
+    } catch (err) {
+      console.error('Checkout exception:', err)
+      toast.error('Something went wrong. Please try again.')
     } finally {
-      setLoading(null);
+      setLoading(null)
     }
-  };
+  }
 
   const busy = loading !== null;
   const selectedPlan = searchParams.get("plan") as "standard" | null;
