@@ -115,7 +115,7 @@ export default function CRM() {
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Full proposal analytics</li>
               </ul>
               <Button variant="hero" size="lg" className="w-full" onClick={() => router.push("/settings?tab=billing")}>
-                Upgrade to Pro — $12/mo
+                Upgrade to Standard — $12/mo
               </Button>
             </motion.div>
           </div>

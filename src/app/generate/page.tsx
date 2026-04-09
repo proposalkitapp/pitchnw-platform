@@ -168,7 +168,7 @@ export default function ProposalGenerator() {
         try {
           const err = await resp.json();
           if (err.code === "LIMIT_REACHED") {
-            toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
+            toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.", { id: "gen" });
             router.push("/settings");
             return;
           }

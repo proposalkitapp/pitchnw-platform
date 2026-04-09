@@ -13,7 +13,7 @@ import pitchnwLogo from "../../assets/pitchnw-logo.png";
 export default function Checkout() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [loading, setLoading] = useState<"pro" | "standard" | "upgrade" | null>(null);
+  const [loading, setLoading] = useState<"standard" | "upgrade" | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -35,7 +35,7 @@ export default function Checkout() {
     load();
   }, []);
 
-  const handleUpgrade = async (plan: "pro" | "standard") => {
+  const handleUpgrade = async (plan: "standard") => {
     try {
       setLoading("upgrade");
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,7 +48,7 @@ export default function Checkout() {
 
       if (error) throw error;
       
-      toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan!`);
+      toast.success(`Successfully upgraded to Standard plan!`);
       router.push("/settings");
     } catch {
       toast.error("Failed to process the upgrade. Please try again or contact support.");
@@ -57,7 +57,7 @@ export default function Checkout() {
     }
   };
 
-  const handleCheckout = async (plan: "pro" | "standard") => {
+  const handleCheckout = async (plan: "standard") => {
     try {
       console.log("Starting checkout for plan:", plan);
       setLoading(plan);
@@ -102,7 +102,7 @@ export default function Checkout() {
   };
 
   const busy = loading !== null;
-  const selectedPlan = searchParams.get("plan") as "pro" | "standard" | null;
+  const selectedPlan = searchParams.get("plan") as "standard" | null;
   const isUpgrading = currentPlan && selectedPlan && currentPlan !== selectedPlan && subscriptionStatus === "active";
 
   if (loadingProfile) {
@@ -118,7 +118,7 @@ export default function Checkout() {
       <div className="min-h-screen bg-[#08080F] font-body text-foreground">
          <div className="mx-auto max-w-md px-4 py-16">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-              <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
+              <img src={pitchnwLogo.src || pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
               <h1 className="font-display font-extrabold text-3xl mb-3">Upgrade Your Plan</h1>
               <p className="text-muted-foreground">You are changing your subscription</p>
             </motion.div>
@@ -137,12 +137,12 @@ export default function Checkout() {
                 <div className="text-primary font-bold">→</div>
                 <div className="text-right">
                   <p className="text-xs text-success uppercase tracking-wider font-semibold">New</p>
-                  <p className="font-display font-bold text-lg capitalize">{selectedPlan}</p>
+                  <p className="font-display font-bold text-lg capitalize">{selectedPlan || "standard"}</p>
                 </div>
               </div>
 
               <div className="space-y-4 mb-8 text-sm text-card-foreground">
-                <p>By upgrading, you will immediately gain access to the new features of the <strong>{selectedPlan}</strong> tier.</p>
+                <p>By upgrading, you will immediately gain access to all the features of the <strong>Standard</strong> tier.</p>
                 <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
                   <Check className="h-5 w-5 shrink-0 mt-0.5" />
                   Your payment method on file will be charged the prorated difference for the remainder of this billing cycle.
@@ -154,7 +154,7 @@ export default function Checkout() {
                 size="lg"
                 className="w-full"
                 disabled={busy}
-                onClick={() => handleUpgrade(selectedPlan)}
+                onClick={() => handleUpgrade("standard")}
               >
                 {loading === "upgrade" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Confirm Upgrade
@@ -185,64 +185,14 @@ export default function Checkout() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
-          <h1 className="font-display font-extrabold text-4xl text-center mb-3">Choose Your Plan</h1>
+          <img src={pitchnwLogo.src || pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
+          <h1 className="font-display font-syne text-[800] text-4xl text-center mb-3">One plan. Everything included.</h1>
           <p className="text-muted-foreground text-center max-w-lg mx-auto">
-            Start your 3-day free trial. Cancel anytime.
+            Start your 3-day free trial. <br/> No card required during trial. Cancel anytime.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-          {/* Pro */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="relative rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-6 md:p-8 flex flex-col"
-          >
-            <span className="inline-flex self-start rounded-full bg-success/15 text-success text-xs font-medium px-3 py-1 mb-4">
-              3-day free trial
-            </span>
-            <p className="font-display font-bold uppercase tracking-wide text-lg text-card-foreground">Pro</p>
-            <div className="mt-2 mb-4 flex items-baseline gap-1">
-              <span className="font-display font-extrabold text-5xl text-card-foreground">$12</span>
-              <span className="text-muted-foreground text-sm">/month</span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">For freelancers who pitch regularly</p>
-            <ul className="space-y-2.5 mb-8 flex-1 text-sm text-muted-foreground">
-              {[
-                "Unlimited AI proposal generation",
-                "High-converting sales copy output",
-                "8 professional pitch templates",
-                "Branding kit (logo + header)",
-                "Client portal with private link",
-                "Digital signatures",
-                "Proposal analytics",
-                "Sophisticated CRM pipeline",
-                "PDF export",
-              ].map((f) => (
-                <li key={f} className="flex gap-2">
-                  <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  {f}
-                </li>
-              ))}
-              <li className="flex gap-2 text-muted-foreground/70">
-                <X className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                AI Win-Rate Coach
-              </li>
-            </ul>
-            <Button
-              variant="hero"
-              size="lg"
-              className="w-full"
-              disabled={busy}
-              onClick={() => handleCheckout("pro")}
-            >
-              {loading === "pro" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Start Pro Free Trial
-            </Button>
-          </motion.div>
-
+        <div className="max-w-[480px] mx-auto">
           {/* Standard */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -256,14 +206,27 @@ export default function Checkout() {
             <span className="inline-flex self-start rounded-full bg-success/15 text-success text-xs font-medium px-3 py-1 mb-4 mt-2">
               3-day free trial
             </span>
-            <p className="font-display font-bold uppercase tracking-wide text-lg text-card-foreground">Standard</p>
+            <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground">Standard</p>
             <div className="mt-2 mb-4 flex items-baseline gap-1">
-              <span className="font-display font-extrabold text-5xl text-card-foreground">$29</span>
+              <span className="font-display font-extrabold text-5xl text-card-foreground">$15</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-6">Everything in Pro, plus power features</p>
+            <p className="text-sm text-muted-foreground mb-6">Everything you need to pitch and win</p>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm text-muted-foreground">
-              {["Everything in Pro", "AI Win-Rate Coach", "Advanced analytics", "Priority support"].map((f) => (
+              {[
+                "Unlimited AI proposal generation",
+                "High-converting sales copy output",
+                "8 professional pitch templates",
+                "Branding kit (logo + header title)",
+                "Client portal with private link",
+                "Digital signatures (creator + client)",
+                "Proposal analytics",
+                "Sophisticated CRM pipeline",
+                "PDF export",
+                "AI Win-Rate Coach",
+                "Follow-up reminders",
+                "Priority support"
+              ].map((f) => (
                 <li key={f} className="flex gap-2">
                   <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
                   {f}
@@ -278,7 +241,7 @@ export default function Checkout() {
               onClick={() => handleCheckout("standard")}
             >
               {loading === "standard" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Start Standard Free Trial
+              Start Free Trial — 3 Days
             </Button>
           </motion.div>
         </div>

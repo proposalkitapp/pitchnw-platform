@@ -138,7 +138,7 @@ serve(async (req) => {
 
       if ((count ?? 0) >= 3) {
         return new Response(
-          JSON.stringify({ error: "Free plan limit reached. You've used all 3 free proposals. Upgrade to Pro for unlimited proposals.", code: "LIMIT_REACHED" }),
+          JSON.stringify({ error: "Free plan limit reached. You've used all 3 free proposals. Upgrade to Standard for unlimited proposals.", code: "LIMIT_REACHED" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

@@ -122,10 +122,10 @@ export function AppSidebar() {
           <div className="px-3 py-3 mb-3 bg-white/5 rounded-xl">
             <p className="text-[11px] text-slate-400 truncate mb-1">{user?.email}</p>
             <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-              plan === "standard" ? "bg-amber-500/20 text-amber-500" :
-              "bg-white/10 text-slate-300"
+              plan === "standard" ? "bg-purple-500/20 text-purple-400" :
+              "bg-amber-500/20 text-amber-500"
             }`}>
-              {plan === "free" ? "Free Plan" : "Standard Plan"}
+              {plan === "standard" ? "Standard Plan" : "Trial"}
             </span>
           </div>
         )}

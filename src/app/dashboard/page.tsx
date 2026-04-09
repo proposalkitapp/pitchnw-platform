@@ -148,7 +148,7 @@ export default function Dashboard() {
 
   const deleteProposal = async (id: string) => {
     if (plan === "free") {
-      toast.error("Free plan users cannot delete proposals. Upgrade to Pro to manage your proposals.");
+      toast.error("Free plan users cannot delete proposals. Upgrade to Standard to manage your proposals.");
       return;
     }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
@@ -274,7 +274,7 @@ export default function Dashboard() {
       bgColor: "bg-primary/10",
       onClick: () => {
         if (!canCreateProposal) {
-          toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
+          toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
           router.push("/settings");
           return;
         }
@@ -389,7 +389,7 @@ export default function Dashboard() {
               className="gap-2 shrink-0"
               onClick={() => {
                 if (!canCreateProposal) {
-                  toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
+                  toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
                   router.push("/settings");
                   return;
                 }
@@ -884,7 +884,7 @@ export default function Dashboard() {
                     className="w-full gap-1.5"
                     onClick={() => router.push("/settings")}
                   >
-                    <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade to Pro
+                    <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade to Standard
                   </Button>
                 </div>
               </motion.div>

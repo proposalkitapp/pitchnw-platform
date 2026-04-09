@@ -26,7 +26,7 @@ export default function Admin() {
   const [users, setUsers] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, proUsers: 0, standardUsers: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, standardUsers: 0, standardUsers: 0 });
 
   useEffect(() => {
     if (user) checkAdmin();
@@ -61,7 +61,7 @@ export default function Admin() {
     setStats({
       totalUsers: profs.length,
       totalProposals: props.length,
-      proUsers: profs.filter((p: any) => p.plan === "pro").length,
+      standardUsers: profs.filter((p: any) => p.plan === "standard").length,
       standardUsers: profs.filter((p: any) => p.plan === "standard").length,
     });
     setLoading(false);
@@ -107,7 +107,7 @@ export default function Admin() {
   const overviewStats = [
     { label: "Total Users", value: stats.totalUsers, icon: Users, color: "text-primary" },
     { label: "Total Proposals", value: stats.totalProposals, icon: FileText, color: "text-success" },
-    { label: "Pro Users", value: stats.proUsers, icon: Shield, color: "text-primary" },
+    { label: "Pro Users", value: stats.standardUsers, icon: Shield, color: "text-primary" },
     { label: "Standard Users", value: stats.standardUsers, icon: Shield, color: "text-warning" },
   ];
 
