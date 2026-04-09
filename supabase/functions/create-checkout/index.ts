@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std/http/server.ts'
+import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 import DodoPayments from 'https://esm.sh/dodopayments'
 
@@ -74,10 +74,10 @@ serve(async (req) => {
       customer: profile?.dodo_customer_id
         ? { customer_id: profile.dodo_customer_id }
         : {
-            email: user.email!,
-            name: profile?.display_name || user.email!,
-            create_new_customer: true
-          },
+          email: user.email!,
+          name: profile?.display_name || user.email!,
+          create_new_customer: true
+        },
       success_url: appUrl + '/payment/success?plan=standard&session_id={CHECKOUT_SESSION_ID}',
       cancel_url: appUrl + '/checkout',
       metadata: {
