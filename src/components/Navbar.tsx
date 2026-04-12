@@ -30,7 +30,7 @@ export function Navbar() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
-  const location = usePathname();
+  const location = useLocation().pathname;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);

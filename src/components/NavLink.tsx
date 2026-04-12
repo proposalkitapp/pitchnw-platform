@@ -15,7 +15,7 @@ interface NavLinkProps {
 
 const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
   ({ className, activeClassName, to, end, children, ...props }, ref) => {
-    const pathname = usePathname();
+    const pathname = useLocation().pathname;
     const isActive = end ? pathname === to : pathname.startsWith(to);
 
     const computedClassName = typeof className === 'function' 
