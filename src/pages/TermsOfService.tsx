@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthLayout } from "@/components/AuthLayout";
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function TermsOfService() {
   return (
@@ -36,7 +36,7 @@ export default function TermsOfService() {
         <div className="mt-12 pt-6 border-t border-border">
           <p>If you have any questions about these Terms, please contact us at <a href="mailto:support@pitchnw.app" className="text-primary hover:underline">support@pitchnw.app</a>.</p>
           <div className="mt-4">
-            <Link href="/" className="text-primary hover:underline">← Back to Home</Link>
+            <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
           </div>
         </div>
       </div>

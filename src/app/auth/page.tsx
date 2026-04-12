@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import Link from 'next/link';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,7 @@ const GoogleLogo = () => (
 );
 
 export default function AuthPage() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("mode") === "signup" ? false : true;
   const [isLogin, setIsLogin] = useState(defaultTab);
   const [email, setEmail] = useState("");
@@ -45,7 +44,7 @@ export default function AuthPage() {
     if (session) {
       navigate(redirectTo);
     }
-  }, [session, router, redirectTo]);
+  }, [session, navigate, redirectTo]);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -198,7 +197,7 @@ export default function AuthPage() {
                       Accept terms and conditions
                     </label>
                     <p className="text-[13px] text-muted-foreground">
-                      I agree to the <Link href="/terms" className="text-primary hover:underline">Terms of Use</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                      I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Use</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                     </p>
                   </div>
                 </div>

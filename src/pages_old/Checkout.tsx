@@ -12,7 +12,7 @@ import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState<"pro" | "standard" | "upgrade" | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);

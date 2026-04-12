@@ -12,7 +12,7 @@ import pitchnwLogo from "../../assets/pitchnw-logo.png";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState<"standard" | "upgrade" | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export default function Checkout() {
       <div className="min-h-screen bg-[#08080F] font-body text-foreground">
          <div className="mx-auto max-w-md px-4 py-16">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-              <img src={pitchnwLogo.src || pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
+              <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
               <h1 className="font-display font-extrabold text-3xl mb-3">Upgrade Your Plan</h1>
               <p className="text-muted-foreground">You are changing your subscription</p>
             </motion.div>
@@ -187,7 +187,7 @@ export default function Checkout() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <img src={pitchnwLogo.src || pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
+          <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
           <h1 className="font-display font-syne text-[800] text-4xl text-center mb-3">One plan. Everything included.</h1>
           <p className="text-muted-foreground text-center max-w-lg mx-auto">
             Start your 3-day free trial. <br/> No card required during trial. Cancel anytime.

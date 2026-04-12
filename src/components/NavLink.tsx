@@ -1,7 +1,6 @@
 "use client";
 
-import Link from 'next/link';
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { forwardRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +23,7 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
 
     return (
       <Link
-        href={to}
+        to={to}
         ref={ref}
         className={computedClassName}
         {...props}

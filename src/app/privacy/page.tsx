@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { AuthLayout } from "@/components/AuthLayout";
-import Link from 'next/link';
+import { Link } from 'react-router-dom';
 
 export default function PrivacyPolicy() {
   return (
@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
         <div className="mt-12 pt-6 border-t border-border">
           <p>If you have questions or comments about this Privacy Policy, please contact us at <a href="mailto:support@pitchnw.app" className="text-primary hover:underline">support@pitchnw.app</a>.</p>
           <div className="mt-4">
-            <Link href="/" className="text-primary hover:underline">← Back to Home</Link>
+            <Link to="/" className="text-primary hover:underline">← Back to Home</Link>
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ const GoogleLogo = () => (
 );
 
 export default function AuthPage() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("mode") === "signup" ? false : true;
   const [isLogin, setIsLogin] = useState(defaultTab);
   const [email, setEmail] = useState("");

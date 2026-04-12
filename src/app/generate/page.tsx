@@ -100,7 +100,7 @@ export default function ProposalGenerator() {
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const templateId = searchParams.get("template");
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
   const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);

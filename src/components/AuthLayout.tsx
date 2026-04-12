@@ -18,7 +18,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     if (!loading && !user) {
       navigate("/auth");
     }
-  }, [user, loading, router]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (

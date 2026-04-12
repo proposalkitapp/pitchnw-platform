@@ -65,7 +65,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 px-6 py-6 mb-4">
             <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
               <img
-                src={pitchnwLogo.src || pitchnwLogo}
+                src={pitchnwLogo}
                 alt="Pitchnw"
                 className={`${collapsed ? "h-10" : "h-14"} w-auto object-contain filter brightness-0 invert`}
               />

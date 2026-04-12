@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 export default function PaymentSuccess() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const plan = (searchParams.get("plan") || "pro").toLowerCase();
   const label = plan === "standard" ? "Standard" : "Pro";
