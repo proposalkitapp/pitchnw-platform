@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, CheckCircle } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -18,7 +18,7 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -82,7 +82,7 @@ export default function ResetPassword() {
           {success ? (
             <div className="rounded-xl border border-border bg-card p-6 sm:p-8 text-center space-y-4">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
-              <Button variant="hero" onClick={() => router.push("/dashboard")} className="w-full">
+              <Button variant="hero" onClick={() => navigate("/dashboard")} className="w-full">
                 Go to Dashboard
               </Button>
             </div>
@@ -91,7 +91,7 @@ export default function ResetPassword() {
               <p className="text-muted-foreground">
                 Invalid or expired reset link. Please request a new one.
               </p>
-              <Button variant="hero" onClick={() => router.push("/forgot-password")}>
+              <Button variant="hero" onClick={() => navigate("/forgot-password")}>
                 Request New Link
               </Button>
             </div>

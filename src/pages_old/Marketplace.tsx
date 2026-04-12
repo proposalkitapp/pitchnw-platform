@@ -6,11 +6,11 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Star, ArrowRight, Search } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { templates, categories } from "@/lib/templates";
 
 export default function Marketplace() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -70,7 +70,7 @@ export default function Marketplace() {
               transition={{ delay: i * 0.05 }}
               whileHover={{ y: -4 }}
               className="group rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-glow cursor-pointer"
-              onClick={() => router.push(`/marketplace/${template.id}`)}
+              onClick={() => navigate(`/marketplace/${template.id}`)}
             >
               {/* Accent top border */}
               <div className="h-1" style={{ backgroundColor: `hsl(${template.accentColor})` }} />

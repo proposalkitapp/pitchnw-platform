@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -86,7 +86,7 @@ function getRelativeTime(dateStr: string): string {
 
 export default function Dashboard() {
   const { session } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -276,10 +276,10 @@ export default function Dashboard() {
       onClick: () => {
         if (!canCreateProposal) {
           toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
-          router.push("/settings");
+          navigate("/settings");
           return;
         }
-        router.push("/generate");
+        navigate("/generate");
       },
     },
     {
@@ -288,7 +288,7 @@ export default function Dashboard() {
       icon: Store,
       color: "text-violet-500",
       bgColor: "bg-violet-500/10",
-      onClick: () => router.push("/marketplace"),
+      onClick: () => navigate("/marketplace"),
     },
     {
       title: "CRM Pipeline",
@@ -296,7 +296,7 @@ export default function Dashboard() {
       icon: BarChart3,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
-      onClick: () => router.push("/crm"),
+      onClick: () => navigate("/crm"),
     },
   ];
 
@@ -391,10 +391,10 @@ export default function Dashboard() {
               onClick={() => {
                 if (!canCreateProposal) {
                   toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
-                  router.push("/settings");
+                  navigate("/settings");
                   return;
                 }
-                router.push("/generate");
+                navigate("/generate");
               }}
             >
               <Plus className="h-5 w-5" /> New Proposal
@@ -464,7 +464,7 @@ export default function Dashboard() {
                     <Button
                       variant="hero"
                       size="sm"
-                      onClick={() => router.push("/settings")}
+                      onClick={() => navigate("/settings")}
                       className="gap-1 text-xs"
                     >
                       <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade
@@ -596,7 +596,7 @@ export default function Dashboard() {
                   <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                     Generate your first AI-powered proposal in under 60 seconds.
                   </p>
-                  <Button variant="hero" onClick={() => router.push("/generate")} className="gap-2">
+                  <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
                     <Sparkles className="h-4 w-4" /> Create Your First Proposal
                   </Button>
                 </motion.div>
@@ -883,7 +883,7 @@ export default function Dashboard() {
                     variant="hero"
                     size="sm"
                     className="w-full gap-1.5"
-                    onClick={() => router.push("/settings")}
+                    onClick={() => navigate("/settings")}
                   >
                     <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade to Standard
                   </Button>

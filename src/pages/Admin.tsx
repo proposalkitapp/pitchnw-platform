@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
@@ -20,7 +20,7 @@ import {
 
 export default function Admin() {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
@@ -40,7 +40,7 @@ export default function Admin() {
       .single();
 
     if (!data?.is_admin) {
-      router.push("/dashboard");
+      navigate("/dashboard");
       return;
     }
     setIsAdmin(true);

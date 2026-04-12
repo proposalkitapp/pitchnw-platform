@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 const OCCUPATIONS = [
   "Freelance Developer", "Web Designer", "UI/UX Designer", "Graphic Designer",
@@ -34,7 +34,7 @@ interface Props {
 
 export function OnboardingModal({ onComplete }: Props) {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
 
   // Form states

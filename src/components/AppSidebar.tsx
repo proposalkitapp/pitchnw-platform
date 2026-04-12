@@ -2,7 +2,7 @@
 
 import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useRouter, usePathname } from "next/navigation";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = usePathname();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -55,7 +55,7 @@ export function AppSidebar() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/");
+    navigate("/");
   };
 
   return (
@@ -63,7 +63,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-black">
         <SidebarGroup>
           <div className="flex items-center gap-2 px-6 py-6 mb-4">
-            <a href="/" onClick={(e) => { e.preventDefault(); router.push("/"); }}>
+            <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
               <img
                 src={pitchnwLogo.src || pitchnwLogo}
                 alt="Pitchnw"

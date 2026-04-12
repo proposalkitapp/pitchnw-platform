@@ -3,7 +3,7 @@
 import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 
 const plans = [
@@ -34,14 +34,14 @@ const plans = [
 ];
 
 export function PricingSection() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const handlePlanClick = (planName: string) => {
     if (user) {
-      router.push("/settings");
+      navigate("/settings");
     } else {
-      router.push(`/auth?mode=signup&intent=standard`);
+      navigate(`/auth?mode=signup&intent=standard`);
     }
   };
 

@@ -1,22 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 export default function AuthCallback() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleCallback = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (error || !data.session) {
-        router.push("/auth?error=auth_failed");
+        navigate("/auth?error=auth_failed");
         return;
       }
-      router.push("/dashboard");
+      navigate("/dashboard");
     };
     handleCallback();
   }, [router]);

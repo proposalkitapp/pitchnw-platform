@@ -3,13 +3,13 @@
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
-import { useRouter, useParams } from 'next/navigation';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Star, ArrowLeft, ArrowRight, Users, Shield } from "lucide-react";
 import { templates, getTemplateById } from "@/lib/templates";
 
 export default function TemplateDetail() {
   const { id } = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const template = getTemplateById(id || "");
 
   if (!template) {
@@ -17,7 +17,7 @@ export default function TemplateDetail() {
       <AuthLayout>
         <div className="p-6 text-center py-20">
           <h2 className="font-display text-xl font-semibold mb-2">Template not found</h2>
-          <Button variant="outline" onClick={() => router.push("/marketplace")}>← Back to Marketplace</Button>
+          <Button variant="outline" onClick={() => navigate("/marketplace")}>← Back to Marketplace</Button>
         </div>
       </AuthLayout>
     );
@@ -28,7 +28,7 @@ export default function TemplateDetail() {
   return (
     <AuthLayout>
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-        <Button variant="ghost" onClick={() => router.push("/marketplace")} className="gap-2 mb-6 text-muted-foreground">
+        <Button variant="ghost" onClick={() => navigate("/marketplace")} className="gap-2 mb-6 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to Marketplace
         </Button>
 
@@ -129,7 +129,7 @@ export default function TemplateDetail() {
               style={{
                 backgroundColor: `hsl(${template.accentColor})`,
               }}
-              onClick={() => router.push(`/generate?template=${template.id}`)}
+              onClick={() => navigate(`/generate?template=${template.id}`)}
             >
               Use This Template <ArrowRight className="h-4 w-4" />
             </Button>
@@ -146,7 +146,7 @@ export default function TemplateDetail() {
                   key={t.id}
                   whileHover={{ y: -4 }}
                   className="rounded-xl border border-border bg-card p-5 cursor-pointer hover:border-primary/30 transition-colors"
-                  onClick={() => router.push(`/marketplace/${t.id}`)}
+                  onClick={() => navigate(`/marketplace/${t.id}`)}
                 >
                   <div className="h-1 rounded-t-xl -mt-5 -mx-5 mb-4" style={{ backgroundColor: `hsl(${t.accentColor})` }} />
                   <h3 className="font-display text-sm font-semibold text-card-foreground">{t.name}</h3>

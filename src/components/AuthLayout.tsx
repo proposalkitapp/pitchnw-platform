@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -11,12 +11,12 @@ import { Moon, Sun } from "lucide-react";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { isDark, toggle } = useTheme();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth");
+      navigate("/auth");
     }
   }, [user, loading, router]);
 

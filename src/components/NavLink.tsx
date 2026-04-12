@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from "next/navigation";
+import { useLocation } from "react-router-dom";
 import { forwardRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 

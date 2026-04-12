@@ -4,7 +4,7 @@ import { FadeInView, ParallaxSection } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 
 const templates = [
@@ -17,7 +17,7 @@ const templates = [
 ];
 
 export function MarketplaceSection() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   return (
@@ -39,7 +39,7 @@ export function MarketplaceSection() {
               <motion.div
                 whileHover={{ y: -3 }}
                 className="group rounded-2xl border border-border bg-card overflow-hidden transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/[0.03] cursor-pointer"
-                onClick={() => router.push(user ? "/marketplace" : "/auth?mode=signup")}
+                onClick={() => navigate(user ? "/marketplace" : "/auth?mode=signup")}
               >
                 <div className="h-32 bg-muted/30 flex items-center justify-center border-b border-border">
                   <div className="w-3/4 space-y-2">
@@ -74,7 +74,7 @@ export function MarketplaceSection() {
           <Button
             variant="hero-outline"
             size="lg"
-            onClick={() => router.push(user ? "/marketplace" : "/auth?mode=signup")}
+            onClick={() => navigate(user ? "/marketplace" : "/auth?mode=signup")}
           >
             Browse All Templates
           </Button>

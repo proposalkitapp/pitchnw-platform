@@ -10,13 +10,13 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mail, ArrowLeft } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +63,7 @@ export default function ForgotPassword() {
                 <Button variant="outline" onClick={() => setSent(false)}>
                   Try Again
                 </Button>
-                <Button variant="hero" onClick={() => router.push("/auth")}>
+                <Button variant="hero" onClick={() => navigate("/auth")}>
                   Back to Sign In
                 </Button>
               </div>
@@ -101,7 +101,7 @@ export default function ForgotPassword() {
 
               <button
                 type="button"
-                onClick={() => router.push("/auth")}
+                onClick={() => navigate("/auth")}
                 className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mx-auto transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to Sign In

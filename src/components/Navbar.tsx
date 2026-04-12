@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, usePathname } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import pitchnwLogo from "../assets/pitchnw-logo.png";
 
@@ -29,7 +29,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
   const location = usePathname();
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function Navbar() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     if (location !== "/") {
-      router.push("/");
+      navigate("/");
       setTimeout(() => {
         document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -68,7 +68,7 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/");
+    navigate("/");
   };
 
   return (
@@ -86,7 +86,7 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           <a
             href="/"
-            onClick={(e) => { e.preventDefault(); router.push("/"); }}
+            onClick={(e) => { e.preventDefault(); navigate("/"); }}
             className="flex items-center gap-2"
           >
             <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
@@ -109,7 +109,7 @@ export function Navbar() {
                   variant={isActive ? "secondary" : "ghost"}
                   size="sm"
                   className="gap-2"
-                  onClick={() => router.push(link.path)}
+                  onClick={() => navigate(link.path)}
                 >
                   <link.icon className="h-4 w-4" />
                   {link.label}
@@ -152,14 +152,14 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push("/auth?mode=login")}
+                onClick={() => navigate("/auth?mode=login")}
               >
                 Sign in
               </Button>
               <Button
                 variant="hero"
                 size="sm"
-                onClick={() => router.push("/auth?mode=signup")}
+                onClick={() => navigate("/auth?mode=signup")}
               >
                 Get Started
               </Button>
@@ -197,7 +197,7 @@ export function Navbar() {
                       key={link.path}
                       variant={location === link.path ? "secondary" : "ghost"}
                       className="justify-start gap-2"
-                      onClick={() => { router.push(link.path); setMobileOpen(false); }}
+                      onClick={() => { navigate(link.path); setMobileOpen(false); }}
                     >
                       <link.icon className="h-4 w-4" /> {link.label}
                     </Button>
@@ -218,7 +218,7 @@ export function Navbar() {
                       {link.label}
                     </a>
                   ))}
-                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { router.push("/auth?mode=signup"); setMobileOpen(false); }}>
+                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}>
                     Get Started Free
                   </Button>
                 </>

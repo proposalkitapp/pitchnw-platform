@@ -3,11 +3,11 @@
 import { FadeInView } from "@/components/ParallaxSection";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 
 export function CTASection() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   return (
@@ -27,7 +27,7 @@ export function CTASection() {
           <Button
             variant="hero"
             size="xl"
-            onClick={() => router.push(user ? "/dashboard" : "/auth?mode=signup")}
+            onClick={() => navigate(user ? "/dashboard" : "/auth?mode=signup")}
           >
             Get Started Free
             <ArrowRight className="h-5 w-5" />

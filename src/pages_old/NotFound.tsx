@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from 'next/navigation';
+import { useLocation } from 'react-router-dom';
 import { useEffect } from "react";
 
 const NotFound = () => {

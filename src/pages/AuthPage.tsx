@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
@@ -36,14 +36,14 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp, session } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const redirectParam = searchParams.get("redirect");
   const redirectTo = redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/dashboard";
 
   useEffect(() => {
     if (session) {
-      router.push(redirectTo);
+      navigate(redirectTo);
     }
   }, [session, router, redirectTo]);
 
@@ -223,7 +223,7 @@ export default function AuthPage() {
 
             {isLogin && (
               <p className="text-center text-sm">
-                <button type="button" onClick={() => router.push("/forgot-password")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
+                <button type="button" onClick={() => navigate("/forgot-password")} className="text-muted-foreground hover:text-primary hover:underline transition-colors">
                   Forgot your password?
                 </button>
               </p>

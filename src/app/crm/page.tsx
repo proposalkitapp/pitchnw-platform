@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -40,7 +40,7 @@ const kanbanColumns = ["sent", "opened", "draft", "won", "lost"];
 
 export default function CRM() {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"table" | "kanban">("table");
@@ -115,7 +115,7 @@ export default function CRM() {
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Follow-up reminders</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Full proposal analytics</li>
               </ul>
-              <Button variant="hero" size="lg" className="w-full" onClick={() => router.push("/settings?tab=billing")}>
+              <Button variant="hero" size="lg" className="w-full" onClick={() => navigate("/settings?tab=billing")}>
                 Upgrade to Standard — $12/mo
               </Button>
             </motion.div>
@@ -131,7 +131,7 @@ export default function CRM() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <h1 className="font-display text-3xl font-bold">CRM Pipeline</h1>
-            <Button variant="hero" className="gap-2" onClick={() => router.push("/generate")}>
+            <Button variant="hero" className="gap-2" onClick={() => navigate("/generate")}>
               <Plus className="h-4 w-4" /> Add to Pipeline
             </Button>
           </div>
@@ -177,7 +177,7 @@ export default function CRM() {
             <BarChart3 className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="font-display text-xl font-semibold mb-2">Your pipeline is empty</h2>
             <p className="text-muted-foreground mb-6">Proposals you send appear here automatically.</p>
-            <Button variant="hero" onClick={() => router.push("/generate")} className="gap-2">
+            <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
               <Plus className="h-4 w-4" /> Create a Proposal
             </Button>
           </motion.div>
@@ -210,7 +210,7 @@ export default function CRM() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push("/dashboard")}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/dashboard")}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         {p.status !== "won" && (
@@ -252,7 +252,7 @@ export default function CRM() {
                         key={p.id}
                         layout
                         className="rounded-lg border border-border bg-card p-3 cursor-pointer hover:border-primary/30 transition-colors"
-                        onClick={() => router.push("/dashboard")}
+                        onClick={() => navigate("/dashboard")}
                       >
                         <p className="font-display text-sm font-semibold text-card-foreground truncate">{p.client_name || "No client"}</p>
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.project_type || p.title}</p>

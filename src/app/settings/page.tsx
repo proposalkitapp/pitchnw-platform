@@ -14,11 +14,11 @@ import { toast } from "sonner";
 import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -458,7 +458,7 @@ export default function Settings() {
                   <AlertTitle>Payment failed</AlertTitle>
                   <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
                     <span>Your last payment failed. Update your payment method in Dodo Payments checkout.</span>
-                    <Button size="sm" variant="hero" onClick={() => router.push("/checkout")}>
+                    <Button size="sm" variant="hero" onClick={() => navigate("/checkout")}>
                       Retry payment
                     </Button>
                   </AlertDescription>
@@ -495,7 +495,7 @@ export default function Settings() {
                 {subscriptionStatus === "cancelled" && (currentPlan === "pro" || currentPlan === "standard") && (
                   <div className="space-y-3 pt-2">
                     <p className="text-sm text-muted-foreground">Cancels at end of billing period.</p>
-                    <Button variant="hero-outline" size="sm" onClick={() => router.push("/checkout")}>
+                    <Button variant="hero-outline" size="sm" onClick={() => navigate("/checkout")}>
                       Reactivate
                     </Button>
                   </div>
@@ -518,7 +518,7 @@ export default function Settings() {
                       <li>✓ 8 professional pitch templates</li>
                       <li>✓ Client portal and analytics</li>
                     </ul>
-                    <Button variant="hero" size="sm" onClick={() => router.push("/checkout")}>
+                    <Button variant="hero" size="sm" onClick={() => navigate("/checkout")}>
                       Subscribe Now
                     </Button>
                   </div>
@@ -562,7 +562,7 @@ export default function Settings() {
                         variant="hero"
                         className="w-full gap-2"
                         disabled={isCurrent}
-                        onClick={() => router.push(`/checkout?plan=${key}`)}
+                        onClick={() => navigate(`/checkout?plan=${key}`)}
                       >
                         {isCurrent ? "Current plan" : `Upgrade to ${plan.name}`}
                       </Button>

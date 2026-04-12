@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from "framer-motion";
 import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import pitchnwLogo from "../../assets/pitchnw-logo.png";
 
 
 export default function Checkout() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState<"standard" | "upgrade" | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
@@ -49,7 +49,7 @@ export default function Checkout() {
       if (error) throw error;
       
       toast.success(`Successfully upgraded to Standard plan!`);
-      router.push("/settings");
+      navigate("/settings");
     } catch {
       toast.error("Failed to process the upgrade. Please try again or contact support.");
     } finally {
@@ -65,7 +65,7 @@ export default function Checkout() {
         await supabase.auth.getSession()
 
       if (sessionError || !session) {
-        router.push('/auth?mode=signup&redirect=/checkout')
+        navigate('/auth?mode=signup&redirect=/checkout')
         return
       }
 
@@ -165,7 +165,7 @@ export default function Checkout() {
                 variant="ghost"
                 className="w-full mt-2 text-muted-foreground hover:text-foreground"
                 disabled={busy}
-                onClick={() => router.push("/settings")}
+                onClick={() => navigate("/settings")}
               >
                 Cancel
               </Button>

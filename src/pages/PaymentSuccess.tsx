@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { CheckCircle2 } from "lucide-react";
@@ -10,7 +10,7 @@ import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 export default function PaymentSuccess() {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const plan = (searchParams.get("plan") || "pro").toLowerCase();
   const label = plan === "standard" ? "Standard" : "Pro";
 
@@ -52,10 +52,10 @@ export default function PaymentSuccess() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <Button variant="hero" size="lg" className="w-full sm:w-auto" onClick={() => router.push("/dashboard")}>
+          <Button variant="hero" size="lg" className="w-full sm:w-auto" onClick={() => navigate("/dashboard")}>
             Go to Dashboard
           </Button>
-          <Button variant="hero-outline" size="lg" className="w-full sm:w-auto" onClick={() => router.push("/settings")}>
+          <Button variant="hero-outline" size="lg" className="w-full sm:w-auto" onClick={() => navigate("/settings")}>
             Complete Your Profile
           </Button>
         </div>

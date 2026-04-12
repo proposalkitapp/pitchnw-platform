@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
 
 const badges = [
@@ -13,11 +13,11 @@ const badges = [
 ];
 
 export function HeroSection() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleGetStarted = () => {
-    router.push(user ? "/dashboard" : "/auth?mode=signup");
+    navigate(user ? "/dashboard" : "/auth?mode=signup");
   };
 
   return (
@@ -73,7 +73,7 @@ export function HeroSection() {
           <Button
             variant="hero-outline"
             size="xl"
-            onClick={() => router.push(user ? "/marketplace" : "/auth?mode=signup")}
+            onClick={() => navigate(user ? "/marketplace" : "/auth?mode=signup")}
             className="text-base"
           >
             Browse Templates

@@ -7,12 +7,12 @@ import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Star, ArrowRight, Search } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { templates, categories } from "@/lib/templates";
 import { TemplateCard } from "@/components/TemplateCard";
 
 export default function Marketplace() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
 
@@ -69,7 +69,7 @@ export default function Marketplace() {
               key={template.id}
               template={template}
               index={i}
-              onClick={() => router.push(`/marketplace/${template.id}`)}
+              onClick={() => navigate(`/marketplace/${template.id}`)}
             />
           ))}
         </div>
