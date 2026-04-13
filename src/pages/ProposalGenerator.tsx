@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2 } from "lucide-react";
+import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -105,12 +105,35 @@ export default function ProposalGenerator() {
   const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
   const [budgetError, setBudgetError] = useState("");
 
+  // Plan state: null = free, 'pro' = paid
+  const [plan, setPlan] = useState<string | null>(null);
+  const [proposalsUsed, setProposalsUsed] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   useEffect(() => {
     if (templateId) {
       const t = getTemplateById(templateId);
       if (t) setActiveTemplate(t);
     }
   }, [templateId]);
+
+  // Load plan and proposals_used to enforce the free limit gate
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("plan, proposals_used")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        setPlan(data?.plan ?? null);
+        setProposalsUsed(data?.proposals_used || 0);
+        setProfileLoading(false);
+      });
+  }, [user]);
+
+  const isFreeUser = !plan;
+  const hasHitFreeLimit = isFreeUser && proposalsUsed >= 3;
 
   const update = (field: keyof FormData, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -167,12 +190,12 @@ export default function ProposalGenerator() {
         let errorMessage = "Failed to generate proposal";
         try {
           const err = await resp.json();
-          if (err.code === "LIMIT_REACHED") {
+          if (err.code === "LIMIT_REACHED" || err.error === "limit_reached") {
             toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
-            navigate("/settings");
+            navigate("/checkout");
             return;
           }
-          errorMessage = err.error || errorMessage;
+          errorMessage = err.error || err.message || errorMessage;
         } catch (parseError) {
           console.error("Error parsing failure response:", parseError);
           const textError = await resp.text().catch(() => "Unknown error");
@@ -214,11 +237,12 @@ export default function ProposalGenerator() {
             }
           } catch (e) {
             console.warn("Error parsing stream chunk:", e, jsonStr);
-            // Don't break here, just continue to next line
           }
         }
       }
       toast.success("Proposal created!", { id: "gen" });
+      // Update local counter after successful generation
+      setProposalsUsed((prev) => prev + 1);
     } catch (e: any) {
       console.error("Generation error details:", e);
       toast.error(e.message || "Generation failed. Please try again.", { id: "gen" });
@@ -268,6 +292,52 @@ export default function ProposalGenerator() {
     }
     setIsSaving(false);
   };
+
+  // Show loading spinner while checking plan
+  if (profileLoading) {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  // Upgrade wall — shown instead of the form when free limit is reached
+  if (hasHitFreeLimit) {
+    return (
+      <AuthLayout>
+        <div className="flex items-center justify-center min-h-[70vh] p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="upgrade-wall max-w-md w-full rounded-2xl border border-border bg-card p-10 text-center shadow-2xl"
+          >
+            <div className="upgrade-icon text-5xl mb-6">🔒</div>
+            <h2 className="font-display text-2xl font-bold mb-4 text-card-foreground">
+              You have used all 3 free proposals
+            </h2>
+            <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
+              Free accounts include 3 proposals for life. Upgrade to Pro for unlimited proposal
+              generation, no limits, and full access to every feature.
+            </p>
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full mb-4"
+              onClick={() => navigate("/checkout")}
+            >
+              Upgrade to Pro — $12/mo
+            </Button>
+            <p className="sub-note text-xs text-muted-foreground">
+              Your existing proposals are safe and still accessible.
+            </p>
+          </motion.div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>

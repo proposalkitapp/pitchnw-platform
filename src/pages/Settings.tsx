@@ -27,7 +27,9 @@ export default function Settings() {
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState<string | null>("free");
+  // null = free, 'pro' = paid
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [proposalsUsed, setProposalsUsed] = useState(0);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function Settings() {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
+        "display_name, company_name, signature_data, plan, proposals_used, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
       )
       .eq("user_id", user.id)
       .single();
@@ -54,7 +56,9 @@ export default function Settings() {
       setDisplayName(data.display_name || "");
       setCompanyName(data.company_name || "");
       setSignatureData(data.signature_data || null);
-      setCurrentPlan(data.plan ?? "free");
+      // null = free; 'pro' = paid
+      setCurrentPlan(data.plan ?? null);
+      setProposalsUsed(data.proposals_used || 0);
       setBrandName(data.brand_name || "");
       setBrandLogoUrl(data.brand_logo_url || "");
       setPortfolioUrl(data.portfolio_url || "");
@@ -86,7 +90,6 @@ export default function Settings() {
 
     setUploadingLogo(true);
     try {
-      // Convert to base64 data URL for storage in profile
       const reader = new FileReader();
       reader.onloadend = () => {
         setBrandLogoUrl(reader.result as string);
@@ -108,7 +111,7 @@ export default function Settings() {
     }
     setPortfolioError("");
     setSaving(true);
-    
+
     try {
       const { error } = await supabase
         .from("profiles")
@@ -190,15 +193,18 @@ export default function Settings() {
     }
   };
 
+  const isPro = currentPlan === "pro";
+  const isFree = !currentPlan;
+
   const trialActive =
     trialEndsAt &&
     new Date(trialEndsAt) > new Date() &&
-    (currentPlan === "free" || currentPlan === null) &&
+    isFree &&
     subscriptionStatus !== "active";
   const trialExpired =
     trialEndsAt &&
     new Date(trialEndsAt) <= new Date() &&
-    (currentPlan === "free" || currentPlan === null);
+    isFree;
   const trialDaysLeft = trialActive
     ? Math.max(0, Math.ceil((new Date(trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -212,34 +218,6 @@ export default function Settings() {
       </AuthLayout>
     );
   }
-
-  const plans = [
-    {
-      name: "Pro",
-      price: "$12",
-      period: "/month",
-      features: [
-        "Unlimited AI proposals",
-        "All templates",
-        "Full proposal analytics",
-        "CRM pipeline dashboard",
-        "Client accept/decline flow",
-        "Delete & manage proposals",
-      ],
-    },
-    {
-      name: "Standard",
-      price: "$29",
-      period: "/month",
-      features: [
-        "Everything in Pro",
-        "Template Builder",
-        "AI Win-Rate Coach",
-        "Revenue dashboard",
-        "Priority support",
-      ],
-    },
-  ];
 
   return (
     <AuthLayout>
@@ -456,6 +434,7 @@ export default function Settings() {
                 </Alert>
               )}
 
+              {/* Current plan status */}
               <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-3">
                 <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
                   <CreditCard className="h-5 w-5 text-primary" /> Billing & subscription
@@ -464,10 +443,11 @@ export default function Settings() {
                   Payments are processed securely by Dodo Payments.
                 </p>
 
-                {currentPlan === "pro" && subscriptionStatus === "active" && (
+                {/* Pro — active */}
+                {isPro && subscriptionStatus === "active" && (
                   <div className="space-y-1 pt-2">
                     <p className="font-medium text-foreground">💜 Pro Plan · Active</p>
-                    <p className="text-sm text-muted-foreground">Renews monthly</p>
+                    <p className="text-sm text-muted-foreground">$12/month · Renews monthly</p>
                     {subscriptionPeriodEnd && (
                       <p className="text-xs text-muted-foreground">
                         Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
@@ -486,37 +466,17 @@ export default function Settings() {
                   </div>
                 )}
 
-                {currentPlan === "standard" && subscriptionStatus === "active" && (
-                  <div className="space-y-1 pt-2">
-                    <p className="font-medium text-foreground">⭐ Standard Plan · Active</p>
-                    <p className="text-sm text-muted-foreground">Renews monthly</p>
-                    {subscriptionPeriodEnd && (
-                      <p className="text-xs text-muted-foreground">
-                        Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
-                      </p>
-                    )}
-                    {dodoSubscriptionId && (
-                      <button
-                        type="button"
-                        className="text-sm text-primary hover:underline mt-2"
-                        disabled={cancelling}
-                        onClick={handleCancel}
-                      >
-                        {cancelling ? "Cancelling…" : "Cancel subscription"}
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {subscriptionStatus === "cancelled" && (currentPlan === "pro" || currentPlan === "standard") && (
+                {/* Pro — cancelled but still active until period end */}
+                {subscriptionStatus === "cancelled" && isPro && (
                   <div className="space-y-3 pt-2">
-                    <p className="text-sm text-muted-foreground">Cancels at end of billing period.</p>
-                    <Button variant="hero-outline" size="sm" onClick={() => navigate("/checkout")}>
-                      Reactivate
+                    <p className="text-sm text-muted-foreground">Pro subscription cancelled. Access continues until end of billing period.</p>
+                    <Button variant="hero" size="sm" onClick={() => navigate("/checkout")}>
+                      Reactivate Pro
                     </Button>
                   </div>
                 )}
 
+                {/* Trial active */}
                 {trialActive && (
                   <div className="pt-2 space-y-1">
                     <p className="font-medium text-foreground">Trial active</p>
@@ -526,61 +486,60 @@ export default function Settings() {
                   </div>
                 )}
 
+                {/* Trial expired */}
                 {trialExpired && (
                   <div className="pt-2 space-y-3">
                     <p className="font-medium text-foreground">Your trial has ended</p>
                     <Button variant="hero" size="sm" onClick={() => navigate("/checkout")}>
-                      Choose a plan
+                      Upgrade to Pro — $12/mo
                     </Button>
                   </div>
                 )}
 
-                {(currentPlan === "free" || currentPlan === null) &&
-                  subscriptionStatus !== "active" &&
-                  !trialActive &&
-                  !trialExpired && (
-                    <div className="pt-2 space-y-1">
-                      <p className="text-sm text-muted-foreground">
-                        3 proposals · Free templates only · Cannot delete proposals
-                      </p>
-                    </div>
-                  )}
+                {/* Free plan — no trial */}
+                {isFree && subscriptionStatus !== "active" && !trialActive && !trialExpired && (
+                  <div className="pt-2 space-y-1">
+                    <p className="font-medium text-foreground">Free Plan</p>
+                    <p className="text-sm text-muted-foreground">
+                      {Math.min(proposalsUsed, 3)} of 3 lifetime proposals used
+                    </p>
+                    <p className="text-xs text-muted-foreground">Cannot delete proposals · Free templates only</p>
+                  </div>
+                )}
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                {plans.map((plan) => {
-                  const key = plan.name.toLowerCase();
-                  const isCurrent = currentPlan === key && subscriptionStatus === "active";
-                  return (
-                    <div
-                      key={plan.name}
-                      className="rounded-xl border border-border bg-card p-6 hover:border-primary/20 transition-colors"
-                    >
-                      <h3 className="font-display text-xl font-bold text-card-foreground">{plan.name}</h3>
-                      <div className="mt-2 mb-4">
-                        <span className="font-display text-3xl font-extrabold text-card-foreground">{plan.price}</span>
-                        <span className="text-sm text-muted-foreground">{plan.period}</span>
-                      </div>
-                      <ul className="space-y-2 mb-6">
-                        {plan.features.map((f, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                      <Button
-                        variant="hero"
-                        className="w-full gap-2"
-                        disabled={isCurrent}
-                        onClick={() => navigate(`/checkout?plan=${key}`)}
-                      >
-                        {isCurrent ? "Current plan" : `Upgrade to ${plan.name}`}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Pro plan card — shown only when user is not already on Pro */}
+              {!isPro && (
+                <div className="rounded-xl border-2 border-primary bg-gradient-to-br from-primary/10 via-card/90 to-card/80 p-6 shadow-[0_0_30px_-10px_hsl(var(--primary))]">
+                  <h3 className="font-display text-xl font-bold text-card-foreground mb-1">Pro Plan</h3>
+                  <div className="mt-1 mb-4">
+                    <span className="font-display text-3xl font-extrabold text-card-foreground">$12</span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </div>
+                  <ul className="space-y-2 mb-6">
+                    {[
+                      "Unlimited AI proposals",
+                      "All templates",
+                      "Full proposal analytics",
+                      "CRM pipeline dashboard",
+                      "Client accept/decline flow",
+                      "Delete & manage proposals",
+                    ].map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    variant="hero"
+                    className="w-full gap-2"
+                    onClick={() => navigate("/checkout")}
+                  >
+                    Upgrade to Pro — $12/mo
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </motion.div>

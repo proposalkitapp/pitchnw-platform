@@ -34,7 +34,7 @@ function getGreeting(): string {
 }
 
 export default function Dashboard() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,11 @@ export default function Dashboard() {
   const [userBranding, setUserBranding] = useState<ProposalBranding>({});
 
   const fetchProposals = async (userId: string) => {
+    // Belt-and-braces: bail silently if userId is somehow falsy
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from("proposals")
@@ -53,6 +58,9 @@ export default function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (error) {
+        // Only show the toast when we know userId was real — avoids
+        // the race-condition toast that fires before auth is settled
+        console.error("fetchProposals error:", error);
         toast.error("Failed to load proposals");
       } else {
         setProposals(data || []);
@@ -89,11 +97,12 @@ export default function Dashboard() {
             }
           }
         });
-    } else if (session === null) {
+    } else if (!authLoading && session === null) {
       // Session has been checked and is null
       setLoading(false);
     }
-  }, [session]);
+    // While authLoading=true, session=null just means auth is still initialising — do nothing
+  }, [session, authLoading]);
 
   const deleteProposal = async (id: string) => {
     if (plan === "free") {
@@ -139,7 +148,7 @@ export default function Dashboard() {
   return (
     <AuthLayout>
       {showOnboarding && (
-        <OnboardingModal displayName={displayName} onComplete={() => setShowOnboarding(false)} />
+        <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
         <motion.div

@@ -29,6 +29,7 @@ export type Database = {
           onboarding_completed: boolean
           plan: string | null
           portfolio_url: string | null
+          proposals_used: number
           signature_data: string | null
           subscription_period_end: string | null
           subscription_status: string | null
@@ -53,6 +54,7 @@ export type Database = {
           onboarding_completed?: boolean
           plan?: string | null
           portfolio_url?: string | null
+          proposals_used?: number
           signature_data?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           onboarding_completed?: boolean
           plan?: string | null
           portfolio_url?: string | null
+          proposals_used?: number
           signature_data?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null

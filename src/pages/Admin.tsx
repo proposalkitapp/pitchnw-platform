@@ -48,23 +48,35 @@ export default function Admin() {
   };
 
   const fetchAll = async () => {
-    const [{ data: profileData }, { data: proposalData }] = await Promise.all([
-      supabase.from("profiles").select("*"),
-      supabase.from("proposals").select("id, title, client_name, status, created_at, user_id"),
-    ]);
+    if (!user?.id) return;
+    
+    try {
+      const [{ data: profileData, error: profError }, { data: proposalData, error: propError }] = await Promise.all([
+        supabase.from("profiles").select("*"),
+        supabase.from("proposals").select("id, title, client_name, status, created_at, user_id"),
+      ]);
 
-    const profs = profileData || [];
-    const props = proposalData || [];
+      if ((profError || propError) && user?.id) {
+        console.error("Admin fetch error:", profError || propError);
+        toast.error("Failed to load admin data");
+      } else {
+        const profs = profileData || [];
+        const props = proposalData || [];
 
-    setUsers(profs);
-    setProposals(props);
-    setStats({
-      totalUsers: profs.length,
-      totalProposals: props.length,
-      proUsers: profs.filter((p: any) => p.plan === "pro").length,
-      standardUsers: profs.filter((p: any) => p.plan === "standard").length,
-    });
-    setLoading(false);
+        setUsers(profs);
+        setProposals(props);
+        setStats({
+          totalUsers: profs.length,
+          totalProposals: props.length,
+          proUsers: profs.filter((p: any) => p.plan === "pro").length,
+          standardUsers: profs.filter((p: any) => p.plan === "standard").length,
+        });
+      }
+    } catch (err) {
+      console.error("Admin fetch all error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateUserPlan = async (userId: string, plan: string) => {

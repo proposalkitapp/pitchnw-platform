@@ -34,17 +34,24 @@ function getGreeting(): string {
 }
 
 export default function Dashboard() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [plan, setPlan] = useState("free");
+  // null = free plan, 'pro' = paid
+  const [plan, setPlan] = useState<string | null>(null);
+  const [proposalsUsed, setProposalsUsed] = useState(0);
   const [userBranding, setUserBranding] = useState<ProposalBranding>({});
 
   const fetchProposals = async (userId: string) => {
+    // Belt-and-braces: bail silently if userId is somehow falsy
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from("proposals")
@@ -53,6 +60,9 @@ export default function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (error) {
+        // Only show the toast when we know userId was real — avoids
+        // the race-condition toast that fires before auth is settled
+        console.error("fetchProposals error:", error);
         toast.error("Failed to load proposals");
       } else {
         setProposals(data || []);
@@ -67,16 +77,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchProposals(session.user.id);
-      
+
       supabase
         .from("profiles")
-        .select("display_name, onboarding_completed, plan, brand_logo_url, brand_name, company_name, portfolio_url")
+        .select("display_name, onboarding_completed, plan, proposals_used, brand_logo_url, brand_name, company_name, portfolio_url")
         .eq("user_id", session.user.id)
         .single()
         .then(({ data }) => {
           if (data) {
             setDisplayName(data.display_name?.split(" ")[0] || "there");
-            setPlan(data.plan || "free");
+            setPlan(data.plan ?? null);
+            setProposalsUsed(data.proposals_used || 0);
             setUserBranding({
               logoUrl: data.brand_logo_url,
               headerTitle: data.brand_name,
@@ -89,15 +100,19 @@ export default function Dashboard() {
             }
           }
         });
-    } else if (session === null) {
-      // Session has been checked and is null
+    } else if (!authLoading && session === null) {
+      // Auth fully resolved with no session (logged out) — stop loading
       setLoading(false);
     }
-  }, [session]);
+    // While authLoading=true, session=null just means auth is still initialising — do nothing
+  }, [session, authLoading]);
+
+  const isFree = !plan;
 
   const deleteProposal = async (id: string) => {
-    if (plan === "free") {
-      toast.error("Free plan users cannot delete proposals. Upgrade to Pro to manage your proposals.");
+    // Free users cannot delete proposals — prevents bypassing the 3-proposal limit
+    if (isFree) {
+      toast.error("Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals.");
       return;
     }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
@@ -134,12 +149,22 @@ export default function Dashboard() {
     lost: "bg-destructive/10 text-destructive",
   };
 
-  const canCreateProposal = plan !== "free" || totalProposals < 3;
+  // Free: can create if proposals_used < 3; Pro: unlimited
+  const hasHitFreeLimit = isFree && proposalsUsed >= 3;
+
+  const usedCount = Math.min(proposalsUsed, 3);
+  const usagePercent = Math.min((proposalsUsed / 3) * 100, 100);
+  const usageBarColor =
+    proposalsUsed === 0
+      ? "bg-success"
+      : proposalsUsed < 3
+      ? "bg-warning"
+      : "bg-destructive";
 
   return (
     <AuthLayout>
       {showOnboarding && (
-        <OnboardingModal displayName={displayName} onComplete={() => setShowOnboarding(false)} />
+        <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
         <motion.div
@@ -182,8 +207,8 @@ export default function Dashboard() {
               ))}
         </div>
 
-        {/* Free Plan Usage Bar */}
-        {plan === "free" && !loading && (
+        {/* Free Plan Usage Bar — only for free users */}
+        {isFree && !loading && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -192,39 +217,37 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-card-foreground">Free Plan Usage</span>
+                <span className="text-sm font-semibold text-card-foreground">Free proposals used</span>
               </div>
               <span className="text-xs font-mono text-muted-foreground">
-                {Math.min(totalProposals, 3)} / 3 proposals
+                {usedCount} / 3
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.min((totalProposals / 3) * 100, 100)}%` }}
+                animate={{ width: `${usagePercent}%` }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`h-full rounded-full ${
-                  totalProposals >= 3 ? "bg-destructive" : "bg-primary"
-                }`}
+                className={`h-full rounded-full ${usageBarColor}`}
               />
             </div>
-            {totalProposals >= 3 ? (
+            {proposalsUsed >= 3 ? (
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-xs text-destructive font-medium">
-                  Limit reached — upgrade to continue generating proposals
+                  You have used all free proposals
                 </p>
                 <Button
                   variant="hero"
                   size="sm"
-                  onClick={() => navigate("/settings")}
+                  onClick={() => navigate("/checkout")}
                   className="gap-1 text-xs"
                 >
-                  Upgrade to Pro
+                  Upgrade to Pro →
                 </Button>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground mt-2">
-                {3 - totalProposals} proposal{3 - totalProposals !== 1 ? "s" : ""} remaining on your free plan
+                {3 - proposalsUsed} proposal{3 - proposalsUsed !== 1 ? "s" : ""} remaining on your free plan
               </p>
             )}
           </motion.div>
@@ -234,12 +257,12 @@ export default function Dashboard() {
         <Button
           className="w-full mb-10 h-14 bg-[#0033ff] hover:bg-[#002be6] text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] rounded-xl font-semibold text-base transition-all duration-200"
           onClick={() => {
-            if (!canCreateProposal) {
-            toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
-            navigate("/settings");
-            return;
-          }
-          navigate("/generate");
+            if (hasHitFreeLimit) {
+              toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
+              navigate("/checkout");
+              return;
+            }
+            navigate("/generate");
           }}
         >
           <Plus className="h-5 w-5 mr-2" /> CREATE NEW PROPOSAL
@@ -374,7 +397,8 @@ export default function Dashboard() {
                           <Link2 className="h-4 w-4" />
                         </Button>
                       )}
-                      {plan === "free" ? (
+                      {/* Delete button: locked for free users */}
+                      {isFree ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -387,7 +411,7 @@ export default function Dashboard() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Upgrade to Pro to delete</p>
+                            <p>Upgrade to Pro to delete proposals</p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (

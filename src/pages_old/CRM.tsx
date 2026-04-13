@@ -52,13 +52,26 @@ export default function CRM() {
   }, [user]);
 
   const fetchData = async () => {
-    const [{ data: profs }, { data: props }] = await Promise.all([
-      supabase.from("profiles").select("plan").eq("user_id", user!.id).single(),
-      supabase.from("proposals").select("id, title, client_name, project_type, budget, status, created_at, public_slug").order("created_at", { ascending: false }),
-    ]);
-    setPlan(profs?.plan || "free");
-    setProposals(props || []);
-    setLoading(false);
+    if (!user?.id) return;
+    
+    try {
+      const [{ data: profs, error: profError }, { data: props, error: propError }] = await Promise.all([
+        supabase.from("profiles").select("plan").eq("user_id", user.id).single(),
+        supabase.from("proposals").select("id, title, client_name, project_type, budget, status, created_at, public_slug").eq("user_id", user.id).order("created_at", { ascending: false }),
+      ]);
+      
+      if ((profError || propError) && user?.id) {
+        console.error("CRM fetch error:", profError || propError);
+        toast.error("Failed to load pipeline data");
+      } else {
+        setPlan(profs?.plan || "free");
+        setProposals(props || []);
+      }
+    } catch (err) {
+      console.error("CRM fetch data error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateStatus = async (id: string, status: string) => {

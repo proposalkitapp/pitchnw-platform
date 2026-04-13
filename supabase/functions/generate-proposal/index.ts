@@ -120,28 +120,35 @@ serve(async (req) => {
       );
     }
 
+    // Fetch profile: plan (null = free) and proposals_used counter
     const { data: profile } = await supabase
       .from("profiles")
-      .select("plan")
+      .select("plan, proposals_used")
       .eq("user_id", user.id)
       .single();
 
-    const plan = profile?.plan || "free";
+    // null plan means free user; only 'pro' is a paid plan
+    const isFreeUser = !profile?.plan;
+    const proposalsUsed = profile?.proposals_used || 0;
 
-    if (plan === "free") {
-      const { count, error: countError } = await supabase
-        .from("proposals")
-        .select("id", { count: "exact", head: true })
+    // Server-side limit check — blocks API abuse even if frontend is bypassed
+    if (isFreeUser && proposalsUsed >= 3) {
+      return new Response(
+        JSON.stringify({
+          error: "limit_reached",
+          message: "You have used all 3 free proposals. Upgrade to Pro for unlimited generation.",
+          code: "LIMIT_REACHED",
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Increment proposals_used BEFORE calling AI (optimistic, prevents double-generation exploits)
+    if (isFreeUser) {
+      await supabase
+        .from("profiles")
+        .update({ proposals_used: proposalsUsed + 1 })
         .eq("user_id", user.id);
-
-      if (countError) console.error("Count error:", countError);
-
-      if ((count ?? 0) >= 3) {
-        return new Response(
-          JSON.stringify({ error: "Free plan limit reached. You've used all 3 free proposals. Upgrade to Standard for unlimited proposals.", code: "LIMIT_REACHED" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
     }
 
     const baseSystemPrompt = mode === "sales_pitch" ? SALES_PITCH_SYSTEM : TRADITIONAL_SYSTEM;

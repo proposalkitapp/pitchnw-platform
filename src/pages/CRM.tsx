@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Eye, Check, X, Trash2, Plus, Lock, BarChart3, DollarSign, TrendingUp, ArrowRight,
+  Eye, Check, X, Trash2, Plus, BarChart3, TrendingUp,
 } from "lucide-react";
 
 interface Proposal {
@@ -43,7 +43,8 @@ export default function CRM() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"table" | "kanban">("table");
-  const [plan, setPlan] = useState("free");
+  // null = free plan, 'pro' = paid
+  const [plan, setPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -52,14 +53,30 @@ export default function CRM() {
   }, [user]);
 
   const fetchData = async () => {
-    const [{ data: profs }, { data: props }] = await Promise.all([
-      supabase.from("profiles").select("plan").eq("user_id", user!.id).single(),
-      supabase.from("proposals").select("id, title, client_name, project_type, budget, status, created_at, public_slug").order("created_at", { ascending: false }),
-    ]);
-    setPlan(profs?.plan || "free");
-    setProposals(props || []);
-    setLoading(false);
+    if (!user?.id) return;
+    
+    try {
+      const [{ data: profs, error: profError }, { data: props, error: propError }] = await Promise.all([
+        supabase.from("profiles").select("plan").eq("user_id", user.id).single(),
+        supabase.from("proposals").select("id, title, client_name, project_type, budget, status, created_at, public_slug").eq("user_id", user.id).order("created_at", { ascending: false }),
+      ]);
+      
+      if ((profError || propError) && user?.id) {
+        console.error("CRM fetch error:", profError || propError);
+        toast.error("Failed to load pipeline data");
+      } else {
+        // null = free; 'pro' = paid
+        setPlan(profs?.plan ?? null);
+        setProposals(props || []);
+      }
+    } catch (err) {
+      console.error("CRM fetch data error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const isFree = !plan;
 
   const updateStatus = async (id: string, status: string) => {
     setProposals((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
@@ -73,6 +90,11 @@ export default function CRM() {
   };
 
   const deleteProposal = async (id: string) => {
+    // Free users cannot delete proposals — prevents limit bypass
+    if (isFree) {
+      toast.error("Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals.");
+      return;
+    }
     setProposals((prev) => prev.filter((p) => p.id !== id));
     const { error } = await supabase.from("proposals").delete().eq("id", id);
     if (error) toast.error("Failed to delete");
@@ -83,46 +105,6 @@ export default function CRM() {
   const winRate = proposals.length > 0
     ? Math.round((proposals.filter((p) => p.status === "won").length / proposals.length) * 100)
     : 0;
-
-  if (plan === "free" && !loading) {
-    return (
-      <AuthLayout>
-        <div className="relative min-h-[80vh]">
-          {/* Blurred preview */}
-          <div className="blur-sm opacity-40 pointer-events-none p-6 lg:p-8 max-w-6xl mx-auto">
-            <h1 className="font-display text-3xl font-bold mb-6">CRM Pipeline</h1>
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
-            </div>
-            <Skeleton className="h-64 rounded-xl" />
-          </div>
-          {/* Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl border border-border bg-card p-8 sm:p-12 text-center max-w-md mx-4 shadow-2xl"
-            >
-              <Lock className="h-12 w-12 text-primary mx-auto mb-4" />
-              <h2 className="font-display text-2xl font-bold mb-2">CRM Pipeline is a Pro feature</h2>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Track proposals, manage follow-ups, and close more deals with your CRM pipeline.
-              </p>
-              <ul className="text-left space-y-2 mb-6 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Unlimited proposals</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Pipeline tracking & kanban</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Follow-up reminders</li>
-                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Full proposal analytics</li>
-              </ul>
-              <Button variant="hero" size="lg" className="w-full" onClick={() => navigate("/settings?tab=billing")}>
-                Upgrade to Pro — $12/mo
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout>
@@ -222,9 +204,12 @@ export default function CRM() {
                             <X className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteProposal(p.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {/* Only show delete for Pro users */}
+                        {!isFree && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteProposal(p.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

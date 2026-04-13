@@ -36,7 +36,8 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [plan, setPlan] = useState("free");
+  // null = free, 'pro' = paid
+  const [plan, setPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -48,7 +49,8 @@ export function AppSidebar() {
         .then(({ data }) => {
           setDisplayName(data?.username || data?.display_name || user.email?.split("@")[0] || "User");
           setIsAdmin(data?.is_admin || false);
-          setPlan(data?.plan || "free");
+          // null means free plan; only 'pro' is a paid plan
+          setPlan(data?.plan ?? null);
         });
     }
   }, [user]);
@@ -122,10 +124,10 @@ export function AppSidebar() {
           <div className="px-3 py-3 mb-3 bg-white/5 rounded-xl">
             <p className="text-[11px] text-slate-400 truncate mb-1">{user?.email}</p>
             <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-              plan === "standard" ? "bg-purple-500/20 text-purple-400" :
-              "bg-amber-500/20 text-amber-500"
+              plan === "pro" ? "bg-purple-500/20 text-purple-400" :
+              "bg-slate-500/20 text-slate-400"
             }`}>
-              {plan === "standard" ? "Standard Plan" : "Trial"}
+              {plan === "pro" ? "PRO" : "FREE"}
             </span>
           </div>
         )}
