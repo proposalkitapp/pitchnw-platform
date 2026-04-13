@@ -44,29 +44,39 @@ export default function Settings() {
   const loadProfile = useCallback(async () => {
     if (!user) return;
     setLoadingProfile(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select(
-        "display_name, username, company_name, signature_data, plan, proposals_used, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at",
-      )
-      .eq("user_id", user.id)
-      .single();
-    if (data) {
-      setDisplayName(data.display_name || "");
-      setUsername(data.username || "");
-      setCompanyName(data.company_name || "");
-      setSignatureData(data.signature_data || null);
-      // null = free; 'pro' = paid
-      setCurrentPlan(data.plan ?? null);
-      setProposalsUsed(data.proposals_used || 0);
-      setBrandName(data.brand_name || "");
-      setBrandLogoUrl(data.brand_logo_url || "");
-      setPortfolioUrl(data.portfolio_url || "");
-      setSubscriptionStatus(data.subscription_status);
-      setSubscriptionPeriodEnd(data.subscription_period_end);
-      setTrialEndsAt(data.trial_ends_at);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(
+          "display_name, username, company_name, signature_data, plan, proposals_used, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at",
+        )
+        .eq("user_id", user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error loading profile in settings:", error);
+      }
+      
+      if (data) {
+        setDisplayName(data.display_name || "");
+        setUsername(data.username || "");
+        setCompanyName(data.company_name || "");
+        setSignatureData(data.signature_data || null);
+        // null = free; 'pro' = paid
+        setCurrentPlan(data.plan ?? null);
+        setProposalsUsed(data.proposals_used || 0);
+        setBrandName(data.brand_name || "");
+        setBrandLogoUrl(data.brand_logo_url || "");
+        setPortfolioUrl(data.portfolio_url || "");
+        setSubscriptionStatus(data.subscription_status);
+        setSubscriptionPeriodEnd(data.subscription_period_end);
+        setTrialEndsAt(data.trial_ends_at);
+      }
+    } catch (err) {
+      console.error("Critical error in loadProfile Settings:", err);
+    } finally {
+      setLoadingProfile(false);
     }
-    setLoadingProfile(false);
   }, [user]);
 
   useEffect(() => {

@@ -40,8 +40,7 @@ Your writing rules:
 - Write in clean, formal professional English
 - Return ONLY valid raw JSON with no wrapper text`;
 
-const SALES_PITCH_JSON_SCHEMA = `Return a JSON object with exactly these keys:
-{
+const SALES_PITCH_JSON_SCHEMA = `{
   "executiveSummary": "Opens with client's world and challenge. Builds immediate empathy. Bridges to your solution.",
   "problemStatement": "Articulates exactly what is at stake for the client if this problem goes unsolved. Specific and felt.",
   "proposedSolution": "Your approach framed as the intelligent answer. Specific methodology. Sounds intentional.",
@@ -55,8 +54,7 @@ const SALES_PITCH_JSON_SCHEMA = `Return a JSON object with exactly these keys:
   "callToAction": "The natural, obvious next step. Low-risk and confident."
 }`;
 
-const TRADITIONAL_JSON_SCHEMA = `Return a JSON object with exactly these keys:
-{
+const TRADITIONAL_JSON_SCHEMA = `{
   "executiveSummary": "Formal overview of the engagement and its objectives.",
   "projectBackground": "Context and background of the client's situation.",
   "proposedApproach": "Methodology and approach, formally stated.",
@@ -106,7 +104,6 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    // Support both flattened structure (requested) and legacy formData structure
     const formData = body.formData || {
       clientName: body.clientName,
       clientEmail: body.clientEmail,
@@ -148,18 +145,15 @@ serve(async (req) => {
       );
     }
 
-    // Fetch profile: plan (null = free) and proposals_used counter
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan, proposals_used")
       .eq("user_id", user.id)
       .single();
 
-    // null plan means free user; only 'pro' is a paid plan
     const isFreeUser = !profile?.plan;
     const proposalsUsed = profile?.proposals_used || 0;
 
-    // Server-side limit check — blocks API abuse even if frontend is bypassed
     if (isFreeUser && proposalsUsed >= 3) {
       return new Response(
         JSON.stringify({
@@ -171,7 +165,6 @@ serve(async (req) => {
       );
     }
 
-    // Increment proposals_used BEFORE calling AI (optimistic, prevents double-generation exploits)
     if (isFreeUser) {
       await supabase
         .from("profiles")
@@ -181,26 +174,23 @@ serve(async (req) => {
 
     const baseSystemPrompt = mode === "sales_pitch" ? SALES_PITCH_SYSTEM : TRADITIONAL_SYSTEM;
     const jsonSchema = mode === "sales_pitch" ? SALES_PITCH_JSON_SCHEMA : TRADITIONAL_JSON_SCHEMA;
-
     const templateContext = templatePrompt ? `\n\nTEMPLATE-SPECIFIC INSTRUCTIONS:\n${templatePrompt}` : "";
-
     const currencyInstruction = currencySymbol && currencySymbol !== "$"
-      ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal. Do not use $ unless the client specifically uses USD.`
+      ? `\n\nIMPORTANT: Use "${currencySymbol}" as the currency symbol for all pricing in this proposal.`
       : "";
 
-    // Project type specific context
-    // Project type specific context - normalize to lowercase for matching
     const projectType = (formData.projectType || "General").toLowerCase();
     const projectTypeCtx = PROJECT_TYPE_CONTEXT[projectType] || "";
     const projectTypeInstruction = projectTypeCtx
-      ? `\n\nIMPORTANT: This is a ${formData.projectType} project. Write content that is highly specific to this type of work. Use terminology, deliverables, and framing that is native to ${formData.projectType} professionals. Do not write a generic proposal that could apply to any project type. Every section must reflect the specific nature of ${formData.projectType} work.\n\nINDUSTRY CONTEXT: ${projectTypeCtx}`
+      ? `\n\nIMPORTANT: This is a ${formData.projectType} project. Write content that is highly specific to this type of work.\n\nINDUSTRY CONTEXT: ${projectTypeCtx}`
       : "";
 
     const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}${projectTypeInstruction}
 
+REQUIRED JSON SCHEMA:
 ${jsonSchema}
 
-Write in a ${formData.tone || "professional"} tone. Be specific, detailed, and persuasive. Make the proposal feel tailored and high-quality.`;
+Write in a ${formData.tone || "professional"} tone. Be specific, detailed, and persuasive. Return ONLY the JSON object.`;
 
     const userPrompt = `Write a professional client proposal for the following project:
 
@@ -211,15 +201,10 @@ Industry: ${formData.industry || "General"}
 Project Type: ${formData.projectType || "General"}
 Budget Range: ${formData.budget || "To be discussed"}
 Timeline: ${formData.timeline || "To be determined"}
-Description: ${formData.description || "No additional description provided."}
-Key Deliverables: ${formData.deliverables || "As discussed with client."}
+Description: ${formData.description || "No description."}
+Key Deliverables: ${formData.deliverables || "As discussed."}
 
-Generate a complete, ready-to-send proposal as a valid JSON object. 
-IMPORTANT: Return ONLY the JSON object. Do not enclose it in markdown code blocks like \` \` \`json. 
-Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets in the string values. 
-Write clean, professional prose with numbered lists where appropriate for deliverables.
-Ensure all JSON keys and values are properly escaped.
-DO NOT add any preamble or postamble text. Return ONLY the JSON.`;
+Generate a complete, ready-to-send proposal as a valid JSON object. Do not add any preamble or use markdown code blocks.`;
 
     const response = await fetch(
       "https://api.anthropic.com/v1/messages",
@@ -243,12 +228,6 @@ DO NOT add any preamble or postamble text. Return ONLY the JSON.`;
     );
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const t = await response.text();
       console.error("Anthropic API error:", response.status, t);
       return new Response(
@@ -267,11 +246,7 @@ DO NOT add any preamble or postamble text. Return ONLY the JSON.`;
       }
     );
   } catch (err: any) {
-    console.error('Full error details:', {
-      message: err.message,
-      stack: err.stack,
-      name: err.name
-    });
+    console.error('Full error details:', err.message);
     return new Response(
       JSON.stringify({
         error: 'generation_failed',

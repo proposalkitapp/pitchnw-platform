@@ -23,7 +23,6 @@ import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { getTemplateById, type Template } from "@/lib/templates";
 import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
 import { ProposalCustomizer } from "@/components/ProposalCustomizer";
-import { ProposalCustomizer } from "@/components/ProposalCustomizer";
 import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
 import { Badge } from "@/components/ui/badge";
 import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
@@ -136,8 +135,13 @@ export default function ProposalGenerator() {
           headerTitle: data?.brand_name,
           companyName: data?.company_name,
           displayName: data?.display_name,
-          portfolioUrl: data?.portfolio_url,
+          portfolio_url: data?.portfolio_url,
         });
+      })
+      .catch((err) => {
+        console.error("Critical error loading profile in Generator:", err);
+      })
+      .finally(() => {
         setProfileLoading(false);
       });
   }, [user]);
