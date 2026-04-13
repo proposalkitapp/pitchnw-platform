@@ -95,6 +95,23 @@ export default async function handler(req: Req, res: Res) {
             return;
         }
 
+        // Validate product id format for Checkout Sessions API:
+        // Dodo docs show product_cart expects product_id values like 'prod_...'
+        // Static payment links sometimes use 'pdt_...' but Checkout Sessions requires product ids.
+        const productIdStr = String(productId);
+        const isLikelyProductFormat = /^(prod_|pdt_)[A-Za-z0-9]+$/.test(productIdStr);
+        if (!isLikelyProductFormat) {
+            console.error("create-checkout-session error: invalid product id format", {
+                environment,
+                productIdPrefix: productIdStr.slice(0, 5),
+            });
+            res.status(400).json({
+                error:
+                    "Invalid DODO_PRO_PLAN_PRODUCT_ID format. Expected a product ID starting with 'prod_' or 'pdt_'.",
+            });
+            return;
+        }
+
         // Normalize/parse body (Vercel functions don't auto-parse by default)
         let parsed: any = undefined;
         if (typeof req.body === "string") {
@@ -189,16 +206,21 @@ export default async function handler(req: Req, res: Res) {
         const status = (err && (err.status || err.response?.status)) || 500;
         const code = err && (err.code || err.response?.data?.code);
         const respErr = err?.response?.data?.error || err?.response?.data;
-        console.error("create-checkout-session error:", {
+        const message = err?.message || String(err);
+
+        console.error("create-checkout-session failure:", {
             envMode,
             status,
             code,
-            message: err?.message || String(err),
+            message,
             responseError: respErr,
-            stack: err?.stack,
         });
-        // Minimal client-facing error
-        res.status(500).json({ error: "Failed to create checkout session" });
+
+        res.status(status).json({
+            error: "Failed to create checkout session",
+            message: message,
+            detail: respErr || null,
+        });
     }
 }
 
