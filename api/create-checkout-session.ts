@@ -35,8 +35,8 @@ export default async function handler(req: Req, res: Res) {
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
         const environment =
-            (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") ||
-            "test_mode";
+            (process.env.DODO_PAYMENTS_ENVIRONMENT as "live_mode" | "live_mode") ||
+            "live_mode";
         const productId = process.env.DODO_PRO_PLAN_PRODUCT_ID;
 
         if (!apiKey) {
