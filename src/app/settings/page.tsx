@@ -112,19 +112,23 @@ export default function Settings() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
           display_name: displayName,
-          username: username,
+          username: username || null,
           company_name: companyName,
           signature_data: signatureData,
           brand_name: brandName,
           brand_logo_url: brandLogoUrl,
           portfolio_url: portfolioUrl || null,
-        })
-        .eq("user_id", user.id);
+        }, { onConflict: 'user_id' });
 
       if (error) {
-        toast.error("Failed to save profile. Please try again.");
+        if (error.code === "23505") {
+          toast.error("Username already taken. Please choose another.");
+        } else {
+          toast.error("Failed to save profile. Please try again.");
+        }
       } else {
         toast.success("Profile saved ✓");
       }

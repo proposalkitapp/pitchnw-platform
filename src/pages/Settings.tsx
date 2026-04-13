@@ -19,6 +19,7 @@ export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [brandName, setBrandName] = useState("");
   const [brandLogoUrl, setBrandLogoUrl] = useState("");
@@ -46,12 +47,13 @@ export default function Settings() {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "display_name, company_name, signature_data, plan, proposals_used, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at",
+        "display_name, username, company_name, signature_data, plan, proposals_used, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at",
       )
       .eq("user_id", user.id)
       .single();
     if (data) {
       setDisplayName(data.display_name || "");
+      setUsername(data.username || "");
       setCompanyName(data.company_name || "");
       setSignatureData(data.signature_data || null);
       // null = free; 'pro' = paid
@@ -112,18 +114,23 @@ export default function Settings() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
           display_name: displayName,
+          username: username || null,
           company_name: companyName,
           signature_data: signatureData,
           brand_name: brandName,
           brand_logo_url: brandLogoUrl,
           portfolio_url: portfolioUrl || null,
-        })
-        .eq("user_id", user.id);
+        }, { onConflict: 'user_id' });
 
       if (error) {
-        toast.error("Failed to save profile. Please try again.");
+        if (error.code === "23505") {
+          toast.error("Username already taken. Please choose another.");
+        } else {
+          toast.error("Failed to save profile. Please try again.");
+        }
       } else {
         toast.success("Profile saved ✓");
       }
@@ -210,6 +217,17 @@ export default function Settings() {
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={user?.email || ""} disabled className="mt-1.5 bg-muted" />
                   <p className="text-xs text-muted-foreground mt-1">Contact support to change email</p>
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">No spaces allowed</p>
                 </div>
                 <div>
                   <Label htmlFor="displayName">Display Name</Label>
