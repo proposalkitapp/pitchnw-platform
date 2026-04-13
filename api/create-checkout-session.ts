@@ -33,15 +33,38 @@ async function readRawBody(req: any): Promise<string> {
 }
 
 function getBaseURLFromHeaders(headers: Record<string, any>) {
+    // Prefer explicit override for production/live to avoid localhost or wrong proto
+    const override = process.env.DODO_RETURN_URL_BASE;
+    if (override && typeof override === "string" && override.trim().length > 0) {
+        // normalize to no trailing slash
+        return override.replace(/\/+$/, "");
+    }
+
     const host = headers["x-forwarded-host"] || headers["host"];
-    const proto = headers["x-forwarded-proto"] || "https";
+    const protoHeader = headers["x-forwarded-proto"];
+    let proto = typeof protoHeader === "string" ? protoHeader : "https";
+
     if (!host) {
         // Fallback to Vercel env if available
         const vercelURL = process.env.VERCEL_URL;
-        if (vercelURL) return `https://${vercelURL}`;
+        if (vercelURL) return `https://${vercelURL}`.replace(/\/+$/, "");
+        // Local dev default
         return "http://localhost:3000";
     }
-    return `${proto}://${host}`;
+
+    // If we're in live_mode but running on localhost, prefer Vercel domain if available
+    const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
+    if (envMode === "live_mode" && /^(localhost|127\.0\.0\.1)(:|$)/i.test(String(host))) {
+        const vercelURL = process.env.VERCEL_URL;
+        if (vercelURL) return `https://${vercelURL}`.replace(/\/+$/, "");
+    }
+
+    // If proto header is missing and host looks like localhost, force http for dev
+    if (!protoHeader && /localhost|127\.0\.0\.1/i.test(String(host))) {
+        proto = "http";
+    }
+
+    return `${proto}://${host}`.replace(/\/+$/, "");
 }
 
 export default async function handler(req: Req, res: Res) {
@@ -53,8 +76,7 @@ export default async function handler(req: Req, res: Res) {
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
         const environment =
-            (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") ||
-            "test_mode";
+            process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode";
         const productId = process.env.DODO_PRO_PLAN_PRODUCT_ID;
 
         if (!apiKey) {
@@ -63,6 +85,14 @@ export default async function handler(req: Req, res: Res) {
         }
         if (!productId) {
             res.status(500).json({ error: "Missing DODO_PRO_PLAN_PRODUCT_ID" });
+            return;
+        }
+        if (!environment) {
+            res.status(500).json({ error: "Missing DODO_PAYMENTS_ENVIRONMENT" });
+            return;
+        }
+        if (environment !== "test_mode" && environment !== "live_mode") {
+            res.status(400).json({ error: "Invalid DODO_PAYMENTS_ENVIRONMENT" });
             return;
         }
 
@@ -166,7 +196,7 @@ Documentation references:
   https://docs.dodopayments.com/developer-resources/subscription-integration-guide
 
 Security & Notes:
-- environment must be 'test_mode' or 'live_mode'; defaulting to 'test_mode' here.
-- Amounts returned by APIs are in minor units (e.g., cents) if you later inspect them.
+- environment must be 'test_mode' or 'live_mode' and is required via DODO_PAYMENTS_ENVIRONMENT.
+- Amounts returned by APIs are in the currency’s smallest unit (minor units).
 - Do NOT expose your API key on the client; keep this route server-side.
 */

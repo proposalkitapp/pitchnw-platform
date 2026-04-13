@@ -23,6 +23,7 @@ import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { getTemplateById, type Template } from "@/lib/templates";
 import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
 import { ProposalCustomizer } from "@/components/ProposalCustomizer";
+import { ProposalCustomizer } from "@/components/ProposalCustomizer";
 import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
 import { Badge } from "@/components/ui/badge";
 import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
