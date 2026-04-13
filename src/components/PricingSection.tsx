@@ -11,7 +11,7 @@ const plans = [
     name: "Pro",
     price: "$12",
     period: "/month",
-    badge: "3-day free trial",
+    badge: "Unlimited Access",
     description: "Everything you need to pitch and win",
     features: [
       "Unlimited AI proposal generation",
@@ -27,7 +27,7 @@ const plans = [
       "Follow-up reminders",
       "Priority support"
     ],
-    cta: "Start Free Trial — 3 Days",
+    cta: "Upgrade to Pro now",
     variant: "hero" as const,
     highlighted: true,
   },
@@ -54,8 +54,8 @@ export function PricingSection() {
             One plan. Everything included.
           </h2>
           <p className="text-muted-foreground text-base lg:text-lg max-w-xl mx-auto">
-            Start your 3-day free trial.<br/>
-            No card required during trial. Cancel anytime.
+            Upgrade to Pro to unlock unlimited power.<br/>
+            No commitment. Cancel anytime.
           </p>
         </FadeInView>
 

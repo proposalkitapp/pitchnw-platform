@@ -22,8 +22,8 @@ export default function TermsOfService() {
         <h2 className="font-display text-xl mt-8 font-semibold text-foreground">3. User Accounts</h2>
         <p>You may need to register via email or Google OAuth to use the service. You are responsible for safeguarding your password and any other credentials used to access your account. You agree not to disclose your password to any third party.</p>
 
-        <h2 className="font-display text-xl mt-8 font-semibold text-foreground">4. Payment and Billing</h2>
-        <p>We offer Free and Pro ($12/month) plans. Payments are securely processed through Dodo Payments. By subscribing to a paid plan, you authorize Dodo Payments to bill you on a recurring basis. You may cancel your subscription at any time; access will remain until the end of your billing cycle.</p>
+        <h2 className="font-display text-xl mt-8 font-semibold text-foreground">4. Plans and Access</h2>
+        <p>We offer Free and Pro tiers. You may upgrade your account to the Pro tier at any time within the platform. Access to premium features is granted upon upgrade and may be subject to future fees as described in the platform.</p>
 
         <h2 className="font-display text-xl mt-8 font-semibold text-foreground">5. Fair Use</h2>
         <p>The Free plan allows for standard proposal generation (up to 3 proposals). Our paid plans provide additional benefits such as CRM features and analytics. Any misuse, circumvention of tier limits, or abuse of the AI generation APIs may result in the suspension of your account.</p>

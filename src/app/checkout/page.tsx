@@ -58,56 +58,7 @@ export default function Checkout() {
   };
 
   const handleCheckout = async () => {
-    try {
-      setLoading("pro")
-
-      const { data: { session }, error: sessionError } =
-        await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        navigate('/auth?mode=signup&redirect=/checkout')
-        return
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { plan: 'pro' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      })
-
-      if (error) {
-        console.error('Checkout invoke error:', error)
-        toast.error(
-          'Checkout error: ' + (error.message || 'Could not reach payment server.')
-        )
-        return
-      }
-
-      if (!data) {
-        toast.error('No response from payment server.')
-        return
-      }
-
-      if (data.error) {
-        console.error('Checkout function error:', data)
-        toast.error(data.message || 'Checkout setup failed.')
-        return
-      }
-
-      if (!data.checkout_url) {
-        toast.error('Could not create checkout link.')
-        return
-      }
-
-      window.location.href = data.checkout_url
-
-    } catch (err) {
-      console.error('Checkout exception:', err)
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setLoading(null)
-    }
+    await handleUpgrade("pro");
   }
 
   const busy = loading !== null;
@@ -154,7 +105,7 @@ export default function Checkout() {
                 <p>By upgrading, you will immediately gain access to all the features of the <strong>Pro</strong> tier.</p>
                 <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
                   <Check className="h-5 w-5 shrink-0 mt-0.5" />
-                  Your payment method on file will be charged the prorated difference for the remainder of this billing cycle.
+                  Enjoy full access to all premium features.
                 </div>
               </div>
 
@@ -179,7 +130,7 @@ export default function Checkout() {
             </motion.div>
             
             <p className="mt-8 text-center font-mono text-[11px] text-muted-foreground space-y-1">
-              <span className="block">🔒 Secure instant upgrade powered by Dodo Payments</span>
+              <span className="block">🔒 Secure instant upgrade</span>
             </p>
          </div>
       </div>
@@ -256,8 +207,8 @@ export default function Checkout() {
         </div>
 
         <p className="mt-10 text-center font-mono text-[11px] text-muted-foreground space-y-1">
-          <span className="block">🔒 Secure checkout powered by Dodo Payments</span>
-          <span className="block">No card charged during trial · Cancel anytime</span>
+          <span className="block">🔒 Secure upgrade</span>
+          <span className="block">Cancel anytime from settings</span>
         </p>
       </div>
     </div>

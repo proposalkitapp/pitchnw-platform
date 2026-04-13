@@ -176,7 +176,7 @@ export default function Checkout() {
         </motion.div>
 
         <p className="mt-8 text-center font-mono text-[11px] text-muted-foreground space-y-1">
-          <span className="block">🔒 Secure checkout powered by Dodo Payments</span>
+          <span className="block">🔒 Secure instant upgrade</span>
           <span className="block">No card charged during trial · Cancel anytime</span>
         </p>
       </div>

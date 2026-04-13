@@ -31,8 +31,6 @@ export default function Settings() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-  const [dodoSubscriptionId, setDodoSubscriptionId] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,7 +44,7 @@ export default function Settings() {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at, dodo_subscription_id",
+        "display_name, company_name, signature_data, plan, brand_name, brand_logo_url, portfolio_url, subscription_status, subscription_period_end, trial_ends_at",
       )
       .eq("user_id", user.id)
       .single();
@@ -61,7 +59,6 @@ export default function Settings() {
       setSubscriptionStatus(data.subscription_status);
       setSubscriptionPeriodEnd(data.subscription_period_end);
       setTrialEndsAt(data.trial_ends_at);
-      setDodoSubscriptionId(data.dodo_subscription_id);
     }
     setLoadingProfile(false);
   }, [user]);
@@ -159,36 +156,7 @@ export default function Settings() {
     }
   };
 
-  const handleCancel = async () => {
-    if (!user) return;
-    setCancelling(true);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please sign in again.");
-        return;
-      }
-      const { error } = await supabase.functions.invoke("cancel-subscription", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      if (error) {
-        toast.error("Cancellation failed. Please try again.");
-        return;
-      }
-      toast.success(
-        "Subscription cancelled. You keep access until the end of your billing period.",
-      );
-      await loadProfile();
-    } catch {
-      toast.error("Cancellation failed. Please try again.");
-    } finally {
-      setCancelling(false);
-    }
-  };
+  // Cancellation logic removed
 
   const trialActive =
     trialEndsAt &&
@@ -443,79 +411,28 @@ export default function Settings() {
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="space-y-6">
-              {subscriptionStatus === "past_due" && (
-                <Alert className="border-warning/50 bg-warning/10 text-foreground">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                  <AlertTitle>Payment failed</AlertTitle>
-                  <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2">
-                    <span>Your last payment failed. Update your payment method in Dodo Payments checkout.</span>
-                    <Button size="sm" variant="hero" onClick={() => navigate("/checkout")}>
-                      Retry payment
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-
               <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-3">
                 <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
                   <CreditCard className="h-5 w-5 text-primary" /> Billing & subscription
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Payments are processed securely by Dodo Payments.
+                  Manage your plan and access to premium features.
                 </p>
 
-                {currentPlan === "pro" && subscriptionStatus === "active" && (
+                {currentPlan === "pro" && (
                   <div className="space-y-1 pt-2">
                     <p className="font-medium text-foreground">💜 Pro Plan · Active</p>
-                    <p className="text-sm text-muted-foreground">Renews monthly</p>
-                    {subscriptionPeriodEnd && (
-                      <p className="text-xs text-muted-foreground">
-                        Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
-                      </p>
-                    )}
-                    {dodoSubscriptionId && (
-                      <button
-                        type="button"
-                        className="text-sm text-primary hover:underline mt-2"
-                        disabled={cancelling}
-                        onClick={handleCancel}
-                      >
-                        {cancelling ? "Cancelling…" : "Cancel subscription"}
-                      </button>
-                    )}
+                    <p className="text-sm text-muted-foreground">You have full access to all premium features.</p>
                   </div>
                 )}
 
-                {currentPlan === "standard" && subscriptionStatus === "active" && (
+                {currentPlan === "standard" && (
                   <div className="space-y-1 pt-2">
                     <p className="font-medium text-foreground">⭐ Standard Plan · Active</p>
-                    <p className="text-sm text-muted-foreground">Renews monthly</p>
-                    {subscriptionPeriodEnd && (
-                      <p className="text-xs text-muted-foreground">
-                        Next billing: {new Date(subscriptionPeriodEnd).toLocaleDateString()}
-                      </p>
-                    )}
-                    {dodoSubscriptionId && (
-                      <button
-                        type="button"
-                        className="text-sm text-primary hover:underline mt-2"
-                        disabled={cancelling}
-                        onClick={handleCancel}
-                      >
-                        {cancelling ? "Cancelling…" : "Cancel subscription"}
-                      </button>
-                    )}
+                    <p className="text-sm text-muted-foreground">You have full access to all premium features.</p>
                   </div>
                 )}
 
-                {subscriptionStatus === "cancelled" && (currentPlan === "pro" || currentPlan === "standard") && (
-                  <div className="space-y-3 pt-2">
-                    <p className="text-sm text-muted-foreground">Cancels at end of billing period.</p>
-                    <Button variant="hero-outline" size="sm" onClick={() => navigate("/checkout")}>
-                      Reactivate
-                    </Button>
-                  </div>
-                )}
 
                 {trialActive && (
                   <div className="pt-2 space-y-1">

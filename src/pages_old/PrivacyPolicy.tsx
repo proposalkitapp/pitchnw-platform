@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
         <ul>
           <li>Create and manage your account and authentication securely via Supabase.</li>
           <li>Generate AI-based proposals using your inputs.</li>
-          <li>Handle recurring payments and process transactions via Dodo Payments.</li>
+          <li>Handle account management and access to features.</li>
           <li>Send email notifications to you and your clients regarding generated proposals.</li>
           <li>Monitor and analyze usage and trends to improve your experience with the platform.</li>
         </ul>
@@ -34,7 +34,6 @@ export default function PrivacyPolicy() {
         <p>We may share your information with trusted third-party providers purely to operate our business, such as:</p>
         <ul>
           <li><strong>Supabase:</strong> For authentication and secure, encrypted database hosting.</li>
-          <li><strong>Dodo Payments:</strong> For handling secure payment processing and subscriptions.</li>
           <li><strong>Resend:</strong> For dispatching system emails and client proposals.</li>
         </ul>
         <p>We do not sell, trade, or rent your personal identification information to others.</p>
