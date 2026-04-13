@@ -46,7 +46,7 @@ export function AppSidebar() {
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
-          setDisplayName(data?.username || data?.display_name || user.email?.split("@")[0] || "User");
+          setDisplayName(data?.display_name || data?.username || user.email?.split("@")[0] || "User");
           setIsAdmin(data?.is_admin || false);
           // null means free plan; only 'pro' is a paid plan
           setPlan(data?.plan ?? null);

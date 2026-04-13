@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
+import dashboardMockup from "@/assets/dashboard-mockup.png";
+import proposalPreview from "@/assets/proposal-preview.png";
 
 const badges = [
   "No Credit Card Required",
@@ -98,9 +100,10 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1, duration: 0.6 }}
-          className="mt-16 max-w-4xl mx-auto"
+          className="mt-16 max-w-5xl mx-auto relative px-4"
         >
-          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl shadow-primary/[0.04]">
+          {/* Main Dashboard Image */}
+          <div className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-destructive/40" />
@@ -109,40 +112,32 @@ export function HeroSection() {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1 rounded-md bg-background text-xs font-mono text-muted-foreground border border-border">
-                  pitchnw.lovable.app/dashboard
+                  pitchnw.app/dashboard
                 </div>
               </div>
             </div>
-            <div className="p-6 grid grid-cols-4 gap-4">
-              <div className="col-span-1 space-y-3 hidden sm:block">
-                <div className="h-4 rounded bg-primary/15 w-3/4" />
-                <div className="h-3 rounded bg-muted w-full" />
-                <div className="h-3 rounded bg-muted w-5/6" />
-                <div className="h-3 rounded bg-muted w-4/5" />
-                <div className="h-3 rounded bg-muted w-full mt-6" />
-                <div className="h-3 rounded bg-muted w-3/4" />
-              </div>
-              <div className="col-span-4 sm:col-span-3 space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-lg border border-border bg-muted/20 p-4 space-y-2">
-                      <div className="h-3 rounded bg-muted w-1/2" />
-                      <div className="h-6 rounded bg-primary/10 w-2/3" />
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-muted/10 p-3">
-                      <div className="w-2 h-2 rounded-full bg-success/60" />
-                      <div className="h-3 rounded bg-muted flex-1" />
-                      <div className="h-3 rounded bg-primary/10 w-16" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <img 
+              src={dashboardMockup} 
+              alt="Dashboard Preview" 
+              className="w-full h-auto object-cover aspect-[16/10] sm:aspect-auto"
+            />
           </div>
+
+          {/* Overlapping Proposal Preview */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1.3, duration: 0.8 }}
+            className="absolute -bottom-6 -right-2 sm:-right-8 w-48 sm:w-72 rounded-xl border border-border bg-background p-2 shadow-2xl hidden xs:block"
+          >
+            <div className="rounded-lg overflow-hidden border border-border">
+              <img 
+                src={proposalPreview} 
+                alt="Proposal Template Preview" 
+                className="w-full h-auto"
+              />
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>

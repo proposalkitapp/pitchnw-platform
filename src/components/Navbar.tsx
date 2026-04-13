@@ -46,7 +46,7 @@ export function Navbar() {
         .eq("user_id", user.id)
         .single()
         .then(({ data }) => {
-          setDisplayName(data?.username || data?.display_name || user.email?.split("@")[0] || "User");
+          setDisplayName(data?.display_name || data?.username || user.email?.split("@")[0] || "User");
         });
     } else {
       setDisplayName(null);

@@ -136,7 +136,7 @@ export default function Dashboard() {
         .single()
         .then(({ data }) => {
           if (data) {
-            setDisplayName(data.username || data.display_name?.split(" ")[0] || "there");
+            setDisplayName(data.display_name?.split(" ")[0] || data.username || "there");
             setPlan(data.plan || "free");
             setUserBranding({
               logoUrl: data.brand_logo_url,

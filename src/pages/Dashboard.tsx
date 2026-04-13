@@ -85,7 +85,7 @@ export default function Dashboard() {
         .single()
         .then(({ data }) => {
           if (data) {
-            setDisplayName(data.display_name?.split(" ")[0] || "there");
+            setDisplayName(data.display_name?.split(" ")[0] || data.username || "there");
             setPlan(data.plan ?? null);
             setProposalsUsed(data.proposals_used || 0);
             setUserBranding({
