@@ -25,6 +25,7 @@ import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
 import { ProposalCustomizer } from "@/components/ProposalCustomizer";
 import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
 import { Badge } from "@/components/ui/badge";
+import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
 
 interface FormData {
   clientName: string;
@@ -109,6 +110,7 @@ export default function ProposalGenerator() {
   const [plan, setPlan] = useState<string | null>(null);
   const [proposalsUsed, setProposalsUsed] = useState(0);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [branding, setBranding] = useState<ProposalBranding | undefined>(undefined);
 
   useEffect(() => {
     if (templateId) {
@@ -122,12 +124,19 @@ export default function ProposalGenerator() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("plan, proposals_used")
+      .select("plan, proposals_used, brand_name, brand_logo_url, display_name, company_name, portfolio_url")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         setPlan(data?.plan ?? null);
         setProposalsUsed(data?.proposals_used || 0);
+        setBranding({
+          logoUrl: data?.brand_logo_url,
+          headerTitle: data?.brand_name,
+          companyName: data?.company_name,
+          displayName: data?.display_name,
+          portfolioUrl: data?.portfolio_url,
+        });
         setProfileLoading(false);
       });
   }, [user]);
@@ -673,40 +682,24 @@ export default function ProposalGenerator() {
             <div className="grid lg:grid-cols-4 gap-6">
               {/* Proposal Preview */}
               <div className="lg:col-span-3">
-                {(() => {
-                  const theme = getThemeById(appearance.theme);
-                  return (
-                    <div
-                      className="rounded-xl border p-6 sm:p-8 transition-colors"
-                      style={{
-                        backgroundColor: theme.background,
-                        borderColor: theme.border,
-                        color: theme.bodyText,
-                      }}
-                    >
-                      <pre
-                        className="whitespace-pre-wrap text-sm leading-relaxed"
-                        style={{
-                          fontFamily: appearance.fontStyle === "modern" ? "'Syne', 'DM Sans', sans-serif" :
-                            appearance.fontStyle === "classic" ? "'Playfair Display', 'Lora', serif" :
-                            appearance.fontStyle === "clean" ? "'DM Sans', sans-serif" :
-                            "'Syne', sans-serif",
-                          color: theme.bodyText,
-                        }}
-                      >
-                        {generatedProposal || ""}
-                        {isGenerating && (
-                          <motion.span
-                            animate={{ opacity: [1, 0] }}
-                            transition={{ duration: 0.8, repeat: Infinity }}
-                            className="inline-block w-2 h-4 ml-0.5 align-middle"
-                            style={{ backgroundColor: theme.accent }}
-                          />
-                        )}
-                      </pre>
+                <div
+                  className="rounded-xl border p-6 sm:p-8 transition-colors bg-white shadow-sm"
+                  style={{
+                    backgroundColor: getThemeById(appearance.theme).background,
+                    borderColor: getThemeById(appearance.theme).border,
+                  }}
+                >
+                  <ProposalRenderer 
+                    content={generatedProposal || ""} 
+                    mode={form.proposalMode}
+                    branding={branding}
+                  />
+                  {isGenerating && (
+                    <div className="mt-4 flex justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
                     </div>
-                  );
-                })()}
+                  )}
+                </div>
               </div>
 
               {/* Customizer Panel */}

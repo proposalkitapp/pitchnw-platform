@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
-import { useRouter } from "next/navigation";
 
 const OCCUPATIONS = [
   "Freelance Developer", "Web Designer", "UI/UX Designer", "Graphic Designer",
@@ -36,7 +35,6 @@ interface Props {
 export function OnboardingModal({ onComplete }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const router = useRouter();
   const [step, setStep] = useState(0);
 
   // Form states
@@ -79,9 +77,8 @@ export function OnboardingModal({ onComplete }: Props) {
     import("sonner").then((mod) => mod.toast.success(`You're all set, ${username}!`));
     
     onComplete();
-    // Force a hard refresh to get the updated username in headers/sidebars,
-    // or just let Next router refresh the page data
-    router.refresh();
+    // Force a hard refresh to get the updated username in headers/sidebars
+    navigate(0);
   };
 
   return (

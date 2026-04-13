@@ -69,22 +69,24 @@ const TRADITIONAL_JSON_SCHEMA = `Return a JSON object with exactly these keys:
 }`;
 
 const PROJECT_TYPE_CONTEXT: Record<string, string> = {
-  "Web Design & Development":
+  "web design & development":
     "Use technical web development terminology. Reference phases like Discovery, Wireframing, Design, Development, Testing, and Launch. Mention responsive design, CMS, browser compatibility, performance optimization.",
-  "Brand Identity & Logo":
+  "brand identity & logo":
     "Focus on brand strategy, visual identity, color psychology, typography, logo variations, and brand guidelines. Reference deliverables like primary logo, alternate versions, brand style guide, file formats.",
-  "Copywriting & Content":
+  "copywriting & content":
     "Reference content strategy, brand voice, tone of voice, editorial calendar, SEO, word counts, content types, and usage rights.",
-  Photography:
+  "photography":
     "Reference shot lists, lighting setups, location scouting, post-processing, image licensing, RAW files, delivery formats, and usage rights.",
-  "Social Media Management":
+  "social media management":
     "Reference platforms by name, posting frequency, content pillars, engagement strategy, community management, analytics reporting, and monthly deliverables.",
-  "Video Production":
+  "video production":
     "Reference pre-production, production days, post-production, color grading, sound design, revisions, delivery formats, and distribution rights.",
-  "Business Consulting":
+  "business consulting":
     "Reference stakeholder interviews, situation analysis, strategic frameworks, implementation roadmap, deliverables matrix, and measurable KPIs.",
-  "SEO & Digital Marketing":
+  "seo & digital marketing":
     "Reference keyword research, technical SEO audit, backlink strategy, content optimization, Google Analytics, monthly reporting, and ranking disclaimers.",
+  "ui/ux design":
+    "Focus on user-centric design, wireframing, prototyping, user testing, design systems, and seamless navigation. Reference tools like Figma or Adobe XD.",
 };
 
 serve(async (req) => {
@@ -187,10 +189,11 @@ serve(async (req) => {
       : "";
 
     // Project type specific context
-    const projectType = formData.projectType || "General";
+    // Project type specific context - normalize to lowercase for matching
+    const projectType = (formData.projectType || "General").toLowerCase();
     const projectTypeCtx = PROJECT_TYPE_CONTEXT[projectType] || "";
     const projectTypeInstruction = projectTypeCtx
-      ? `\n\nIMPORTANT: This is a ${projectType} project. Write content that is highly specific to this type of work. Use terminology, deliverables, and framing that is native to ${projectType} professionals. Do not write a generic proposal that could apply to any project type. Every section must reflect the specific nature of ${projectType} work.\n\nINDUSTRY CONTEXT: ${projectTypeCtx}`
+      ? `\n\nIMPORTANT: This is a ${formData.projectType} project. Write content that is highly specific to this type of work. Use terminology, deliverables, and framing that is native to ${formData.projectType} professionals. Do not write a generic proposal that could apply to any project type. Every section must reflect the specific nature of ${formData.projectType} work.\n\nINDUSTRY CONTEXT: ${projectTypeCtx}`
       : "";
 
     const systemPrompt = `${baseSystemPrompt}${templateContext}${currencyInstruction}${projectTypeInstruction}
@@ -211,7 +214,12 @@ Timeline: ${formData.timeline || "To be determined"}
 Description: ${formData.description || "No additional description provided."}
 Key Deliverables: ${formData.deliverables || "As discussed with client."}
 
-Generate a complete, ready-to-send proposal as a valid JSON object. Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets. Write clean, professional prose with numbered lists where appropriate.`;
+Generate a complete, ready-to-send proposal as a valid JSON object. 
+IMPORTANT: Return ONLY the JSON object. Do not enclose it in markdown code blocks like \` \` \`json. 
+Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets in the string values. 
+Write clean, professional prose with numbered lists where appropriate for deliverables.
+Ensure all JSON keys and values are properly escaped.
+DO NOT add any preamble or postamble text. Return ONLY the JSON.`;
 
     const response = await fetch(
       "https://api.anthropic.com/v1/messages",
@@ -223,7 +231,7 @@ Generate a complete, ready-to-send proposal as a valid JSON object. Do not use a
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-3-5-sonnet-latest",
           max_tokens: 8192,
           system: systemPrompt,
           messages: [
