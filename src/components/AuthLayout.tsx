@@ -51,7 +51,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex items-center gap-4">
 
-              <div className="flex items-center gap-3 bg-[#0033ff] text-white pl-4 pr-1.5 py-1.5 rounded-full ml-2">
+              <div 
+                className="flex items-center gap-3 bg-[#0033ff] text-white pl-4 pr-1.5 py-1.5 rounded-full ml-2 cursor-pointer hover:bg-[#002be6] transition-colors"
+                onClick={() => navigate("/settings")}
+                title="Settings"
+              >
                 <span className="text-sm font-semibold truncate max-w-[120px]">{user?.email?.split('@')[0].toUpperCase()}</span>
                 <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center border border-white/40">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
