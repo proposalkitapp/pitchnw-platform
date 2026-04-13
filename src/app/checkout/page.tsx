@@ -47,7 +47,7 @@ export default function Checkout() {
       });
 
       if (error) throw error;
-      
+
       toast.success(`Successfully upgraded to Pro plan!`);
       navigate("/settings");
     } catch {
@@ -58,7 +58,47 @@ export default function Checkout() {
   };
 
   const handleCheckout = async () => {
-    await handleUpgrade("pro");
+    try {
+      setLoading("pro");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth?mode=signup&redirect=/checkout");
+        return;
+      }
+
+      const sessionId = crypto.randomUUID();
+
+      const resp = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          customer: {
+            email: session.user.email,
+            name: (session.user as any)?.user_metadata?.full_name,
+          },
+        }),
+      });
+
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        console.error("Checkout API error:", resp.status, text);
+        toast.error(`Checkout error: ${resp.status} ${text}`.trim());
+        return;
+      }
+
+      const data = await resp.json().catch(() => null);
+      if (!data?.checkout_url) {
+        toast.error("Could not create checkout link.");
+        return;
+      }
+
+      window.location.href = data.checkout_url as string;
+    } catch (e: any) {
+      toast.error(e?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(null);
+    }
   }
 
   const busy = loading !== null;
@@ -76,63 +116,63 @@ export default function Checkout() {
   if (isUpgrading) {
     return (
       <div className="min-h-screen bg-[#08080F] font-body text-foreground">
-         <div className="mx-auto max-w-md px-4 py-16">
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-              <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
-              <h1 className="font-display font-extrabold text-3xl mb-3">Upgrade Your Plan</h1>
-              <p className="text-muted-foreground">You are changing your subscription</p>
-            </motion.div>
+        <div className="mx-auto max-w-md px-4 py-16">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+            <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
+            <h1 className="font-display font-extrabold text-3xl mb-3">Upgrade Your Plan</h1>
+            <p className="text-muted-foreground">You are changing your subscription</p>
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="rounded-2xl border-2 border-primary bg-card/90 p-8 flex flex-col shadow-[var(--clay-shadow-primary)]"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-2xl border-2 border-primary bg-card/90 p-8 flex flex-col shadow-[var(--clay-shadow-primary)]"
+          >
+            <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Current</p>
+                <p className="font-display font-bold text-lg capitalize">{currentPlan}</p>
+              </div>
+              <div className="text-primary font-bold">→</div>
+              <div className="text-right">
+                <p className="text-xs text-success uppercase tracking-wider font-semibold">New</p>
+                <p className="font-display font-bold text-lg capitalize">{selectedPlan || "pro"}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-8 text-sm text-card-foreground">
+              <p>By upgrading, you will immediately gain access to all the features of the <strong>Pro</strong> tier.</p>
+              <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
+                <Check className="h-5 w-5 shrink-0 mt-0.5" />
+                Enjoy full access to all premium features.
+              </div>
+            </div>
+
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full"
+              disabled={busy}
+              onClick={() => handleUpgrade("pro")}
             >
-              <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Current</p>
-                  <p className="font-display font-bold text-lg capitalize">{currentPlan}</p>
-                </div>
-                <div className="text-primary font-bold">→</div>
-                <div className="text-right">
-                  <p className="text-xs text-success uppercase tracking-wider font-semibold">New</p>
-                  <p className="font-display font-bold text-lg capitalize">{selectedPlan || "pro"}</p>
-                </div>
-              </div>
+              {loading === "upgrade" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Confirm Upgrade
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full mt-2 text-muted-foreground hover:text-foreground"
+              disabled={busy}
+              onClick={() => navigate("/settings")}
+            >
+              Cancel
+            </Button>
+          </motion.div>
 
-              <div className="space-y-4 mb-8 text-sm text-card-foreground">
-                <p>By upgrading, you will immediately gain access to all the features of the <strong>Pro</strong> tier.</p>
-                <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
-                  <Check className="h-5 w-5 shrink-0 mt-0.5" />
-                  Enjoy full access to all premium features.
-                </div>
-              </div>
-
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full"
-                disabled={busy}
-                onClick={() => handleUpgrade("pro")}
-              >
-                {loading === "upgrade" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Confirm Upgrade
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full mt-2 text-muted-foreground hover:text-foreground"
-                disabled={busy}
-                onClick={() => navigate("/settings")}
-              >
-                Cancel
-              </Button>
-            </motion.div>
-            
-            <p className="mt-8 text-center font-mono text-[11px] text-muted-foreground space-y-1">
-              <span className="block">🔒 Secure instant upgrade</span>
-            </p>
-         </div>
+          <p className="mt-8 text-center font-mono text-[11px] text-muted-foreground space-y-1">
+            <span className="block">🔒 Secure instant upgrade</span>
+          </p>
+        </div>
       </div>
     );
   }
@@ -148,7 +188,7 @@ export default function Checkout() {
           <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
           <h1 className="font-display font-syne text-[800] text-4xl text-center mb-3">One plan. Everything included.</h1>
           <p className="text-muted-foreground text-center max-w-lg mx-auto">
-            Start your 3-day free trial. <br/> No card required during trial. Cancel anytime.
+            Start your 3-day free trial. <br /> No card required during trial. Cancel anytime.
           </p>
         </motion.div>
 

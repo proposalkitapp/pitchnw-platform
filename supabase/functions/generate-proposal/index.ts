@@ -119,8 +119,8 @@ serve(async (req) => {
     };
     
     const { proposalMode, templatePrompt, templateSections, currencySymbol } = body;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     const mode = proposalMode === "traditional" ? "traditional" : "sales_pitch";
 
@@ -214,20 +214,22 @@ Key Deliverables: ${formData.deliverables || "As discussed with client."}
 Generate a complete, ready-to-send proposal as a valid JSON object. Do not use any markdown formatting characters such as **, ##, backticks, or dashes for bullets. Write clean, professional prose with numbered lists where appropriate.`;
 
     const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://api.anthropic.com/v1/messages",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "anthropic/claude-3-5-sonnet-20241022",
+          model: "claude-3-5-sonnet-20241022",
+          max_tokens: 8192,
+          system: systemPrompt,
           messages: [
-            { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          stream: true,
+          stream: false,
         }),
       }
     );
@@ -239,23 +241,23 @@ Generate a complete, ready-to-send proposal as a valid JSON object. Do not use a
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add funds in Settings > Workspace > Usage." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("Anthropic API error:", response.status, t);
       return new Response(
         JSON.stringify({ error: "Failed to generate proposal" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    const result = await response.json();
+    const content = result.content[0].text;
+
+    return new Response(
+      JSON.stringify({ content }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (err: any) {
     console.error('Full error details:', {
       message: err.message,

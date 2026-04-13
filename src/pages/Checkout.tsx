@@ -47,33 +47,29 @@ export default function Checkout() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { plan: "pro" },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      const sessionId = crypto.randomUUID();
+
+      const resp = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          customer: {
+            email: session.user.email,
+            name: (session.user as any)?.user_metadata?.full_name,
+          },
+        }),
       });
 
-      if (error) {
-        console.error("Checkout invoke error:", error);
-        toast.error(
-          "Checkout error: " + (error.message || "Could not reach payment server.")
-        );
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => "");
+        console.error("Checkout API error:", resp.status, text);
+        toast.error(`Checkout error: ${resp.status} ${text}`.trim());
         return;
       }
 
-      if (!data) {
-        toast.error("No response from payment server.");
-        return;
-      }
-
-      if (data.error) {
-        console.error("Checkout function error:", data);
-        toast.error(data.message || "Checkout setup failed.");
-        return;
-      }
-
-      if (!data.checkout_url) {
+      const data = await resp.json().catch(() => null);
+      if (!data?.checkout_url) {
         toast.error("Could not create checkout link.");
         return;
       }
@@ -155,7 +151,7 @@ export default function Checkout() {
               "Proposal analytics",
               "Full CRM pipeline",
               "PDF export",
-              "Delete & manage proposals",
+              "Manage proposals",
             ].map((f) => (
               <li key={f} className="flex gap-2">
                 <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />

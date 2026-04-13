@@ -19,7 +19,7 @@ import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Downlo
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { getTemplateById, type Template } from "@/lib/templates";
 import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
@@ -99,8 +99,8 @@ export default function ProposalGenerator() {
   const [generatedProposal, setGeneratedProposal] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const templateId = searchParams.get("template");
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
   const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
@@ -139,7 +139,7 @@ export default function ProposalGenerator() {
       const accessToken = session?.access_token;
       if (!accessToken) {
         toast.error("Please sign in to generate proposals", { id: "gen" });
-        navigate("/auth");
+        router.push("/auth");
         return;
       }
 
@@ -173,7 +173,7 @@ export default function ProposalGenerator() {
         // Handle specific limit_reached error from backend
         if (error.context?.status === 403 || error.message?.includes("limit_reached")) {
           toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.", { id: "gen" });
-          navigate("/settings");
+          router.push("/settings");
           return;
         }
 
@@ -202,7 +202,7 @@ export default function ProposalGenerator() {
   const handleSave = async () => {
     if (!user) {
       toast.error("Please sign in to save proposals");
-      navigate("/auth");
+      router.push("/auth");
       return;
     }
     if (!generatedProposal) return;
@@ -235,7 +235,7 @@ export default function ProposalGenerator() {
         toast.success("Shareable link copied to clipboard! 🔗");
         toast.success("Proposal sent! Your client has been notified via email.");
       }
-      navigate("/dashboard");
+      router.push("/dashboard");
     }
     setIsSaving(false);
   };

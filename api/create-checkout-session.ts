@@ -14,6 +14,24 @@ type Res = {
     end: (data?: any) => void;
 };
 
+/**
+ * Read raw body for environments where req.body is not auto-parsed (e.g., Vercel Node Functions).
+ */
+async function readRawBody(req: any): Promise<string> {
+    return new Promise((resolve, reject) => {
+        try {
+            const chunks: Buffer[] = [];
+            req.on?.("data", (chunk: Buffer) =>
+                chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+            );
+            req.on?.("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+            req.on?.("error", (err: Error) => reject(err));
+        } catch (e) {
+            reject(e as Error);
+        }
+    });
+}
+
 function getBaseURLFromHeaders(headers: Record<string, any>) {
     const host = headers["x-forwarded-host"] || headers["host"];
     const proto = headers["x-forwarded-proto"] || "https";
@@ -35,8 +53,8 @@ export default async function handler(req: Req, res: Res) {
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
         const environment =
-            (process.env.DODO_PAYMENTS_ENVIRONMENT as "live_mode" | "live_mode") ||
-            "live_mode";
+            (process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") ||
+            "test_mode";
         const productId = process.env.DODO_PRO_PLAN_PRODUCT_ID;
 
         if (!apiKey) {
@@ -48,9 +66,17 @@ export default async function handler(req: Req, res: Res) {
             return;
         }
 
-        // Normalize body (Vercel may give object already)
-        const body =
-            typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+        // Normalize/parse body (Vercel functions don't auto-parse by default)
+        let parsed: any = undefined;
+        if (typeof req.body === "string") {
+            parsed = JSON.parse(req.body);
+        } else if (req.body && typeof req.body === "object") {
+            parsed = req.body;
+        } else {
+            const raw = await readRawBody(req).catch(() => null);
+            if (raw) parsed = JSON.parse(raw);
+        }
+        const body = parsed || {};
         const { sessionId, customer, billing_address } = body as {
             sessionId: string;
             customer?: {
@@ -126,7 +152,8 @@ export default async function handler(req: Req, res: Res) {
         });
     } catch (err: any) {
         // Avoid leaking internals
-        console.error("create-checkout-session error:", err);
+        console.error("create-checkout-session error:", err?.message || err, err?.stack);
+        // Surface minimal detail to help client-side error toast
         res.status(500).json({ error: "Failed to create checkout session" });
     }
 }
