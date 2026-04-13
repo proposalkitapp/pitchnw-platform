@@ -219,8 +219,8 @@ export default function Settings() {
 
   const plans = [
     {
-      name: "Standard",
-      price: "$15",
+      name: "Pro",
+      price: "$12",
       period: "/month",
       features: [
         "Unlimited AI proposal generation",
@@ -475,10 +475,10 @@ export default function Settings() {
 
 
 
-                {currentPlan === "standard" && subscriptionStatus === "active" && (
+                {currentPlan === "pro" && subscriptionStatus === "active" && (
                   <div className="space-y-1 pt-2">
-                    <p className="font-medium text-foreground">⭐ Standard Plan · Active</p>
-                    <p className="text-sm text-muted-foreground">$15/month · Renews {subscriptionPeriodEnd ? new Date(subscriptionPeriodEnd).toLocaleDateString() : "monthly"}</p>
+                    <p className="font-medium text-foreground">⭐ Pro Plan · Active</p>
+                    <p className="text-sm text-muted-foreground">$12/month · Renews {subscriptionPeriodEnd ? new Date(subscriptionPeriodEnd).toLocaleDateString() : "monthly"}</p>
                     {dodoSubscriptionId && (
                       <button
                         type="button"
@@ -512,7 +512,7 @@ export default function Settings() {
 
                 {trialExpired && (
                   <div className="pt-2 space-y-3">
-                    <p className="font-medium text-foreground">Standard — $15/month</p>
+                    <p className="font-medium text-foreground">Pro — $12/month</p>
                     <ul className="space-y-1 mt-2 text-sm text-muted-foreground">
                       <li>✓ Unlimited AI proposal generation</li>
                       <li>✓ 8 professional pitch templates</li>

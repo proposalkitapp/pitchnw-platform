@@ -54,12 +54,27 @@ export default function Checkout() {
         },
       });
 
-      if (error || !data?.checkout_url) {
+      if (error) {
+        console.error("Checkout invoke error:", error);
         toast.error(
-          error?.message ||
-          data?.message ||
-          "Could not create checkout. Please try again."
+          "Checkout error: " + (error.message || "Could not reach payment server.")
         );
+        return;
+      }
+
+      if (!data) {
+        toast.error("No response from payment server.");
+        return;
+      }
+
+      if (data.error) {
+        console.error("Checkout function error:", data);
+        toast.error(data.message || "Checkout setup failed.");
+        return;
+      }
+
+      if (!data.checkout_url) {
+        toast.error("Could not create checkout link.");
         return;
       }
 

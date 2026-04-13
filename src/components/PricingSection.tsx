@@ -8,8 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 
 const plans = [
   {
-    name: "Standard",
-    price: "$15",
+    name: "Pro",
+    price: "$12",
     period: "/month",
     badge: "3-day free trial",
     description: "Everything you need to pitch and win",
@@ -41,7 +41,7 @@ export function PricingSection() {
     if (user) {
       navigate("/settings");
     } else {
-      navigate(`/auth?mode=signup&intent=standard`);
+      navigate(`/auth?mode=signup&intent=pro`);
     }
   };
 

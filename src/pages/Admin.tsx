@@ -26,7 +26,7 @@ export default function Admin() {
   const [users, setUsers] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, proUsers: 0, standardUsers: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, totalProposals: 0, proUsers: 0 });
 
   useEffect(() => {
     if (user) checkAdmin();
@@ -69,7 +69,6 @@ export default function Admin() {
           totalUsers: profs.length,
           totalProposals: props.length,
           proUsers: profs.filter((p: any) => p.plan === "pro").length,
-          standardUsers: profs.filter((p: any) => p.plan === "standard").length,
         });
       }
     } catch (err) {
@@ -107,7 +106,6 @@ export default function Admin() {
     const colors: Record<string, string> = {
       free: "bg-secondary text-muted-foreground",
       pro: "bg-primary/10 text-primary",
-      standard: "bg-warning/10 text-warning",
     };
     return (
       <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${colors[plan] || colors.free}`}>
@@ -120,7 +118,6 @@ export default function Admin() {
     { label: "Total Users", value: stats.totalUsers, icon: Users, color: "text-primary" },
     { label: "Total Proposals", value: stats.totalProposals, icon: FileText, color: "text-success" },
     { label: "Pro Users", value: stats.proUsers, icon: Shield, color: "text-primary" },
-    { label: "Standard Users", value: stats.standardUsers, icon: Shield, color: "text-warning" },
   ];
 
   return (
@@ -226,7 +223,6 @@ export default function Admin() {
                         >
                           <option value="free">Free</option>
                           <option value="pro">Pro</option>
-                          <option value="standard">Standard</option>
                         </select>
                       </TableCell>
                     </TableRow>

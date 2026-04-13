@@ -14,28 +14,30 @@ serve(async (req) => {
 
   try {
     const apiKey = Deno.env.get('DODO_PAYMENTS_API_KEY')
-    const productId = Deno.env.get('DODO_STANDARD_PRODUCT_ID')
+    const productId = Deno.env.get('DODO_PRO_PRODUCT_ID')
     const appUrl = Deno.env.get('APP_URL')
 
+    if (!apiKey) { console.error('MISSING: DODO_PAYMENTS_API_KEY') }
+    if (!productId) { console.error('MISSING: DODO_PRO_PRODUCT_ID') }
+    if (!appUrl) { console.error('MISSING: APP_URL') }
+
     if (!apiKey || !productId || !appUrl) {
-      console.error('Missing env vars:', {
-        hasApiKey: !!apiKey,
-        hasProductId: !!productId,
-        hasAppUrl: !!appUrl
-      })
       return new Response(
         JSON.stringify({
           error: 'configuration_error',
-          message: 'Payment system not configured.'
+          message: 'Payment configuration is incomplete. Please contact support.'
         }),
-        { status: 500, headers: corsHeaders }
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       )
     }
 
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', message: 'Missing Authorization header' }),
         { status: 401, headers: corsHeaders }
       )
     }
@@ -50,7 +52,7 @@ serve(async (req) => {
 
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired token' }),
         { status: 401, headers: corsHeaders }
       )
     }
@@ -78,11 +80,11 @@ serve(async (req) => {
           name: profile?.display_name || user.email!,
           create_new_customer: true
         },
-      success_url: appUrl + '/payment/success?plan=standard&session_id={CHECKOUT_SESSION_ID}',
+      success_url: appUrl + '/payment/success?plan=pro&session_id={CHECKOUT_SESSION_ID}',
       cancel_url: appUrl + '/checkout',
       metadata: {
         user_id: user.id,
-        plan: 'standard'
+        plan: 'pro'
       }
     })
 
@@ -114,9 +116,15 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: 'checkout_failed',
-        message: error.message || 'Failed to create checkout.'
+        message: error.message || 'Failed to create checkout session.'
       }),
-      { status: 500, headers: corsHeaders }
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
     )
   }
 })

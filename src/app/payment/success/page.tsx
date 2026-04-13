@@ -12,7 +12,7 @@ export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const plan = (searchParams.get("plan") || "pro").toLowerCase();
-  const label = plan === "standard" ? "Standard" : "Pro";
+  const label = "Pro";
 
   useEffect(() => {
     confetti({

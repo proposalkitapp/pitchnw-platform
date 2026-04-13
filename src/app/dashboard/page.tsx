@@ -400,7 +400,7 @@ export default function Dashboard() {
               className="gap-2 shrink-0"
               onClick={() => {
                 if (!canCreateProposal) {
-                  toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
+                  toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
                   navigate("/settings");
                   return;
                 }
@@ -895,7 +895,7 @@ export default function Dashboard() {
                     className="w-full gap-1.5"
                     onClick={() => navigate("/settings")}
                   >
-                    <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade to Standard
+                    <ArrowUpRight className="h-3.5 w-3.5" /> Upgrade to Pro
                   </Button>
                 </div>
               </motion.div>

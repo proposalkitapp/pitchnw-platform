@@ -13,7 +13,7 @@ import pitchnwLogo from "../../assets/pitchnw-logo.png";
 export default function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState<"standard" | "upgrade" | null>(null);
+  const [loading, setLoading] = useState<"pro" | "upgrade" | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -35,7 +35,7 @@ export default function Checkout() {
     load();
   }, []);
 
-  const handleUpgrade = async (plan: "standard") => {
+  const handleUpgrade = async (plan: "pro") => {
     try {
       setLoading("upgrade");
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,7 +48,7 @@ export default function Checkout() {
 
       if (error) throw error;
       
-      toast.success(`Successfully upgraded to Standard plan!`);
+      toast.success(`Successfully upgraded to Pro plan!`);
       navigate("/settings");
     } catch {
       toast.error("Failed to process the upgrade. Please try again or contact support.");
@@ -59,7 +59,7 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     try {
-      setLoading("standard")
+      setLoading("pro")
 
       const { data: { session }, error: sessionError } =
         await supabase.auth.getSession()
@@ -69,27 +69,34 @@ export default function Checkout() {
         return
       }
 
-      const { data, error } =
-        await supabase.functions.invoke('create-checkout', {
-          body: { plan: 'standard' },
-          headers: {
-            Authorization:
-              `Bearer ${session.access_token}`
-          }
-        })
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: 'pro' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      })
 
       if (error) {
-        console.error('Edge function error:', error)
+        console.error('Checkout invoke error:', error)
         toast.error(
-          'Checkout failed: ' +
-          (error.message || 'Please try again.')
+          'Checkout error: ' + (error.message || 'Could not reach payment server.')
         )
         return
       }
 
-      if (!data?.checkout_url) {
-        console.error('No checkout URL returned:', data)
-        toast.error('Could not create checkout session.')
+      if (!data) {
+        toast.error('No response from payment server.')
+        return
+      }
+
+      if (data.error) {
+        console.error('Checkout function error:', data)
+        toast.error(data.message || 'Checkout setup failed.')
+        return
+      }
+
+      if (!data.checkout_url) {
+        toast.error('Could not create checkout link.')
         return
       }
 
@@ -104,7 +111,7 @@ export default function Checkout() {
   }
 
   const busy = loading !== null;
-  const selectedPlan = searchParams.get("plan") as "standard" | null;
+  const selectedPlan = searchParams.get("plan") as "pro" | null;
   const isUpgrading = currentPlan && selectedPlan && currentPlan !== selectedPlan && subscriptionStatus === "active";
 
   if (loadingProfile) {
@@ -139,12 +146,12 @@ export default function Checkout() {
                 <div className="text-primary font-bold">→</div>
                 <div className="text-right">
                   <p className="text-xs text-success uppercase tracking-wider font-semibold">New</p>
-                  <p className="font-display font-bold text-lg capitalize">{selectedPlan || "standard"}</p>
+                  <p className="font-display font-bold text-lg capitalize">{selectedPlan || "pro"}</p>
                 </div>
               </div>
 
               <div className="space-y-4 mb-8 text-sm text-card-foreground">
-                <p>By upgrading, you will immediately gain access to all the features of the <strong>Standard</strong> tier.</p>
+                <p>By upgrading, you will immediately gain access to all the features of the <strong>Pro</strong> tier.</p>
                 <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
                   <Check className="h-5 w-5 shrink-0 mt-0.5" />
                   Your payment method on file will be charged the prorated difference for the remainder of this billing cycle.
@@ -156,7 +163,7 @@ export default function Checkout() {
                 size="lg"
                 className="w-full"
                 disabled={busy}
-                onClick={() => handleUpgrade("standard")}
+                onClick={() => handleUpgrade("pro")}
               >
                 {loading === "upgrade" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Confirm Upgrade
@@ -208,9 +215,9 @@ export default function Checkout() {
             <span className="inline-flex self-start rounded-full bg-success/15 text-success text-xs font-medium px-3 py-1 mb-4 mt-2">
               3-day free trial
             </span>
-            <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground">Standard</p>
+            <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground">Pro</p>
             <div className="mt-2 mb-4 flex items-baseline gap-1">
-              <span className="font-display font-extrabold text-5xl text-card-foreground">$15</span>
+              <span className="font-display font-extrabold text-5xl text-card-foreground">$12</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <p className="text-sm text-muted-foreground mb-6">Everything you need to pitch and win</p>
@@ -242,7 +249,7 @@ export default function Checkout() {
               disabled={busy}
               onClick={() => handleCheckout()}
             >
-              {loading === "standard" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {loading === "pro" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Start Free Trial — 3 Days
             </Button>
           </motion.div>
