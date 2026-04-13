@@ -33,30 +33,29 @@ async function readRawBody(req: any): Promise<string> {
 }
 
 function getBaseURLFromHeaders(headers: Record<string, any>) {
-    // Prefer explicit override for production/live to avoid localhost or wrong proto
+    // 1) Explicit override always wins (recommended for live)
     const override = process.env.DODO_RETURN_URL_BASE;
     if (override && typeof override === "string" && override.trim().length > 0) {
-        // normalize to no trailing slash
         return override.replace(/\/+$/, "");
     }
 
+    // 2) If live_mode and no override provided, force your current production domain
+    //    as requested: https://pitchnw.vercel.app
+    const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
+    if (envMode === "live_mode") {
+        const forced = "https://pitchnw.vercel.app";
+        return forced.replace(/\/+$/, "");
+    }
+
+    // 3) Non-live (e.g., local dev / test_mode) — infer from headers/VERCEL_URL safely
     const host = headers["x-forwarded-host"] || headers["host"];
     const protoHeader = headers["x-forwarded-proto"];
     let proto = typeof protoHeader === "string" ? protoHeader : "https";
 
     if (!host) {
-        // Fallback to Vercel env if available
         const vercelURL = process.env.VERCEL_URL;
         if (vercelURL) return `https://${vercelURL}`.replace(/\/+$/, "");
-        // Local dev default
         return "http://localhost:3000";
-    }
-
-    // If we're in live_mode but running on localhost, prefer Vercel domain if available
-    const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
-    if (envMode === "live_mode" && /^(localhost|127\.0\.0\.1)(:|$)/i.test(String(host))) {
-        const vercelURL = process.env.VERCEL_URL;
-        if (vercelURL) return `https://${vercelURL}`.replace(/\/+$/, "");
     }
 
     // If proto header is missing and host looks like localhost, force http for dev
@@ -164,6 +163,10 @@ export default async function handler(req: Req, res: Res) {
         // Create a checkout session for the $12 monthly subscription product
         const session = await client.checkoutSessions.create({
             product_cart: [{ product_id: productId, quantity: 1 }],
+            // Ensure at least common card methods are available per docs guidance
+            allowed_payment_method_types: ["credit", "debit"],
+            // Explicitly configure the free trial to match UI copy (3-day trial)
+            subscription_data: { trial_period_days: 3 },
             // Pre-fill if provided (types satisfied)
             customer: customerReq ?? undefined,
             billing_address: billingReq ?? undefined,
@@ -181,9 +184,20 @@ export default async function handler(req: Req, res: Res) {
             session_id: session.session_id,
         });
     } catch (err: any) {
-        // Avoid leaking internals
-        console.error("create-checkout-session error:", err?.message || err, err?.stack);
-        // Surface minimal detail to help client-side error toast
+        // Structured server-side diagnostics without leaking secrets
+        const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
+        const status = (err && (err.status || err.response?.status)) || 500;
+        const code = err && (err.code || err.response?.data?.code);
+        const respErr = err?.response?.data?.error || err?.response?.data;
+        console.error("create-checkout-session error:", {
+            envMode,
+            status,
+            code,
+            message: err?.message || String(err),
+            responseError: respErr,
+            stack: err?.stack,
+        });
+        // Minimal client-facing error
         res.status(500).json({ error: "Failed to create checkout session" });
     }
 }
