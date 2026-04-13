@@ -1,8 +1,16 @@
+// Deploy with: supabase functions deploy generate-proposal
+// Required secrets:
+// ANTHROPIC_API_KEY
+// SUPABASE_SERVICE_ROLE_KEY
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-
-
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+}
 const SALES_PITCH_SYSTEM = `You are a world-class sales copywriter who specialises in writing proposals that close deals. You understand buyer psychology at a deep level.
 
 Your writing rules:
@@ -80,19 +88,37 @@ const PROJECT_TYPE_CONTEXT: Record<string, string> = {
 };
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin");
-  const isAllowed = origin && (origin.startsWith("http://localhost:") || origin === "https://pitchnw.app");
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "https://pitchnw.app",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
 
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 
   try {
-    const { formData, proposalMode, templatePrompt, templateSections, currencySymbol } = await req.json();
+    const body = await req.json();
+    // Support both flattened structure (requested) and legacy formData structure
+    const formData = body.formData || {
+      clientName: body.clientName,
+      clientEmail: body.clientEmail,
+      projectTitle: body.projectTitle,
+      industry: body.industry || body.clientCompany,
+      projectType: body.projectType,
+      budget: body.budget,
+      timeline: body.timeline || body.duration,
+      description: body.description || body.requirements,
+      deliverables: body.deliverables || body.scopeIncluded,
+      tone: body.tone
+    };
+    
+    const { proposalMode, templatePrompt, templateSections, currencySymbol } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -230,11 +256,21 @@ Generate a complete, ready-to-send proposal as a valid JSON object. Do not use a
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
-  } catch (e) {
-    console.error("generate-proposal error:", e);
+  } catch (err: any) {
+    console.error('Full error details:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      JSON.stringify({
+        error: 'generation_failed',
+        message: err.message || 'Generation failed'
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
   }
 });

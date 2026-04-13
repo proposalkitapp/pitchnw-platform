@@ -165,84 +165,58 @@ export default function ProposalGenerator() {
         return;
       }
 
-      const resp = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-proposal`,
+      const { data, error } = await supabase.functions.invoke(
+        'generate-proposal',
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            formData: {
-              ...form,
-              budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "",
-            },
+          body: {
+            clientName: form.clientName,
+            clientEmail: form.clientEmail,
+            projectType: form.projectType,
+            projectTitle: form.projectTitle,
+            requirements: form.description,
+            currency: form.budgetCurrency,
+            budget: form.budgetAmount,
+            duration: form.timeline,
+            tone: form.tone,
             proposalMode: form.proposalMode,
             templatePrompt: activeTemplate?.aiPrompt || null,
             templateSections: activeTemplate?.sections || null,
             currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
-          }),
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
         }
       );
 
-      if (!resp.ok) {
-        let errorMessage = "Failed to generate proposal";
-        try {
-          const err = await resp.json();
-          if (err.code === "LIMIT_REACHED" || err.error === "limit_reached") {
-            toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
-            navigate("/checkout");
-            return;
-          }
-          errorMessage = err.error || err.message || errorMessage;
-        } catch (parseError) {
-          console.error("Error parsing failure response:", parseError);
-          const textError = await resp.text().catch(() => "Unknown error");
-          errorMessage = `Error ${resp.status}: ${textError}`;
+      if (error) {
+        console.error('Generation error:', error);
+        
+        // Handle specific limit_reached error from backend
+        if (error.context?.status === 403 || error.message?.includes("limit_reached")) {
+          toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
+          navigate("/checkout");
+          return;
         }
-        throw new Error(errorMessage);
+
+        throw new Error(error.message || "Failed to generate proposal");
       }
 
-      const reader = resp.body?.getReader();
-      if (!reader) throw new Error("No response body");
-
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let fullContent = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullContent += content;
-              setGeneratedProposal(fullContent);
-            }
-          } catch (e) {
-            console.warn("Error parsing stream chunk:", e, jsonStr);
-          }
-        }
+      // Handle the generated content
+      if (data && typeof data === 'string') {
+        setGeneratedProposal(data);
+      } else if (data && data.content) {
+        setGeneratedProposal(data.content);
+      } else if (data) {
+        // If it's a JSON object but not a string, stringify it
+        setGeneratedProposal(JSON.stringify(data, null, 2));
       }
+
       toast.success("Proposal created!", { id: "gen" });
       // Update local counter after successful generation
-      setProposalsUsed((prev) => prev + 1);
+      if (typeof setProposalsUsed === 'function') {
+        setProposalsUsed((prev: number) => prev + 1);
+      }
     } catch (e: any) {
       console.error("Generation error details:", e);
       toast.error(e.message || "Generation failed. Please try again.", { id: "gen" });
