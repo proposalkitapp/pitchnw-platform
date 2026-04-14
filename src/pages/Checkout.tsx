@@ -54,6 +54,7 @@ export default function Checkout() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
+          userId: session.user.id,
           customer: {
             email: session.user.email,
             name: (session.user as any)?.user_metadata?.full_name,

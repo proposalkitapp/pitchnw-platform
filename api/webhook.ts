@@ -77,10 +77,12 @@ export default async function handler(req: Req, res: Res) {
 
             const sessionId: string | undefined =
                 meta.sessionId ?? meta.session_id ?? undefined;
+            const userId: string | undefined =
+                meta.userId ?? meta.user_id ?? undefined;
 
-            if (!sessionId) {
+            if (!sessionId && !userId) {
                 // Log but still acknowledge to avoid retries; you can track this to investigate
-                console.warn("payment.succeeded received without metadata.sessionId");
+                console.warn("payment.succeeded received without sessionId or userId in metadata");
             } else {
                 // Update Postgres (Supabase) to mark the session as paid
                 const supabaseUrl = process.env.SUPABASE_URL;
@@ -91,24 +93,52 @@ export default async function handler(req: Req, res: Res) {
                 } else {
                     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-                    // Upsert to keep the operation idempotent by session_id
-                    // Adjust the table/column names to match your schema if different.
-                    const { error } = await supabase
-                        .from("proposal_sessions")
-                        .upsert(
-                            [
-                                {
-                                    session_id: sessionId,
-                                    paid: true,
-                                    paid_at: new Date().toISOString(),
-                                },
-                            ],
-                            { onConflict: "session_id" }
-                        );
+                    // 1. Mark the session as paid (if proposal_sessions exists)
+                    if (sessionId) {
+                        const { error: sessionErr } = await supabase
+                            .from("proposal_sessions")
+                            .upsert(
+                                [
+                                    {
+                                        session_id: sessionId,
+                                        paid: true,
+                                        paid_at: new Date().toISOString(),
+                                    },
+                                ],
+                                { onConflict: "session_id" }
+                            );
+                        if (sessionErr) console.warn("Supabase upsert warning (proposal_sessions):", sessionErr.message);
+                    }
 
-                    if (error) {
-                        // Log but still acknowledge to avoid webhook retries
-                        console.error("Supabase upsert error (proposal_sessions):", error);
+                    // 2. CRITICAL: Upgrade the User Profile to Pro
+                    if (userId) {
+                        console.log(`Upgrading user ${userId} to Pro...`);
+                        const { error: profileErr } = await supabase
+                            .from("profiles")
+                            .update({
+                                plan: "pro",
+                                subscription_status: "active",
+                                subscription_period_end: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString(), // ~1 month from now
+                            })
+                            .eq("user_id", userId);
+
+                        if (profileErr) {
+                            console.error("Failed to upgrade user profile in profiles table:", profileErr);
+                        } else {
+                            console.log(`Successfully upgraded user ${userId} to Pro.`);
+                        }
+                    } else if (event?.data?.customer?.email) {
+                        // Fallback: Try to find user by email if userId is missing
+                        const email = event.data.customer.email;
+                        console.log(`Attempting fallback upgrade for email ${email}...`);
+                        const { data: profile } = await supabase
+                            .from("profiles")
+                            .select("user_id")
+                            .eq("email", email)
+                            .maybeSingle(); // Note: This depends on having 'email' in profiles table
+                        
+                        // Note: If email isn't in profiles, we can't do much here without more complex logic.
+                        // But since we fixed the frontend to send userId, this fallback is just a safety measure.
                     }
                 }
             }

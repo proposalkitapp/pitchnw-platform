@@ -39,11 +39,10 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
         return override.replace(/\/+$/, "");
     }
 
-    // 2) If live_mode and no override provided, force your current production domain
-    const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
-    if (envMode === "live_mode") {
-        return "https://pitchnw.vercel.app";
-    }
+    // 2) If live_mode and no override provided, check if we have a valid host. 
+    // We prefer inferred headers even in live mode to support different deployment domains (preview domains, etc.)
+    // but we can have a production fallback if everything else fails.
+    const productionFallback = "https://pitchnw.vercel.app";
 
     // 3) Safely infer from headers / VERCEL_URL
     const host = headers["x-forwarded-host"] || headers["host"];
@@ -61,6 +60,10 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
 
     if (!host || String(host).includes("vercel.com")) {
         // Fallback for local development or broken headers
+        // If in live_mode, use the production fallback instead of localhost
+        if (process.env.DODO_PAYMENTS_ENVIRONMENT === "live_mode") {
+            return productionFallback;
+        }
         return "http://localhost:3000";
     }
 
@@ -129,8 +132,9 @@ export default async function handler(req: Req, res: Res) {
             if (raw) parsed = JSON.parse(raw);
         }
         const body = parsed || {};
-        const { sessionId, customer, billing_address } = body as {
+        const { sessionId, userId, customer, billing_address } = body as {
             sessionId: string;
+            userId?: string;
             customer?: {
                 email?: string;
                 name?: string;
@@ -213,9 +217,10 @@ export default async function handler(req: Req, res: Res) {
             // Configure post-checkout redirects
             return_url,
             cancel_url,
-            // Attach sessionId for reconciliation in webhook
+            // Attach identifiers for reconciliation in webhook
             metadata: {
                 sessionId,
+                userId: userId || "",
             },
         });
 
