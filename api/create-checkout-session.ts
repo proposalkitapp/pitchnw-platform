@@ -32,11 +32,23 @@ async function readRawBody(req: any): Promise<string> {
     });
 }
 
+function normalizeOrigin(input: string): string {
+    if (!input || typeof input !== "string") return "";
+    const trimmed = input.trim().replace(/\/+$/, "");
+    if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+    }
+    if (/^(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(trimmed)) {
+        return `http://${trimmed}`.replace(/\/+$/, "");
+    }
+    return `https://${trimmed}`.replace(/\/+$/, "");
+}
+
 function getBaseURLFromHeaders(headers: Record<string, any>) {
     // 1) Explicit override always wins (recommended for live)
     const override = process.env.DODO_RETURN_URL_BASE;
     if (override && typeof override === "string" && override.trim().length > 0) {
-        return override.replace(/\/+$/, "");
+        return normalizeOrigin(override);
     }
 
     // 2) If live_mode and no override provided, check if we have a valid host.
@@ -54,8 +66,7 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
     const isDashboardURL = vercelURL?.includes("vercel.com/");
 
     if (vercelURL && !isDashboardURL) {
-        const normalized = vercelURL.startsWith("http") ? vercelURL : `https://${vercelURL}`;
-        return normalized.replace(/\/+$/, "");
+        return normalizeOrigin(vercelURL);
     }
 
     if (!host || String(host).includes("vercel.com")) {
