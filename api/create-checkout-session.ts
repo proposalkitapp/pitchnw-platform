@@ -39,7 +39,7 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
         return override.replace(/\/+$/, "");
     }
 
-    // 2) If live_mode and no override provided, check if we have a valid host. 
+    // 2) If live_mode and no override provided, check if we have a valid host.
     // We prefer inferred headers even in live mode to support different deployment domains (preview domains, etc.)
     // but we can have a production fallback if everything else fails.
     const productionFallback = "https://pitchnw.vercel.app";
@@ -52,7 +52,7 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
     // Detect if VERCEL_URL is set to a dashboard URL (common misconfiguration)
     const vercelURL = process.env.VERCEL_URL;
     const isDashboardURL = vercelURL?.includes("vercel.com/");
-    
+
     if (vercelURL && !isDashboardURL) {
         const normalized = vercelURL.startsWith("http") ? vercelURL : `https://${vercelURL}`;
         return normalized.replace(/\/+$/, "");
@@ -83,45 +83,16 @@ export default async function handler(req: Req, res: Res) {
 
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
+        // Default to test_mode if not provided, per docs examples
         const environment =
-            process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode";
-        const productId = process.env.DODO_PRO_PLAN_PRODUCT_ID;
+            ((process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode");
 
         if (!apiKey) {
             res.status(500).json({ error: "Missing DODO_PAYMENTS_API_KEY" });
             return;
         }
-        if (!productId) {
-            res.status(500).json({ error: "Missing DODO_PRO_PLAN_PRODUCT_ID" });
-            return;
-        }
-        if (!environment) {
-            res.status(500).json({ error: "Missing DODO_PAYMENTS_ENVIRONMENT" });
-            return;
-        }
-        if (environment !== "test_mode" && environment !== "live_mode") {
-            res.status(400).json({ error: "Invalid DODO_PAYMENTS_ENVIRONMENT" });
-            return;
-        }
 
-        // Validate product id format for Checkout Sessions API:
-        // Dodo docs show product_cart expects product_id values like 'prod_...'
-        // Static payment links sometimes use 'pdt_...' but Checkout Sessions requires product ids.
-        const productIdStr = String(productId);
-        const isLikelyProductFormat = /^(prod_|pdt_)[A-Za-z0-9]+$/.test(productIdStr);
-        if (!isLikelyProductFormat) {
-            console.error("create-checkout-session error: invalid product id format", {
-                environment,
-                productIdPrefix: productIdStr.slice(0, 5),
-            });
-            res.status(400).json({
-                error:
-                    "Invalid DODO_PRO_PLAN_PRODUCT_ID format. Expected a product ID starting with 'prod_' or 'pdt_'.",
-            });
-            return;
-        }
-
-        // Normalize/parse body (Vercel functions don't auto-parse by default)
+        // Parse body (Vercel functions may not auto-parse)
         let parsed: any = undefined;
         if (typeof req.body === "string") {
             parsed = JSON.parse(req.body);
@@ -132,46 +103,32 @@ export default async function handler(req: Req, res: Res) {
             if (raw) parsed = JSON.parse(raw);
         }
         const body = parsed || {};
-        const { sessionId, userId, customer, billing_address } = body as {
-            sessionId: string;
-            userId?: string;
-            customer?: {
-                email?: string;
-                name?: string;
-                phone_number?: string;
-            };
-            billing_address?: {
-                street?: string;
-                city?: string;
-                state?: string;
-                country?: string; // ISO 3166-1 alpha-2
-                zipcode?: string;
-            };
-        };
 
-        if (!sessionId) {
-            res.status(400).json({ error: "Missing required field: sessionId" });
+        // Allow product_id from body, otherwise fallback to env (backward compatible with existing setup)
+        const productIdFromEnv = process.env.DODO_PRO_PLAN_PRODUCT_ID;
+        const productId = (body.product_id as string) || productIdFromEnv;
+        if (!productId) {
+            res.status(400).json({ error: "Missing product_id (body) or DODO_PRO_PLAN_PRODUCT_ID (env)" });
             return;
         }
 
+        // Optional prefill customer per docs
+        const customer = body.customer as
+            | { email?: string; name?: string }
+            | undefined;
+
         const baseURL = getBaseURLFromHeaders(req.headers);
-        const return_url = `${baseURL}/payment/success?session=${encodeURIComponent(sessionId)}`;
-        const cancel_url = `${baseURL}/checkout?canceled=1`;
+        const return_url = `${baseURL}/payment/success`;
 
-        // Diagnostic log (internal only)
-        console.log("Constructed checkout URLs:", { baseURL, return_url, cancel_url });
-
-        // Validate URLs early to avoid 400s from the API
+        // Validate URL early
         try {
             // eslint-disable-next-line no-new
             new URL(return_url);
-            // eslint-disable-next-line no-new
-            new URL(cancel_url);
         } catch {
             res.status(400).json({
-                error: "Invalid return_url or cancel_url",
-                message: "Both return_url and cancel_url must be absolute URLs",
-                detail: { return_url, cancel_url },
+                error: "Invalid return_url",
+                message: "return_url must be an absolute URL",
+                detail: { return_url },
             });
             return;
         }
@@ -181,56 +138,19 @@ export default async function handler(req: Req, res: Res) {
             environment,
         });
 
-        // Build optional typed customer only if we have a valid email
-        let customerReq: any = undefined;
-        if (customer?.email && typeof customer.email === "string") {
-            customerReq = {
-                email: customer.email,
-                name: customer.name,
-                phone_number: customer.phone_number,
-            };
-        }
-
-        // Build optional typed billing address only if we have a valid ISO country
-        let billingReq: any = undefined;
-        if (billing_address?.country && typeof billing_address.country === "string") {
-            const country = billing_address.country.toUpperCase();
-            billingReq = {
-                street: billing_address.street,
-                city: billing_address.city,
-                state: billing_address.state,
-                country,
-                zipcode: billing_address.zipcode,
-            };
-        }
-
-        // Create a checkout session for the $12 monthly subscription product
+        // Per docs: create checkout session with product_cart, optional customer, and return_url
         const session = await client.checkoutSessions.create({
             product_cart: [{ product_id: productId, quantity: 1 }],
-            // Ensure at least common card methods are available per docs guidance
-            allowed_payment_method_types: ["credit", "debit"],
-            // Explicitly configure the free trial to match UI copy (3-day trial)
-            subscription_data: { trial_period_days: 3 },
-            // Pre-fill if provided (types satisfied)
-            customer: customerReq ?? undefined,
-            billing_address: billingReq ?? undefined,
-            // Configure post-checkout redirects
+            customer: customer?.email ? { email: customer.email, name: customer.name } : undefined,
             return_url,
-            cancel_url,
-            // Attach identifiers for reconciliation in webhook
-            metadata: {
-                sessionId,
-                userId: userId || "",
-            },
         });
 
-        // Respond with the hosted checkout URL
+        // Return hosted checkout URL and session id
         res.status(200).json({
             checkout_url: session.checkout_url,
             session_id: session.session_id,
         });
     } catch (err: any) {
-        // Structured server-side diagnostics without leaking secrets
         const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
         const status = (err && (err.status || err.response?.status)) || 500;
         const code = err && (err.code || err.response?.data?.code);
@@ -254,14 +174,14 @@ export default async function handler(req: Req, res: Res) {
 }
 
 /**
-Documentation references:
-- Checkout Sessions (Node SDK usage, return_url, metadata):
-  https://docs.dodopayments.com/developer-resources/checkout-session
-- Subscription Integration Guide (Node SDK with product_cart):
-  https://docs.dodopayments.com/developer-resources/subscription-integration-guide
+ Documentation used (provided in your message):
+ - One-time Payments Integration Guide (Checkout Sessions)
+   https://docs.dodopayments.com/developer-resources/checkout-session
+ - API Reference (Create Checkout Session)
+   https://docs.dodopayments.com/api-reference/checkout-sessions/create
 
-Security & Notes:
-- environment must be 'test_mode' or 'live_mode' and is required via DODO_PAYMENTS_ENVIRONMENT.
-- Amounts returned by APIs are in the currency’s smallest unit (minor units).
-- Do NOT expose your API key on the client; keep this route server-side.
-*/
+ Notes:
+ - Use environment 'test_mode' for sandbox; amounts are in minor units.
+ - Keep API key server-side only; never expose to the client.
+ - Redirect customer to `checkout_url` returned by this endpoint.
+ */
