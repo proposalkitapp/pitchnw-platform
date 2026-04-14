@@ -123,24 +123,36 @@ serve(async (req) => {
 
     const mode = proposalMode === "traditional" ? "traditional" : "sales_pitch";
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    // PRE-FLIGHT DIAGNOSTICS
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !ANTHROPIC_API_KEY) {
+      console.error("Missing critical environment variables:", {
+        hasSupabaseUrl: !!SUPABASE_URL,
+        hasAnonKey: !!SUPABASE_ANON_KEY,
+        hasAnthropicKey: !!ANTHROPIC_API_KEY
+      });
       return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          error: "configuration_error", 
+          message: "The edge function is missing required configuration secrets. Please check Supabase dashboard." 
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: authHeader } } }
     );
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
+      console.error("User authentication failed:", userError);
       return new Response(
-        JSON.stringify({ error: "Invalid session" }),
+        JSON.stringify({ error: "Invalid session", details: userError?.message }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

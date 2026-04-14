@@ -40,26 +40,32 @@ function getBaseURLFromHeaders(headers: Record<string, any>) {
     }
 
     // 2) If live_mode and no override provided, force your current production domain
-    //    as requested: https://pitchnw.vercel.app
     const envMode = process.env.DODO_PAYMENTS_ENVIRONMENT;
     if (envMode === "live_mode") {
-        const forced = "https://pitchnw.vercel.app";
-        return forced.replace(/\/+$/, "");
+        return "https://pitchnw.vercel.app";
     }
 
-    // 3) Non-live (e.g., local dev / test_mode) — infer from headers/VERCEL_URL safely
+    // 3) Safely infer from headers / VERCEL_URL
     const host = headers["x-forwarded-host"] || headers["host"];
     const protoHeader = headers["x-forwarded-proto"];
     let proto = typeof protoHeader === "string" ? protoHeader : "https";
 
-    if (!host) {
-        const vercelURL = process.env.VERCEL_URL;
-        if (vercelURL) return `https://${vercelURL}`.replace(/\/+$/, "");
+    // Detect if VERCEL_URL is set to a dashboard URL (common misconfiguration)
+    const vercelURL = process.env.VERCEL_URL;
+    const isDashboardURL = vercelURL?.includes("vercel.com/");
+    
+    if (vercelURL && !isDashboardURL) {
+        const normalized = vercelURL.startsWith("http") ? vercelURL : `https://${vercelURL}`;
+        return normalized.replace(/\/+$/, "");
+    }
+
+    if (!host || String(host).includes("vercel.com")) {
+        // Fallback for local development or broken headers
         return "http://localhost:3000";
     }
 
-    // If proto header is missing and host looks like localhost, force http for dev
-    if (!protoHeader && /localhost|127\.0\.0\.1/i.test(String(host))) {
+    // Force http for local dev
+    if (/localhost|127\.0\.0\.1/i.test(String(host))) {
         proto = "http";
     }
 
@@ -145,9 +151,26 @@ export default async function handler(req: Req, res: Res) {
         }
 
         const baseURL = getBaseURLFromHeaders(req.headers);
-        // Dodo docs use return_url for post-checkout redirect
-        // Requirement: redirect back to /?session={sessionId}
-        const return_url = `${baseURL}/?session=${encodeURIComponent(sessionId)}`;
+        const return_url = `${baseURL}/payment/success?session=${encodeURIComponent(sessionId)}`;
+        const cancel_url = `${baseURL}/checkout?canceled=1`;
+
+        // Diagnostic log (internal only)
+        console.log("Constructed checkout URLs:", { baseURL, return_url, cancel_url });
+
+        // Validate URLs early to avoid 400s from the API
+        try {
+            // eslint-disable-next-line no-new
+            new URL(return_url);
+            // eslint-disable-next-line no-new
+            new URL(cancel_url);
+        } catch {
+            res.status(400).json({
+                error: "Invalid return_url or cancel_url",
+                message: "Both return_url and cancel_url must be absolute URLs",
+                detail: { return_url, cancel_url },
+            });
+            return;
+        }
 
         const client = new DodoPayments({
             bearerToken: apiKey,
@@ -187,8 +210,9 @@ export default async function handler(req: Req, res: Res) {
             // Pre-fill if provided (types satisfied)
             customer: customerReq ?? undefined,
             billing_address: billingReq ?? undefined,
-            // Use return_url per docs (acts as the "success_url" concept)
+            // Configure post-checkout redirects
             return_url,
+            cancel_url,
             // Attach sessionId for reconciliation in webhook
             metadata: {
                 sessionId,

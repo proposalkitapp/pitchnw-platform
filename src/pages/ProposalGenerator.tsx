@@ -14,18 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2, Lock } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { exportProposalAsPdf } from "@/lib/export-pdf";
-import { getTemplateById, type Template } from "@/lib/templates";
-import { currencies, getCurrencyByCode, formatBudget } from "@/lib/currencies";
-import { ProposalCustomizer } from "@/components/ProposalCustomizer";
-import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
-import { Badge } from "@/components/ui/badge";
 import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
+import { generateSmartProposal } from "@/lib/blueprint-engine";
+import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2, Lock, Zap } from "lucide-react";
 
 interface FormData {
   clientName: string;
@@ -111,6 +102,7 @@ export default function ProposalGenerator() {
   const [proposalsUsed, setProposalsUsed] = useState(0);
   const [profileLoading, setProfileLoading] = useState(true);
   const [branding, setBranding] = useState<ProposalBranding | undefined>(undefined);
+  const [generationMode, setGenerationMode] = useState<"smart" | "ai">("smart");
 
   useEffect(() => {
     if (templateId) {
@@ -168,9 +160,38 @@ export default function ProposalGenerator() {
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGeneratedProposal("");
-    toast.loading("Generating your proposal...", { id: "gen" });
+    
+    if (generationMode === "ai") {
+      toast.loading("AI is crafting your proposal...", { id: "gen" });
+    } else {
+      toast.loading("Smart Engine is assembling your proposal...", { id: "gen" });
+    }
 
     try {
+      // SMART MODE (API-less)
+      if (generationMode === "smart") {
+        // Add a slight artificial delay for a "high-tech" feeling
+        await new Promise(r => setTimeout(r, 1500));
+        
+        const result = generateSmartProposal({
+          clientName: form.clientName,
+          industry: form.industry,
+          projectTitle: form.projectTitle,
+          projectType: form.projectType,
+          budget: `${getCurrencyByCode(form.budgetCurrency).symbol}${form.budgetAmount}`,
+          timeline: form.timeline,
+          tone: form.tone,
+          deliverables: form.deliverables,
+          description: form.description
+        });
+        
+        setGeneratedProposal(JSON.stringify(result));
+        toast.success("Proposal assembled instantly!", { id: "gen" });
+        setIsGenerating(false);
+        return;
+      }
+
+      // AI MODE (Edge Function)
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
       if (!accessToken) {
@@ -516,6 +537,68 @@ export default function ProposalGenerator() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
+                  <Label className="text-base font-semibold">Generation Technology</Label>
+                  <p className="text-sm text-muted-foreground mt-1 mb-4">Choose how you want to build this proposal</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setGenerationMode("smart")}
+                      className={`relative text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                        generationMode === "smart"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <Zap className="h-6 w-6 text-amber-500" />
+                        <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/20 text-[10px]">
+                          Fast & Free
+                        </Badge>
+                      </div>
+                      <h4 className="font-display font-semibold text-card-foreground mb-2">Smart Engine</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Instant assembly using professional blueprints. No API dependencies, zero cost, and extremely reliable.
+                      </p>
+                      {generationMode === "smart" && (
+                        <div className="absolute top-3 right-3">
+                          <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGenerationMode("ai")}
+                      className={`relative text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                        generationMode === "ai"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        <Badge className="bg-primary/15 text-primary border-primary/20 text-[10px]">
+                          Dynamic AI
+                        </Badge>
+                      </div>
+                      <h4 className="font-display font-semibold text-card-foreground mb-2">Neural AI (Edge)</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Uses advanced LLMs to write unique content. Requires an active connection and may incur usage limits.
+                      </p>
+                      {generationMode === "ai" && (
+                        <div className="absolute top-3 right-3">
+                          <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
                   <Label htmlFor="tone">Proposal Tone <span className="text-destructive">*</span></Label>
                   <Select value={form.tone} onValueChange={(v) => update("tone", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select tone" /></SelectTrigger>
@@ -534,8 +617,8 @@ export default function ProposalGenerator() {
 
                 {/* Proposal Mode Selection */}
                 <div>
-                  <Label className="text-base font-semibold">How should your proposal read? <span className="text-destructive">*</span></Label>
-                  <p className="text-sm text-muted-foreground mt-1 mb-4">Choose the generation style for your proposal</p>
+                  <Label className="text-base font-semibold">Writing Style? <span className="text-destructive">*</span></Label>
+                  <p className="text-sm text-muted-foreground mt-1 mb-4">Choose the strategic angle for your proposal</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Sales Pitch Card */}
                     <button
@@ -678,9 +761,21 @@ export default function ProposalGenerator() {
             </div>
 
             {isGenerating && (
-              <div className="flex items-center gap-3 rounded-lg bg-primary/5 border border-primary/20 px-4 py-3">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm text-primary font-medium">Crafting your proposal...</span>
+              <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-12 text-center">
+                <div className="relative">
+                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                  <Zap className="h-6 w-6 text-amber-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-primary">
+                    {generationMode === "smart" ? "Assembling Blueprint..." : "Neural AI is Writing..."}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                    {generationMode === "smart" 
+                      ? "Injecting variables and selecting optimized sales modules for your industry." 
+                      : "Connecting to the edge network to generate unique creative content."}
+                  </p>
+                </div>
               </div>
             )}
 
