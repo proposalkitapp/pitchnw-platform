@@ -17,6 +17,16 @@ import {
 import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
 import { generateSmartProposal } from "@/lib/blueprint-engine";
 import { Sparkles, FileText, ArrowRight, ArrowLeft, Check, Save, Loader2, Download, X, Share2, Lock, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { exportProposalAsPdf } from "@/lib/export-pdf";
+import { getTemplateById, type Template } from "@/lib/templates";
+import { currencies, getCurrencyByCode } from "@/lib/currencies";
+import { defaultAppearance, getThemeById, type AppearanceSettings } from "@/lib/proposal-themes";
+import { Badge } from "@/components/ui/badge";
+import { ProposalCustomizer } from "@/components/ProposalCustomizer";
 
 interface FormData {
   clientName: string;
@@ -114,12 +124,17 @@ export default function ProposalGenerator() {
   // Load plan and proposals_used to enforce the free limit gate
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("plan, proposals_used, brand_name, brand_logo_url, display_name, company_name, portfolio_url")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
+    
+    const loadProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("plan, proposals_used, brand_name, brand_logo_url, display_name, company_name, portfolio_url")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error) throw error;
+
         setPlan(data?.plan ?? null);
         setProposalsUsed(data?.proposals_used || 0);
         setBranding({
@@ -127,15 +142,16 @@ export default function ProposalGenerator() {
           headerTitle: data?.brand_name,
           companyName: data?.company_name,
           displayName: data?.display_name,
-          portfolio_url: data?.portfolio_url,
+          portfolioUrl: data?.portfolio_url,
         });
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Critical error loading profile in Generator:", err);
-      })
-      .finally(() => {
+      } finally {
         setProfileLoading(false);
-      });
+      }
+    };
+
+    loadProfile();
   }, [user]);
 
   const isFreeUser = !plan;
