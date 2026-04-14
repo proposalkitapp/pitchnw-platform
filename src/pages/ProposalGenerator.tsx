@@ -33,7 +33,9 @@ interface FormData {
   clientEmail: string;
   projectTitle: string;
   industry: string;
+  customIndustry: string;
   projectType: string;
+  customProjectType: string;
   budgetAmount: string;
   budgetCurrency: string;
   timeline: string;
@@ -48,7 +50,9 @@ const initialForm: FormData = {
   clientEmail: "",
   projectTitle: "",
   industry: "",
+  customIndustry: "",
   projectType: "",
+  customProjectType: "",
   budgetAmount: "",
   budgetCurrency: "USD",
   timeline: "",
@@ -71,11 +75,13 @@ const stepValidation: Record<number, (form: FormData) => string | null> = {
     if (!f.clientName.trim()) return "Client Name is required";
     if (!f.clientEmail.trim()) return "Client Email is required";
     if (!f.industry) return "Please select an industry";
+    if (f.industry === "other" && !f.customIndustry.trim()) return "Please specify your industry";
     return null;
   },
   1: (f) => {
     if (!f.projectTitle.trim()) return "Project Title is required";
     if (!f.projectType) return "Please select a project type";
+    if (f.projectType === "other" && !f.customProjectType.trim()) return "Please specify the project type";
     if (!f.description.trim()) return "Project Description is required";
     if (!f.deliverables.trim()) return "Key Deliverables are required";
     return null;
@@ -191,9 +197,9 @@ export default function ProposalGenerator() {
         
         const result = generateSmartProposal({
           clientName: form.clientName,
-          industry: form.industry,
+          industry: form.industry === "other" ? form.customIndustry : form.industry,
           projectTitle: form.projectTitle,
-          projectType: form.projectType,
+          projectType: form.projectType === "other" ? form.customProjectType : form.projectType,
           budget: `${getCurrencyByCode(form.budgetCurrency).symbol}${form.budgetAmount}`,
           timeline: form.timeline,
           tone: form.tone,
@@ -222,7 +228,7 @@ export default function ProposalGenerator() {
           body: {
             clientName: form.clientName,
             clientEmail: form.clientEmail,
-            projectType: form.projectType,
+            projectType: form.projectType === "other" ? form.customProjectType : form.projectType,
             projectTitle: form.projectTitle,
             requirements: form.description,
             currency: form.budgetCurrency,
@@ -233,6 +239,7 @@ export default function ProposalGenerator() {
             templatePrompt: activeTemplate?.aiPrompt || null,
             templateSections: activeTemplate?.sections || null,
             currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
+            industry: form.industry === "other" ? form.customIndustry : form.industry,
           },
           headers: {
             Authorization: `Bearer ${accessToken}`
@@ -291,8 +298,8 @@ export default function ProposalGenerator() {
       title: form.projectTitle || "Untitled Proposal",
       client_name: form.clientName || null,
       client_email: form.clientEmail || null,
-      industry: form.industry || null,
-      project_type: form.projectType || null,
+      industry: form.industry === "other" ? form.customIndustry : (form.industry || null),
+      project_type: form.projectType === "other" ? form.customProjectType : (form.projectType || null),
       budget: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${form.budgetAmount}` : null,
       timeline: form.timeline || null,
       description: form.description || null,
@@ -460,11 +467,36 @@ export default function ProposalGenerator() {
                   <Select value={form.industry} onValueChange={(v) => update("industry", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select industry" /></SelectTrigger>
                     <SelectContent>
-                      {["Technology", "Marketing", "Design", "Consulting", "Finance", "Healthcare", "Education", "Other"].map((ind) => (
+                      {[
+                        "Technology", 
+                        "Marketing & Advertising", 
+                        "Creative Design", 
+                        "E-commerce & Retail", 
+                        "Professional Services", 
+                        "Real Estate & Construction", 
+                        "Healthcare & Wellness", 
+                        "Education & E-learning", 
+                        "Finance & Fintech", 
+                        "Hospitality & Tourism", 
+                        "Manufacturing & Logistics", 
+                        "Other"
+                      ].map((ind) => (
                         <SelectItem key={ind} value={ind.toLowerCase()}>{ind}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {form.industry === "other" && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
+                      <Label htmlFor="customIndustry">Specify Industry</Label>
+                      <Input 
+                        id="customIndustry" 
+                        placeholder="e.g. Aerospace & Defense" 
+                        value={form.customIndustry} 
+                        onChange={(e) => update("customIndustry", e.target.value)} 
+                        className="mt-1.5"
+                      />
+                    </motion.div>
+                  )}
                 </div>
               </div>
             )}
@@ -480,11 +512,37 @@ export default function ProposalGenerator() {
                   <Select value={form.projectType} onValueChange={(v) => update("projectType", v)}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                      {["Web Development", "Mobile App", "Brand Identity", "Marketing Campaign", "Consulting", "UI/UX Design", "Other"].map((t) => (
+                      {[
+                        "Web Development", 
+                        "Mobile App Development", 
+                        "Brand Identity & Design", 
+                        "UI/UX Design", 
+                        "Digital Marketing", 
+                        "Social Media Management", 
+                        "SEO & Content Marketing", 
+                        "Business Consulting", 
+                        "SaaS Development", 
+                        "Video Production", 
+                        "Copywriting & Editing", 
+                        "Event Planning", 
+                        "Other"
+                      ].map((t) => (
                         <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {form.projectType === "other" && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
+                      <Label htmlFor="customProjectType">Specify Project Type</Label>
+                      <Input 
+                        id="customProjectType" 
+                        placeholder="e.g. AR Application Development" 
+                        value={form.customProjectType} 
+                        onChange={(e) => update("customProjectType", e.target.value)} 
+                        className="mt-1.5"
+                      />
+                    </motion.div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="description">Project Description <span className="text-destructive">*</span></Label>
@@ -703,8 +761,8 @@ export default function ProposalGenerator() {
                     { label: "Client", value: form.clientName || "—" },
                     { label: "Email", value: form.clientEmail || "—" },
                     { label: "Project", value: form.projectTitle || "—" },
-                    { label: "Industry", value: form.industry || "—" },
-                    { label: "Type", value: form.projectType || "—" },
+                    { label: "Industry", value: form.industry === "other" ? form.customIndustry : (form.industry || "—") },
+                    { label: "Type", value: form.projectType === "other" ? form.customProjectType : (form.projectType || "—") },
                     { label: "Budget", value: form.budgetAmount ? `${getCurrencyByCode(form.budgetCurrency).symbol}${Number(form.budgetAmount).toLocaleString()}` : "—" },
                     { label: "Timeline", value: form.timeline || "—" },
                     { label: "Tone", value: form.tone || "—" },
