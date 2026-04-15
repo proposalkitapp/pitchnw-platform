@@ -283,66 +283,140 @@ export default function Settings() {
               </div>
 
               {/* Brand Customization */}
-              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5">
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-5 overflow-hidden">
                 <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
-                  <Image className="h-5 w-5 text-primary" /> Brand Customization
+                  <Image className="h-5 w-5 text-primary" /> Your Proposal Branding
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Your brand name and logo will appear on proposals generated from templates.
+                  Your logo and name appear at the top of every proposal you send to clients.
                 </p>
-                <div>
-                  <Label htmlFor="brandName">Brand Name</Label>
-                  <Input
-                    id="brandName"
-                    placeholder="e.g. Acme Design Studio"
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label>Brand Logo</Label>
-                  <div className="mt-1.5 space-y-3">
-                    {brandLogoUrl && (
-                      <div className="rounded-lg border border-border bg-background p-4 flex items-center gap-4">
+
+                <div className="space-y-4">
+                  <Label>Logo Upload</Key>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-full h-[140px] border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-slate-50/50"
+                  >
+                    {brandLogoUrl ? (
+                      <div className="flex flex-col items-center gap-2">
                         <img
                           src={brandLogoUrl}
                           alt="Brand logo"
-                          className="h-12 w-auto max-w-[200px] object-contain"
+                          className="h-20 w-auto max-w-[200px] object-contain"
                         />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive text-xs"
-                          onClick={() => setBrandLogoUrl("")}
-                        >
-                          Remove
-                        </Button>
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Change Logo</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center text-center px-4">
+                        <Upload className="h-8 w-8 text-slate-300 mb-2" />
+                        <span className="text-sm font-bold text-slate-500">Click to upload your logo</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">PNG, JPG, SVG — max 2MB</span>
                       </div>
                     )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingLogo}
-                    >
-                      {uploadingLogo ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                      {uploadingLogo ? "Uploading..." : "Upload Logo"}
-                    </Button>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, or SVG. Max 2MB.</p>
+                    {uploadingLogo && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl z-10">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !user) return;
+                      if (!file.type.startsWith("image/")) {
+                        toast.error("Please upload an image file");
+                        return;
+                      }
+                      if (file.size > 2 * 1024 * 1024) {
+                        toast.error("Logo must be under 2MB");
+                        return;
+                      }
+
+                      setUploadingLogo(true);
+                      const tid = toast.loading("Uploading logo...");
+                      try {
+                        const fileExt = file.name.split('.').pop();
+                        const filePath = `${user.id}/logo-${Math.random()}.${fileExt}`;
+                        
+                        const { error: uploadError } = await supabase.storage
+                          .from('logos')
+                          .upload(filePath, file, { upsert: true });
+
+                        if (uploadError) throw uploadError;
+
+                        const { data: { publicUrl } } = supabase.storage
+                          .from('logos')
+                          .getPublicUrl(filePath);
+
+                        setBrandLogoUrl(publicUrl);
+                        toast.success("Logo uploaded ✓", { id: tid });
+                      } catch (err) {
+                        console.error("Upload error:", err);
+                        toast.error("Failed to upload logo", { id: tid });
+                      } finally {
+                        setUploadingLogo(false);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  {brandLogoUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive text-xs h-auto py-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBrandLogoUrl("");
+                      }}
+                    >
+                      Remove Logo
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="brandName">Brand / Studio Name</Label>
+                    <Input
+                      id="brandName"
+                      placeholder="e.g. Wealthy Daniel Studio"
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value)}
+                      className="mt-1.5 h-12"
+                      maxLength={80}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Appears below your logo on every proposal</p>
+                  </div>
+                </div>
+
+                {/* Live Preview */}
+                <div className="pt-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">Live Preview</span>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 flex flex-col items-center text-center">
+                    {brandLogoUrl ? (
+                      <img src={brandLogoUrl} alt="Logo" className="h-10 w-auto object-contain mb-2" />
+                    ) : (
+                      <div className="h-10 w-24 bg-slate-200 rounded animate-pulse mb-2" />
+                    )}
+                    <p className="font-syne font-bold text-base text-slate-900 mb-4 h-6">
+                      {brandName || "Your Studio Name"}
+                    </p>
+                    <div className="w-full h-[3px] bg-primary mb-6" />
+                    <div className="space-y-2 w-full max-w-[200px] opacity-20">
+                      <div className="h-3 w-full bg-slate-400 rounded" />
+                      <div className="h-3 w-3/4 bg-slate-400 rounded mx-auto" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                   <Button variant="hero" onClick={handleSaveProfile} disabled={saving} className="w-full gap-2">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {saving ? "Save Branding" : "Save Branding"}
+                  </Button>
                 </div>
               </div>
 
@@ -431,6 +505,13 @@ export default function Settings() {
                   <div className="space-y-1 pt-2">
                     <p className="font-medium text-foreground">💜 Pro Plan · Active</p>
                     <p className="text-sm text-muted-foreground">You have full access to all premium features.</p>
+                    <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-bold text-slate-700">Priority Support Active</span>
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">Pro Only</span>
+                    </div>
                   </div>
                 )}
 

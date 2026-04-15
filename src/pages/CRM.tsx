@@ -37,6 +37,17 @@ const statusColors: Record<string, string> = {
 
 const kanbanColumns = ["sent", "opened", "draft", "won", "lost"];
 
+const getDealScore = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'draft': return 20;
+    case 'sent': return 45;
+    case 'opened': return 75;
+    case 'won': return 100;
+    case 'lost': return 0;
+    default: return 0;
+  }
+};
+
 export default function CRM() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -106,6 +117,34 @@ export default function CRM() {
     ? Math.round((proposals.filter((p) => p.status === "won").length / proposals.length) * 100)
     : 0;
 
+  if (isFree && !loading) {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md bg-white p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100"
+          >
+            <div className="text-6xl mb-6">📊</div>
+            <h2 className="font-syne font-extrabold text-3xl text-slate-900 mb-4">Master Your Pipeline</h2>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              The CRM Pipeline Dashboard is a Pro feature. 
+              Track deals, see probability scores, and manage your sales flow with ease.
+            </p>
+            <Button 
+              size="lg"
+              className="w-full h-14 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)]"
+              onClick={() => navigate('/checkout')}
+            >
+              Unlock CRM with Pro
+            </Button>
+          </motion.div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout>
       <div className="p-6 lg:p-8 max-w-6xl mx-auto">
@@ -170,6 +209,7 @@ export default function CRM() {
                   <TableHead>Client</TableHead>
                   <TableHead>Project</TableHead>
                   <TableHead>Budget</TableHead>
+                  {!isFree && <TableHead>Score</TableHead>}
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -181,6 +221,19 @@ export default function CRM() {
                     <TableCell className="font-medium text-card-foreground">{p.client_name || "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{p.project_type || "—"}</TableCell>
                     <TableCell className="text-sm">{p.budget || "TBD"}</TableCell>
+                    {!isFree && (
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-10 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full ${getDealScore(p.status) >= 75 ? 'bg-success' : 'bg-primary'}`} 
+                              style={{ width: `${getDealScore(p.status)}%` }} 
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500">{getDealScore(p.status)}%</span>
+                        </div>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || statusColors.draft}`}>
                         {p.status}
@@ -242,6 +295,14 @@ export default function CRM() {
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.project_type || p.title}</p>
                         {p.budget && (
                           <span className="text-xs font-medium text-primary mt-1 inline-block">{p.budget}</span>
+                        )}
+                        {!isFree && (
+                          <div className="flex items-center justify-between mt-2">
+                             <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden mr-2">
+                                <div className="h-full bg-[#7C6FF7]" style={{ width: `${getDealScore(p.status)}%` }} />
+                             </div>
+                             <span className="text-[9px] font-black text-slate-400">{getDealScore(p.status)}%</span>
+                          </div>
                         )}
                         <div className="flex gap-1 mt-2">
                           {col !== "won" && (

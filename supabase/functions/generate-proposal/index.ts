@@ -181,11 +181,8 @@ serve(async (req) => {
 
     // BUILD CLAUDE PROMPT
     const systemPrompt = proposalMode === 'sales_pitch'
-      ? `You are a world-class sales copywriter who
-         writes proposals that close deals. Write
-         persuasively, speak to client outcomes not
-         deliverables, preempt objections, and make
-         every section move the client toward yes.
+      ? `You are a world-class sales copywriter who writes proposals that close deals. 
+         Write every section as a high-converting sales document. Speak directly to the client's fears and desired outcomes. Every paragraph must move the client closer to saying yes. Use specific, concrete language. Frame pricing as investment. Make the call to action feel obvious and low-risk.
          NEVER use markdown characters.
          Return ONLY raw valid JSON.`
       : `You are a senior business proposal writer.

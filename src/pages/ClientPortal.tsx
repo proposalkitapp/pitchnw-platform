@@ -228,8 +228,8 @@ export default function ClientPortal() {
         )}
       </main>
 
-      <footer className="border-t border-gray-100 py-4 text-center">
-        <p className="text-[10px] text-gray-400">Powered by Pitchnw</p>
+      <footer className="border-t border-gray-100 py-6 text-center">
+        <p className="text-[11px] text-gray-400 font-medium tracking-tight">Powered by Pitchnw · pitchnw.app</p>
       </footer>
 
       {showAcceptModal && (
