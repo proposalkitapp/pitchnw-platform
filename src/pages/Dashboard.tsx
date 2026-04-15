@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -45,9 +46,31 @@ export default function Dashboard() {
   const [plan, setPlan] = useState<string | null>(null);
   const [proposalsUsed, setProposalsUsed] = useState(0);
   const [userBranding, setUserBranding] = useState<ProposalBranding>({});
+  const [showSkeleton, setShowSkeleton] = useState(true);
+
+  // After 500ms, force showSkeleton to false to show whatever data we have
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSkeleton(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('proposals_used, plan, display_name, onboarding_completed, brand_logo_url, brand_name, company_name, portfolio_url')
+        .eq('id', session?.user?.id)
+        .single();
+      return data;
+    },
+    enabled: !!session?.user?.id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const fetchProposals = async (userId: string) => {
-    // Belt-and-braces: bail silently if userId is somehow falsy
     if (!userId) {
       setLoading(false);
       return;
@@ -60,8 +83,6 @@ export default function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        // Only show the toast when we know userId was real — avoids
-        // the race-condition toast that fires before auth is settled
         console.error("fetchProposals error:", error);
         toast.error("Failed to load proposals");
       } else {
@@ -77,42 +98,35 @@ export default function Dashboard() {
   useEffect(() => {
     if (session?.user?.id) {
       fetchProposals(session.user.id);
-
-      supabase
-        .from("profiles")
-        .select("display_name, onboarding_completed, plan, proposals_used, brand_logo_url, brand_name, company_name, portfolio_url")
-        .eq("user_id", session.user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setDisplayName(data.display_name?.split(" ")[0] || data.username || "there");
-            setPlan(data.plan ?? null);
-            setProposalsUsed(data.proposals_used || 0);
-            setUserBranding({
-              logoUrl: data.brand_logo_url,
-              headerTitle: data.brand_name,
-              companyName: data.company_name,
-              displayName: data.display_name,
-              portfolioUrl: data.portfolio_url,
-            });
-            if (!data.onboarding_completed) {
-              setShowOnboarding(true);
-            }
-          }
-        });
     } else if (!authLoading && session === null) {
-      // Auth fully resolved with no session (logged out) — stop loading
       setLoading(false);
     }
-    // While authLoading=true, session=null just means auth is still initialising — do nothing
   }, [session, authLoading]);
+
+  // Sync profile data to local state for components expecting it
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name?.split(" ")[0] || "there");
+      setPlan(profile.plan ?? null);
+      setProposalsUsed(profile.proposals_used || 0);
+      setUserBranding({
+        logoUrl: profile.brand_logo_url,
+        headerTitle: profile.brand_name,
+        companyName: profile.company_name,
+        displayName: profile.display_name,
+        portfolioUrl: profile.portfolio_url,
+      });
+      if (!profile.onboarding_completed) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [profile]);
 
   const isFree = !plan;
 
   const deleteProposal = async (id: string) => {
-    // Free users cannot delete proposals — prevents bypassing the 3-proposal limit
     if (isFree) {
-      toast.error("Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals.");
+      toast.error('Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals freely.');
       return;
     }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
@@ -134,8 +148,20 @@ export default function Dashboard() {
   }).length;
   const winRate = totalProposals > 0 ? Math.round((wonProposals / totalProposals) * 100) : 0;
 
+  // Usage indicator data
+  const used = profile?.proposals_used || 0;
+  const remaining = Math.max(0, 3 - used);
+  
+  const usageColors = [
+    { bar: "#4EEAA0", text: "3 proposals remaining" }, // 0 used
+    { bar: "#7C6FF7", text: "2 proposals remaining" }, // 1 used
+    { bar: "#FFD166", text: "1 proposal remaining" }, // 2 used
+    { bar: "#FF6B8A", text: "No proposals remaining" } // 3 used
+  ];
+
+  const currentUsage = usageColors[Math.min(used, 3)];
+
   const stats = [
-    { label: "Total Proposals", value: totalProposals.toString(), icon: FileText, color: "text-primary" },
     { label: "Proposals Won", value: wonProposals.toString(), icon: TrendingUp, color: "text-success" },
     { label: "This Month", value: thisMonthProposals.toString(), icon: CalendarDays, color: "text-warning" },
     { label: "Win Rate", value: `${winRate}%`, icon: BarChart3, color: "text-primary" },
@@ -150,16 +176,7 @@ export default function Dashboard() {
   };
 
   // Free: can create if proposals_used < 3; Pro: unlimited
-  const hasHitFreeLimit = isFree && proposalsUsed >= 3;
-
-  const usedCount = Math.min(proposalsUsed, 3);
-  const usagePercent = Math.min((proposalsUsed / 3) * 100, 100);
-  const usageBarColor =
-    proposalsUsed === 0
-      ? "bg-success"
-      : proposalsUsed < 3
-      ? "bg-warning"
-      : "bg-destructive";
+  const hasHitFreeLimit = isFree && used >= 3;
 
   return (
     <AuthLayout>
@@ -180,8 +197,68 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {loading
-            ? Array.from({ length: 4 }).map((_, i) => (
+          {/* Usage / Total Proposals Card */}
+          {loading && showSkeleton ? (
+            <Skeleton className="h-[100px] rounded-2xl" />
+          ) : isFree ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white text-slate-900 border border-slate-100 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Proposals Used
+                </span>
+                <span className="text-sm font-bold">{used} of 3</span>
+              </div>
+              
+              <div className="w-full h-2 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                <div 
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${(used / 3) * 100}%`,
+                    backgroundColor: currentUsage.bar
+                  }}
+                />
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-[10px] font-medium" style={{ color: currentUsage.bar }}>
+                  {currentUsage.text}
+                </span>
+                {used >= 3 && (
+                  <button 
+                    onClick={() => navigate('/checkout')}
+                    className="text-[10px] font-bold text-primary hover:underline"
+                  >
+                    Upgrade to Pro →
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white text-slate-900 border border-slate-100 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4"
+            >
+              <div className="h-12 w-12 rounded-full border border-slate-100 flex items-center justify-center shrink-0">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Total Proposals
+                </span>
+                <div className="text-xl font-bold mt-0.5">
+                  {totalProposals}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {loading && showSkeleton
+            ? Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-[100px] rounded-2xl" />
               ))
             : stats.map((stat, i) => (
@@ -189,14 +266,14 @@ export default function Dashboard() {
                   key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`${i === 3 ? 'bg-[#0033ff] text-white' : 'bg-white text-slate-900 border border-slate-100'} rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4`}
+                  transition={{ delay: (i + 1) * 0.05 }}
+                  className={`${i === 2 ? 'bg-[#0033ff] text-white' : 'bg-white text-slate-900 border border-slate-100'} rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4`}
                 >
-                  <div className={`h-12 w-12 rounded-full border ${i === 3 ? 'border-white/20' : 'border-slate-100'} flex items-center justify-center shrink-0`}>
-                    <stat.icon className={`h-5 w-5 ${i === 3 ? 'text-white' : stat.color}`} />
+                  <div className={`h-12 w-12 rounded-full border ${i === 2 ? 'border-white/20' : 'border-slate-100'} flex items-center justify-center shrink-0`}>
+                    <stat.icon className={`h-5 w-5 ${i === 2 ? 'text-white' : stat.color}`} />
                   </div>
                   <div>
-                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${i === 3 ? 'text-white/80' : 'text-slate-400'}`}>
+                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${i === 2 ? 'text-white/80' : 'text-slate-400'}`}>
                       {stat.label}
                     </span>
                     <div className="text-xl font-bold mt-0.5">
@@ -206,52 +283,6 @@ export default function Dashboard() {
                 </motion.div>
               ))}
         </div>
-
-        {/* Free Plan Usage Bar — only for free users */}
-        {isFree && !loading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 rounded-xl border border-border bg-card p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-card-foreground">Free proposals used</span>
-              </div>
-              <span className="text-xs font-mono text-muted-foreground">
-                {usedCount} / 3
-              </span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${usagePercent}%` }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`h-full rounded-full ${usageBarColor}`}
-              />
-            </div>
-            {proposalsUsed >= 3 ? (
-              <div className="mt-3 flex items-center justify-between">
-                <p className="text-xs text-destructive font-medium">
-                  You have used all free proposals
-                </p>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={() => navigate("/checkout")}
-                  className="gap-1 text-xs"
-                >
-                  Upgrade to Pro →
-                </Button>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground mt-2">
-                {3 - proposalsUsed} proposal{3 - proposalsUsed !== 1 ? "s" : ""} remaining on your free plan
-              </p>
-            )}
-          </motion.div>
-        )}
 
         {/* Quick Action */}
         <Button
@@ -397,24 +428,7 @@ export default function Dashboard() {
                           <Link2 className="h-4 w-4" />
                         </Button>
                       )}
-                      {/* Delete button: locked for free users */}
-                      {isFree ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 rounded-full text-slate-300 cursor-not-allowed"
-                              disabled
-                            >
-                              <Lock className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Upgrade to Pro to delete proposals</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : (
+                      {!isFree && (
                         <Button
                           variant="ghost"
                           size="sm"

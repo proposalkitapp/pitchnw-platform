@@ -92,7 +92,7 @@ export default function CRM() {
   const deleteProposal = async (id: string) => {
     // Free users cannot delete proposals — prevents limit bypass
     if (isFree) {
-      toast.error("Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals.");
+      toast.error('Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals freely.');
       return;
     }
     setProposals((prev) => prev.filter((p) => p.id !== id));

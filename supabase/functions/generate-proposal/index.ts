@@ -118,9 +118,9 @@ serve(async (req) => {
           message: 'You have used all 3 free proposals. ' +
             'Upgrade to Pro for unlimited generation.'
         }),
-        {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
@@ -332,8 +332,10 @@ Return ONLY this JSON with no markdown, no backticks:
     if (isFreeUser) {
       await supabase
         .from('profiles')
-        .update({ proposals_used: proposalsUsed + 1 })
-        .eq('user_id', user.id)
+        .update({
+          proposals_used: proposalsUsed + 1
+        })
+        .eq('id', user.id)
     }
 
     return new Response(

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +101,7 @@ const stepValidation: Record<number, (form: FormData) => string | null> = {
 };
 
 export default function ProposalGenerator() {
+  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<FormData>(initialForm);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -275,6 +277,9 @@ export default function ProposalGenerator() {
       if (typeof setProposalsUsed === 'function') {
         setProposalsUsed((prev: number) => prev + 1);
       }
+      
+      // Invalidate profile query to update stats on dashboard
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
     } catch (e: any) {
       console.error("Generation error details:", e);
       toast.error(e.message || "Generation failed. Please try again.", { id: "gen" });
@@ -340,32 +345,60 @@ export default function ProposalGenerator() {
   if (hasHitFreeLimit) {
     return (
       <AuthLayout>
-        <div className="flex items-center justify-center min-h-[70vh] p-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="upgrade-wall max-w-md w-full rounded-2xl border border-border bg-card p-10 text-center shadow-2xl"
+        <div className="upgrade-wall" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          textAlign: 'center',
+          padding: '40px 24px',
+          gap: '20px'
+        }}>
+          <div style={{ fontSize: '56px' }}>🔒</div>
+
+          <h2 style={{
+            fontFamily: 'Syne',
+            fontWeight: 800,
+            fontSize: '28px'
+          }}>
+            You have used all 3 free proposals
+          </h2>
+
+          <p style={{
+            color: 'var(--text-secondary)',
+            maxWidth: '480px',
+            lineHeight: 1.7
+          }}>
+            Free accounts include 3 proposals for life.
+            Upgrade to Pro for unlimited proposal generation
+            and access to every feature.
+          </p>
+
+          <button
+            onClick={() => navigate('/checkout')}
+            style={{
+              background: 'var(--primary)',
+              color: 'white',
+              padding: '14px 32px',
+              borderRadius: '14px',
+              fontFamily: 'DM Sans',
+              fontWeight: 600,
+              fontSize: '16px',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
-            <div className="upgrade-icon text-5xl mb-6">🔒</div>
-            <h2 className="font-display text-2xl font-bold mb-4 text-card-foreground">
-              You have used all 3 free proposals
-            </h2>
-            <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
-              Free accounts include 3 proposals for life. Upgrade to Pro for unlimited proposal
-              generation, no limits, and full access to every feature.
-            </p>
-            <Button
-              variant="hero"
-              size="lg"
-              className="w-full mb-4"
-              onClick={() => navigate("/checkout")}
-            >
-              Upgrade to Pro — $12/mo
-            </Button>
-            <p className="sub-note text-xs text-muted-foreground">
-              Your existing proposals are safe and still accessible.
-            </p>
-          </motion.div>
+            Upgrade to Pro — $12/mo
+          </button>
+
+          <p style={{
+            fontSize: '13px',
+            color: 'var(--text-muted)'
+          }}>
+            Your existing 3 proposals are safe and
+            still accessible in your dashboard.
+          </p>
         </div>
       </AuthLayout>
     );
