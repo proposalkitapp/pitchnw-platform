@@ -1,168 +1,225 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from "framer-motion";
-import confetti from "canvas-confetti";
-import { CheckCircle2, Loader2, Sparkles, Building, ArrowRight } from "lucide-round"; // Wait, I use lucide-react normally
-import { CheckCircle2 as CheckIcon, Loader2 as LoaderIcon, Sparkles as SparkleIcon, Building as BuildingIcon, ArrowRight as ArrowIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
-import pitchnwLogo from "@/assets/pitchnw-logo.png";
-import { toast } from "sonner";
 
 export default function PaymentSuccess() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [verifying, setVerifying] = useState(true);
-  const [isSuccessfullyUpgraded, setIsSuccessfullyUpgraded] = useState(false);
-  
-  const plan = (searchParams.get("plan") || "pro").toLowerCase();
-  const label = "Pro";
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [status, setStatus] = useState('verifying')
 
   useEffect(() => {
-    let checkInterval: any;
-    let attempts = 0;
-    const maxAttempts = 15; // 30 seconds total
-
-    async function verifyUpgrade() {
-      if (!user) return;
-      
+    const verifyAndActivate = async () => {
       try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("user_id", user.id)
-          .single();
+        const { data: { session } } = await supabase.auth.getSession()
 
-        if (data?.plan === "pro") {
-          // 🎉 PRO STATUS CONFIRMED
-          setIsSuccessfullyUpgraded(true);
-          setVerifying(false);
-          clearInterval(checkInterval);
-          
-          // CRITICAL: Clear the React Query cache so EVERY component sees the new plan instantly
-          await queryClient.invalidateQueries({ queryKey: ['profile'] });
-          
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.35 },
-            colors: ["#a855f7", "#0033ff", "#38bdf8"],
-          });
-          toast.success("Account upgraded successfully! Welcome to Pro.");
-        } else {
-          attempts++;
-          if (attempts >= maxAttempts) {
-            setVerifying(false); 
-            setIsSuccessfullyUpgraded(false);
-            clearInterval(checkInterval);
-            toast.error("Upgrade sync is taking longer than usual. Try refreshing your dashboard.");
-          }
+        if (!session) {
+          navigate('/auth')
+          return
         }
+
+        // Update plan directly in database
+        // The webhook may be delayed so we do this immediately on the success page
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            plan: 'pro',
+            subscription_status: 'active'
+          })
+          .eq('user_id', session.user.id)
+
+        if (updateError) {
+          console.error('Plan update error:', updateError)
+          setStatus('error')
+          return
+        }
+
+        // Force refresh the session so the app re-reads the updated profile everywhere
+        await supabase.auth.refreshSession()
+
+        setStatus('success')
+
+        // Redirect to dashboard after 3 seconds
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true })
+        }, 3000)
+
       } catch (err) {
-        console.error("Verification error:", err);
+        console.error('Verification error:', err)
+        setStatus('error')
       }
     }
 
-    if (user) {
-      verifyUpgrade();
-      checkInterval = setInterval(verifyUpgrade, 2000);
-    }
+    verifyAndActivate()
+  }, [navigate]);
 
-    return () => clearInterval(checkInterval);
-  }, [user, queryClient]);
+  if (status === 'verifying') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#08080F',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
+        fontFamily: 'DM Sans, sans-serif'
+      }}>
+        <div style={{ fontSize: '48px' }}>⏳</div>
+        <h2 style={{
+          fontFamily: 'Syne, sans-serif',
+          fontWeight: 800,
+          color: '#EEEEFF',
+          fontSize: '24px'
+        }}>
+          Activating your Pro plan...
+        </h2>
+        <p style={{ color: '#8888AA' }}>
+          Please wait, do not close this page.
+        </p>
+      </div>
+    )
+  }
 
-  const handleGoToDashboard = () => {
-    // We already invalidated the query, but we'll use a hard refresh just to be absolutely safe
-    window.location.href = "/dashboard";
-  };
+  if (status === 'error') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#08080F',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '20px',
+        fontFamily: 'DM Sans, sans-serif',
+        textAlign: 'center',
+        padding: '24px'
+      }}>
+        <div style={{ fontSize: '48px' }}>⚠️</div>
+        <h2 style={{
+          fontFamily: 'Syne, sans-serif',
+          fontWeight: 800,
+          color: '#EEEEFF',
+          fontSize: '24px'
+        }}>
+          Payment received but activation failed
+        </h2>
+        <p style={{ color: '#8888AA', maxWidth: '400px' }}>
+          Your payment went through successfully.
+          Please contact us at hello@pitchnw.app
+          and we will activate your account manually
+          within minutes.
+        </p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            background: '#7C6FF7',
+            color: 'white',
+            padding: '12px 28px',
+            borderRadius: '14px',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'DM Sans, sans-serif',
+            fontWeight: 600
+          }}
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    )
+  }
 
+  // Success state
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-body">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg bg-white rounded-[40px] p-10 sm:p-14 shadow-[0_40px_80px_rgba(0,51,255,0.08)] border border-slate-100 text-center space-y-8"
+    <div style={{
+      minHeight: '100vh',
+      background: '#08080F',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '24px',
+      fontFamily: 'DM Sans, sans-serif',
+      textAlign: 'center',
+      padding: '24px'
+    }}>
+      <div style={{ fontSize: '64px' }}>🎉</div>
+
+      <h1 style={{
+        fontFamily: 'Syne, sans-serif',
+        fontWeight: 800,
+        color: '#EEEEFF',
+        fontSize: '32px'
+      }}>
+        Welcome to Pro!
+      </h1>
+
+      <p style={{
+        color: '#8888AA',
+        fontSize: '17px',
+        maxWidth: '440px',
+        lineHeight: 1.7
+      }}>
+        Your Pro plan is now active. You have
+        unlimited proposal generation, full CRM
+        access, pitch analysis, and every feature
+        Pitchnw offers.
+      </p>
+
+      <div style={{
+        background: '#141428',
+        border: '1px solid #2A2A45',
+        borderRadius: '16px',
+        padding: '20px 32px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        maxWidth: '360px',
+        width: '100%',
+        textAlign: 'left'
+      }}>
+        {[
+          '✓ Unlimited AI proposal generation',
+          '✓ AI Pitch Analysis & Rating',
+          '✓ Sophisticated CRM pipeline',
+          '✓ Proposal analytics',
+          '✓ Digital signatures',
+          '✓ AI Win-Rate Coach',
+          '✓ Priority support'
+        ].map((feature, i) => (
+          <p key={i} style={{
+            color: '#4EEAA0',
+            fontSize: '14px',
+            fontFamily: 'DM Sans, sans-serif',
+            fontWeight: 500
+          }}>
+            {feature}
+          </p>
+        ))}
+      </div>
+
+      <p style={{
+        color: '#44445A',
+        fontSize: '13px'
+      }}>
+        Redirecting to your dashboard in 3 seconds...
+      </p>
+
+      <button
+        onClick={() => navigate('/dashboard')}
+        style={{
+          background: '#7C6FF7',
+          color: 'white',
+          padding: '14px 32px',
+          borderRadius: '14px',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'DM Sans, sans-serif',
+          fontWeight: 600,
+          fontSize: '16px'
+        }}
       >
-        <img src={pitchnwLogo} alt="Pitchnw" className="h-16 w-auto object-contain mx-auto mb-4" />
-
-        {verifying ? (
-          <div className="py-12 space-y-6">
-            <div className="relative mx-auto w-20 h-20">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-[#0033ff] animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                 <SparkleIcon className="h-8 w-8 text-[#0033ff]/40" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-black text-slate-900 font-display tracking-tight">Syncing your Pro features...</h2>
-              <p className="text-sm text-slate-400 font-medium">Sit tight. We're finalizing your professional workspace.</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="flex justify-center"
-            >
-              <div className="relative">
-                <div className="rounded-full bg-emerald-50 p-6">
-                  <CheckIcon className="h-16 w-16 text-emerald-500" />
-                </div>
-                <div className="absolute -top-1 -right-1 bg-purple-500 text-white p-2 rounded-full shadow-lg">
-                  <SparkleIcon className="h-5 w-5" />
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="space-y-3">
-              <h1 className="font-display font-black text-4xl text-slate-900 leading-[1.1] tracking-tight">
-                {isSuccessfullyUpgraded ? `Welcome to ${label}!` : "Ready to go!"}
-              </h1>
-              <p className="text-slate-500 text-base max-w-[280px] mx-auto leading-relaxed">
-                {isSuccessfullyUpgraded 
-                  ? "Your account is active. All premium features, CRM tools, and AI templates are now yours."
-                  : "Your payment was successful! Your features are ready and sync is complete."}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-4">
-              <Button 
-                variant="hero" 
-                size="lg" 
-                className="w-full h-16 rounded-2xl bg-[#0033ff] hover:bg-[#002be6] text-white font-bold text-lg gap-3 shadow-[0_10px_30px_rgba(0,51,255,0.2)]" 
-                onClick={handleGoToDashboard}
-              >
-                <BuildingIcon className="h-5 w-5" />
-                Launch Dashboard
-                <ArrowIcon className="h-5 w-5 ml-auto opacity-50" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="lg" 
-                className="w-full h-14 rounded-2xl text-slate-400 font-bold hover:bg-slate-50" 
-                onClick={() => window.location.href = "/generate"}
-              >
-                Start New Proposal
-              </Button>
-            </div>
-
-            <div className="pt-6">
-              <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500 bg-emerald-50 px-5 py-2.5 rounded-full">
-                Professional Subscription Active
-              </div>
-            </div>
-          </>
-        )}
-      </motion.div>
+        Go to Dashboard Now →
+      </button>
     </div>
-  );
+  )
 }

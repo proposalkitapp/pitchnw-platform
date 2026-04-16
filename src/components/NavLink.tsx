@@ -1,10 +1,10 @@
 "use client";
 
 import { Link, useLocation } from "react-router-dom";
-import { forwardRef, ReactNode } from "react";
+import { forwardRef, ReactNode, AnchorHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-interface NavLinkProps {
+interface NavLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'className'> {
   to: string;
   className?: string | ((props: { isActive: boolean }) => string);
   activeClassName?: string;

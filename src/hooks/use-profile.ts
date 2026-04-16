@@ -43,7 +43,8 @@ export function useProfile() {
       return data as Profile;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 30, // 30 seconds
-    refetchOnWindowFocus: true, // Refresh when user comes back to the tab
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 }

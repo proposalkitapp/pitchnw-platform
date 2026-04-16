@@ -48,6 +48,8 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/p/:slug" element={<ClientPortal />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/proposals" element={<Dashboard />} /> {/* For now, map to dashboard list */}
+            <Route path="/coach" element={<Dashboard />} /> {/* For now, map to dashboard coach widgets */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/testimonials" element={<Testimonials />} />

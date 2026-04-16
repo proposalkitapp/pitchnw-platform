@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield, Brain, Lock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,9 +21,14 @@ import {
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "New Proposal", url: "/generate", icon: Plus },
-  { title: "CRM Pipeline", url: "/crm", icon: Kanban },
+  { title: "My Pitches", url: "/proposals", icon: FileText },
+  { title: "New Pitch", url: "/generate", icon: Plus },
   { title: "Marketplace", url: "/marketplace", icon: Store },
+];
+
+const proNavItems = [
+  { title: "CRM Pipeline", url: "/crm", icon: Kanban, pro: true },
+  { title: "Win-Rate Coach", url: "/coach", icon: Brain, pro: true },
 ];
 
 export function AppSidebar() {
@@ -34,20 +39,15 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
+  const isPro = profile?.plan === "pro";
   const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "User";
   const isAdmin = profile?.is_admin || false;
-  const plan = profile?.plan ?? null;
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0 dark bg-black text-slate-200">
-      <SidebarContent className="bg-black">
+    <Sidebar collapsible="icon" className="border-r-0 dark bg-[#08080C] text-slate-200">
+      <SidebarContent className="bg-[#08080C]">
         <SidebarGroup>
-          <div className="flex items-center gap-2 px-6 py-6 mb-4">
+          <div className="flex items-center gap-2 px-6 py-8 mb-4">
             <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>
               <img
                 src={pitchnwLogo}
@@ -57,20 +57,13 @@ export function AppSidebar() {
             </a>
           </div>
 
-          {!collapsed && displayName && (
-            <div className="px-6 py-2 mb-4">
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Hello,</p>
-              <p className="text-sm font-semibold text-white truncate">{displayName}</p>
-            </div>
-          )}
-
           <SidebarGroupContent className="px-3">
             <SidebarMenu className="space-y-1.5">
               {navItems.map((item) => {
                 const isActive = location === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} className="px-3 py-5 rounded-xl transition-all duration-200">
+                    <SidebarMenuButton asChild isActive={isActive} className="px-3 py-6 rounded-xl transition-all duration-200">
                       <NavLink
                         to={item.url}
                         end
@@ -78,21 +71,57 @@ export function AppSidebar() {
                         activeClassName="bg-[#0033ff] text-white font-medium hover:bg-[#0033ff]/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-white"
                       >
                         <item.icon className="h-5 w-5 mr-3" />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
+                        {!collapsed && <span className="text-[15px] font-medium">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
+
+              {/* Pro Items with Lock for Free Users */}
+              <div className="pt-4 pb-2">
+                 {!collapsed && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-3 mb-2">Pro Tools</p>}
+                 {proNavItems.map((item) => {
+                   const isActive = location === item.url;
+                   return (
+                     <SidebarMenuItem key={item.title}>
+                       <SidebarMenuButton 
+                         asChild 
+                         isActive={isActive} 
+                         className="px-3 py-6 rounded-xl transition-all duration-200"
+                         onClick={() => !isPro && navigate('/checkout')}
+                       >
+                         <div className={`flex items-center w-full cursor-pointer ${isPro ? 'text-slate-400 hover:text-white' : 'text-slate-600'}`}>
+                           <NavLink
+                             to={isPro ? item.url : "#"}
+                             end
+                             className="flex items-center w-full"
+                             activeClassName={isPro ? "bg-purple-600 text-white font-medium shadow-[0_4px_14px_0_rgba(168,85,247,0.39)]" : ""}
+                             onClick={(e) => !isPro && e.preventDefault()}
+                           >
+                              {isPro ? <item.icon className="h-5 w-5 mr-3" /> : <Lock className="h-5 w-5 mr-3 text-slate-600" />}
+                              {!collapsed && (
+                                <div className="flex items-center justify-between w-full">
+                                  <span className="text-[15px] font-medium">{item.title}</span>
+                                  {!isPro && <Lock className="h-3 w-3 opacity-40" />}
+                                </div>
+                              )}
+                           </NavLink>
+                         </div>
+                       </SidebarMenuButton>
+                     </SidebarMenuItem>
+                   );
+                 })}
+              </div>
             </SidebarMenu>
 
             {isAdmin && (
-              <SidebarMenu className="mt-6">
+              <SidebarMenu className="mt-6 border-t border-white/5 pt-4">
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={location === "/admin"} className="px-3 py-5 rounded-xl transition-all duration-200">
+                  <SidebarMenuButton asChild isActive={location === "/admin"} className="px-3 py-6 rounded-xl transition-all duration-200">
                     <NavLink to="/admin" end className="text-slate-400 hover:text-white hover:bg-white/5" activeClassName="bg-amber-600 text-white font-medium">
                       <Shield className="h-5 w-5 mr-3" />
-                      {!collapsed && <span className="text-sm">Admin Access</span>}
+                      {!collapsed && <span className="text-[15px] font-medium">Admin Access</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -102,27 +131,43 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-black px-3 pb-6 border-t border-white/10 pt-4">
-        {!collapsed && (
-          <div className="px-3 py-3 mb-3 bg-white/5 rounded-xl">
-            <p className="text-[11px] text-slate-400 truncate mb-1">{user?.email}</p>
-            <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
-              plan === "pro" ? "bg-purple-500/20 text-purple-400" :
-              "bg-slate-500/20 text-slate-400"
-            }`}>
-              {plan === "pro" ? "PRO" : "FREE"}
-            </span>
+      <SidebarFooter className="bg-[#08080C] px-3 pb-8 border-t border-white/5 pt-6">
+        <div className={`px-4 py-4 mb-4 bg-white/5 rounded-2xl border border-white/5 ${collapsed ? "flex justify-center" : ""}`}>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center border border-white/10 shrink-0">
+               <span className="text-xs font-bold text-white">{displayName.charAt(0).toUpperCase()}</span>
+            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white truncate">{displayName}</p>
+                <span className={`inline-flex items-center text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                  isPro ? "bg-purple-500/20 text-purple-400" :
+                  "bg-slate-500/20 text-slate-400"
+                }`}>
+                  {isPro ? "PRO" : "FREE"}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+          
+          {!collapsed && !isPro && (
+            <button 
+              onClick={() => navigate('/checkout')}
+              className="w-full mt-4 py-2.5 rounded-xl bg-purple-600 text-white text-[11px] font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-900/20"
+            >
+              Upgrade to Pro
+            </button>
+          )}
+        </div>
 
         <SidebarMenu>
           <SidebarMenuItem>
              <button
-               onClick={handleSignOut}
-               className={`w-full flex items-center ${collapsed ? 'justify-center p-3' : 'px-4 py-3'} rounded-xl bg-[#0033ff] text-white hover:bg-[#002be6] transition-all duration-200 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] mt-2 font-medium`}
+               onClick={() => signOut().then(() => navigate('/'))}
+               className={`w-full flex items-center ${collapsed ? 'justify-center py-3' : 'px-4 py-3'} rounded-xl bg-[#0033ff]/10 text-[#0033ff] hover:bg-[#0033ff]/20 transition-all duration-200 font-bold border border-[#0033ff]/20`}
              >
                <LogOut className={`h-5 w-5 ${!collapsed && "mr-3"}`} />
-               {!collapsed && <span>Logout</span>}
+               {!collapsed && <span className="text-sm">Logout</span>}
              </button>
           </SidebarMenuItem>
         </SidebarMenu>
