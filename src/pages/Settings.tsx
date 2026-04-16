@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle } from "lucide-react";
+import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { useNavigate } from 'react-router-dom';
@@ -292,7 +292,7 @@ export default function Settings() {
                 </p>
 
                 <div className="space-y-4">
-                  <Label>Logo Upload</Key>
+                  <Label>Logo Upload</Label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="relative w-full h-[140px] border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-slate-50/50"
@@ -415,7 +415,7 @@ export default function Settings() {
                 <div className="pt-2">
                    <Button variant="hero" onClick={handleSaveProfile} disabled={saving} className="w-full gap-2">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {saving ? "Save Branding" : "Save Branding"}
+                    {saving ? "Saving..." : "Save Branding"}
                   </Button>
                 </div>
               </div>
