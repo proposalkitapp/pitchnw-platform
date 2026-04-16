@@ -67,7 +67,7 @@ export default function Dashboard() {
       return data;
     },
     enabled: !!session?.user?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Ensure plan changes are reflected immediately on return
   });
 
   const fetchProposals = async (userId: string) => {

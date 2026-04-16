@@ -94,16 +94,13 @@ export default async function handler(req: Req, res: Res) {
 
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
-        // Default to test_mode if not provided, per docs examples
-        const environment =
-            ((process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode");
 
         if (!apiKey) {
             res.status(500).json({ error: "Missing DODO_PAYMENTS_API_KEY" });
             return;
         }
 
-        // Parse body (Vercel functions may not auto-parse)
+        // Parsing body
         let parsed: any = undefined;
         if (typeof req.body === "string") {
             parsed = JSON.parse(req.body);
@@ -114,6 +111,27 @@ export default async function handler(req: Req, res: Res) {
             if (raw) parsed = JSON.parse(raw);
         }
         const body = parsed || {};
+        const userId = body.userId;
+
+        // Default to environment from env
+        let environment =
+            ((process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode");
+
+        // Admin Override: If user is admin, force test_mode for verification purposes
+        if (userId && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            const { createClient } = await import("@supabase/supabase-js");
+            const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("is_admin")
+                .eq("user_id", userId)
+                .single();
+            
+            if (profile?.is_admin) {
+                console.log(`Admin ${userId} detected. Forcing test_mode for checkout.`);
+                environment = "test_mode";
+            }
+        }
 
         // Allow product_id from body, otherwise fallback to env (backward compatible with existing setup)
         const productIdFromEnv = process.env.DODO_PRO_PLAN_PRODUCT_ID;
