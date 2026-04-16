@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap, Lock, Brain, Sparkles } from "lucide-react";
+import { 
+  FileText, Plus, Trash2, Clock, Eye, Download, 
+  BarChart3, TrendingUp, CalendarDays, Link2, 
+  Lock, Brain, Sparkles, Zap, ArrowRight, Loader2
+} from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +20,7 @@ import { OnboardingModal } from "@/components/OnboardingModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type ProposalBranding } from "@/components/ProposalRenderer";
 import { ProposalRenderer } from "@/components/ProposalRenderer";
+import { ProDashboardView } from "@/components/ProDashboardView";
 
 interface Proposal {
   id: string;
@@ -82,7 +87,6 @@ export default function Dashboard() {
     }
   }, [session, authLoading]);
 
-  // Sync onboarding state
   useEffect(() => {
     if (profile && !profile.onboarding_completed) {
       setShowOnboarding(true);
@@ -151,317 +155,240 @@ export default function Dashboard() {
 
   const loading = profileLoading || loadingProposals;
 
+  if (loading && showSkeleton) {
+    return (
+      <AuthLayout>
+        <div className="p-8 max-w-6xl mx-auto space-y-8">
+          <Skeleton className="h-12 w-64 rounded-xl" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Skeleton className="h-24 rounded-[24px]" />
+            <Skeleton className="h-24 rounded-[24px]" />
+            <Skeleton className="h-24 rounded-[24px]" />
+            <Skeleton className="h-24 rounded-[24px]" />
+          </div>
+          <Skeleton className="h-[400px] rounded-[32px]" />
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout>
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto font-body">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">
-            {getGreeting()}, {displayName} 👋
-          </h1>
-          <p className="text-slate-500 mt-1 text-sm">Here is your proposal overview.</p>
-        </motion.div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {loading && showSkeleton ? (
-            <Skeleton className="h-[100px] rounded-2xl" />
-          ) : isFree ? (
+      
+      <div className="p-6 lg:p-10 max-w-6xl mx-auto min-h-screen">
+        <AnimatePresence mode="wait">
+          {/* PRO VIEW */}
+          {isPro && !selectedProposal && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white text-slate-900 border border-slate-100 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+              key="pro-view"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  Proposals Used
-                </span>
-                <span className="text-sm font-bold">{used} of 3</span>
-              </div>
-              
-              <div className="w-full h-2 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                <div 
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${(used / 3) * 100}%`,
-                    backgroundColor: currentUsage.bar
-                  }}
-                />
-              </div>
-
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[10px] font-medium" style={{ color: currentUsage.bar }}>
-                  {currentUsage.text}
-                </span>
-                {used >= 3 && (
-                  <button 
-                    onClick={() => navigate('/checkout')}
-                    className="text-[10px] font-bold text-primary hover:underline"
-                  >
-                    Upgrade to Pro →
-                  </button>
-                )}
-              </div>
+              <ProDashboardView 
+                profile={profile!} 
+                proposals={proposals} 
+                isLoading={loading} 
+              />
             </motion.div>
-          ) : (
+          )}
+
+          {/* FREE VIEW */}
+          {isFree && !selectedProposal && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white text-slate-900 border border-slate-100 rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4"
+              key="free-view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-10"
             >
-              <div className="h-12 w-12 rounded-full border border-slate-100 flex items-center justify-center shrink-0">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  Total Proposals
-                </span>
-                <div className="text-xl font-bold mt-0.5">
-                  {totalProposals}
+              <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+                <div>
+                  <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                    {getGreeting()}, {displayName} 👋
+                  </h1>
+                  <p className="text-slate-500 mt-2 font-medium">Capture every lead with professional proposals.</p>
                 </div>
+                <Button 
+                  className="h-14 px-8 rounded-2xl bg-[#0033ff] text-white font-bold hover:bg-[#002be6] flex items-center gap-2 shadow-xl shadow-[#0033ff]/20 active:scale-95 transition-all"
+                  onClick={() => navigate('/generate')}
+                >
+                  <Plus className="h-5 w-5" />
+                  CREATE PROPOSAL
+                </Button>
+              </header>
+
+              {/* Stats & Usage */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 {/* Usage Card */}
+                 <div className="bg-white border border-slate-100 rounded-[32px] p-7 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Basic Plan Usage</span>
+                       <span className="text-sm font-bold">{used}/3</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-6">
+                       <div className="h-full transition-all duration-700" style={{ width: `${(used/3)*100}%`, backgroundColor: currentUsage.bar }} />
+                    </div>
+                    <button 
+                      onClick={() => navigate('/checkout')}
+                      className="w-full h-11 rounded-xl bg-[#0033ff]/5 text-[#0033ff] text-xs font-black uppercase tracking-widest hover:bg-[#0033ff]/10 transition-colors"
+                    >
+                      Unlimited Access →
+                    </button>
+                 </div>
+
+                 {stats.map((stat, i) => (
+                   <div key={stat.label} className="bg-white border border-slate-100 rounded-[32px] p-7 shadow-sm">
+                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center mb-6">
+                         <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{stat.label}</p>
+                      <h3 className="text-2xl font-black text-slate-900">{stat.value}</h3>
+                   </div>
+                 ))}
+              </div>
+
+              {/* Proposals List */}
+              <section className="bg-white rounded-[40px] border border-slate-100 p-8 lg:p-10 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                   <h3 className="text-xl font-bold font-display text-slate-900">Recent Proposals</h3>
+                </div>
+
+                {proposals.length === 0 ? (
+                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                    <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-slate-500 font-medium">Build your first pitch to see it here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {proposals.map((prop) => (
+                      <div 
+                        key={prop.id}
+                        className="flex items-center justify-between p-5 rounded-2xl border border-white hover:border-slate-100 hover:bg-slate-50 cursor-pointer group transition-all"
+                        onClick={() => setSelectedProposal(prop)}
+                      >
+                         <div className="flex items-center gap-5 min-w-0">
+                            <div className="h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                               <FileText className="h-4 w-4 text-slate-400 group-hover:text-[#0033ff] transition-colors" />
+                            </div>
+                            <div className="truncate">
+                               <h4 className="font-bold text-slate-900 truncate">{prop.title}</h4>
+                               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">
+                                 {prop.client_name || 'Prospect'} • {new Date(prop.created_at).toLocaleDateString()}
+                               </p>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-4">
+                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${statusColors[prop.status]}`}>
+                               {prop.status}
+                            </span>
+                            <div className="h-8 w-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-slate-100">
+                               <ArrowRight className="h-4 w-4 text-[#0033ff]" />
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Upgrade Banner for Free Users */}
+              <div className="bg-gradient-to-r from-[#A855F7] to-[#0033ff] rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl">
+                 <div className="absolute top-0 right-0 p-10 opacity-10">
+                    <Zap className="h-32 w-32" />
+                 </div>
+                 <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-2">
+                       <Sparkles className="h-4 w-4" />
+                       <span className="text-[10px] font-black uppercase tracking-[0.3em]">Unlock Mastery</span>
+                    </div>
+                    <h3 className="text-3xl font-black font-display max-w-lg leading-tight">Professional results require professional tools.</h3>
+                    <p className="text-white/70 max-w-md font-medium">Get unlimited AI generations, custom branding, and real-time CRM tracking with Pitchnw Pro.</p>
+                    <Button 
+                      className="h-14 px-10 rounded-2xl bg-white text-[#0033ff] font-black text-lg hover:bg-slate-50 transition-all shadow-xl active:scale-95 mt-4"
+                      onClick={() => navigate('/checkout')}
+                    >
+                      UPGRADE NOW
+                    </Button>
+                 </div>
               </div>
             </motion.div>
           )}
 
-          {loading && showSkeleton
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-[100px] rounded-2xl" />
-              ))
-            : stats.map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (i + 1) * 0.05 }}
-                  className={`${i === 2 ? 'bg-[#0033ff] text-white' : 'bg-white text-slate-900 border border-slate-100'} rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex items-center gap-4`}
+          {/* SHARED PROPOSAL PREVIEW MODAL/VIEW */}
+          {selectedProposal && (
+            <motion.div
+              key="proposal-view"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              className="space-y-6 max-w-4xl mx-auto"
+            >
+              <div className="flex gap-4 flex-wrap items-center justify-between pb-4">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedProposal(null)} 
+                  className="gap-2 font-bold hover:bg-white text-slate-500"
                 >
-                  <div className={`h-12 w-12 rounded-full border ${i === 2 ? 'border-white/20' : 'border-slate-100'} flex items-center justify-center shrink-0`}>
-                    <stat.icon className={`h-5 w-5 ${i === 2 ? 'text-white' : stat.color}`} />
-                  </div>
-                  <div>
-                    <span className={`text-[11px] font-semibold uppercase tracking-wider ${i === 2 ? 'text-white/80' : 'text-slate-400'}`}>
-                      {stat.label}
-                    </span>
-                    <div className="text-xl font-bold mt-0.5">
-                      {stat.value}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-        </div>
-
-        {/* Followups Section — Pro Only */}
-        {!isFree && (
-          <div className="mb-10">
-            <h3 className="font-display text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-              <Clock className="h-3 w-3" /> Upcoming Follow-ups
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               {[
-                 { id: '1', title: 'Follow up with ' + (proposals[0]?.client_name || 'Client'), date: 'Tomorrow' },
-                 { id: '2', title: 'Send contract to ' + (proposals[1]?.client_name || 'Client B'), date: 'In 2 days' }
-               ].map((f) => (
-                 <div key={f.id} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm group hover:border-primary/20 transition-all">
-                    <p className="text-[13px] font-bold text-slate-800 truncate">{f.title}</p>
-                    <p className="text-[10px] text-slate-400 font-medium uppercase mt-1">{f.date}</p>
-                    <button className="text-[9px] font-black text-primary uppercase mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Mark Complete ✓
-                    </button>
-                 </div>
-               ))}
-               <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
-                  <span className="text-[11px] font-bold text-slate-400">+ New Task</span>
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Win-Rate Coach — Pro Only (5+ proposals) */}
-        {!isFree && proposals.length >= 5 && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-10 bg-[#0033ff] p-6 rounded-[32px] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_20px_40px_rgba(0,51,255,0.25)] relative overflow-hidden group"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
-               <Brain className="h-32 w-32" />
-            </div>
-            <div className="relative z-10 text-center md:text-left">
-              <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
-                <Sparkles className="h-4 w-4 text-[#4EEAA0]" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Win-Rate Coach Active</span>
-              </div>
-              <h3 className="text-xl font-bold mb-1">Your strategy is 15% more effective this month.</h3>
-              <p className="text-white/70 text-sm">Our AI coach has analyzed your last 5 proposals. You have a new optimization strategy ready.</p>
-            </div>
-            <Button className="shrink-0 bg-white text-[#0033ff] hover:bg-slate-100 font-bold px-8 h-12 rounded-2xl relative z-10 transition-transform active:scale-95">
-              View Strategy
-            </Button>
-          </motion.div>
-        )}
-
-        {/* Quick Action */}
-        <Button
-          className="w-full mb-10 h-14 bg-[#0033ff] hover:bg-[#002be6] text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] rounded-xl font-semibold text-base transition-all duration-200"
-          onClick={() => {
-            if (isFree && used >= 3) {
-              toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
-              navigate("/checkout");
-              return;
-            }
-            navigate("/generate");
-          }}
-        >
-          <Plus className="h-5 w-5 mr-2" /> CREATE NEW PROPOSAL
-        </Button>
-
-        {selectedProposal ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="ghost" onClick={() => setSelectedProposal(null)} className="gap-2">
-                ← Back to list
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => exportProposalAsPdf(selectedProposal.title, selectedProposal.generated_content, userBranding)}
-              >
-                <Download className="h-4 w-4" /> Export PDF
-              </Button>
-              {isPro ? (
-                <Button
-                  variant="hero"
-                  size="sm"
-                  className="gap-2 bg-gradient-to-r from-[#7C6FF7] to-[#4EEAA0] border-none text-white shadow-lg"
-                  onClick={() => navigate(`/proposals/${selectedProposal.id}/analysis`)}
-                >
-                  <Brain className="h-4 w-4" /> Analyze Pitch
+                  ← Back to Dashboard
                 </Button>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="gap-2 h-11 px-5 rounded-xl font-bold border-slate-200 bg-white"
+                    onClick={() => exportProposalAsPdf(selectedProposal.title, selectedProposal.generated_content, userBranding)}
+                  >
+                    <Download className="h-4 w-4 text-slate-400" /> Export PDF
+                  </Button>
+                  
+                  {isPro ? (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 text-slate-300 border-slate-100 cursor-not-allowed"
+                      className="gap-2 h-11 px-5 rounded-xl font-black bg-[#A855F7] text-white hover:bg-[#9333ea] border-none shadow-lg shadow-purple-200"
                       onClick={() => navigate(`/proposals/${selectedProposal.id}/analysis`)}
                     >
-                      <Lock className="h-4 w-4" /> Analyze Pitch
+                      <Brain className="h-4 w-4" /> ANALYZE PITCH
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Upgrade to Pro to analyze your proposals</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-            <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-              <h2 className="font-display text-2xl font-bold mb-6 text-card-foreground">
-                {selectedProposal.title}
-              </h2>
-              <ProposalRenderer
-                content={selectedProposal.generated_content}
-                mode={selectedProposal.proposal_mode}
-                branding={userBranding}
-              />
-            </div>
-          </motion.div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4 mt-6">
-              <h2 className="font-display text-xl font-bold text-slate-900">
-                Recent Proposals
-              </h2>
-            </div>
-
-            {loading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 rounded-2xl" />
-                ))}
-              </div>
-            ) : proposals.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-24 rounded-2xl border border-dashed border-slate-200 bg-white"
-              >
-                <FileText className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                <h2 className="font-display text-xl font-bold mb-2 text-slate-800">No proposals yet</h2>
-                <p className="text-slate-500 mb-6 text-sm">
-                  Generate your first AI proposal in under 60 seconds.
-                </p>
-                <Button onClick={() => navigate("/generate")} className="bg-[#0033ff] hover:bg-[#002be6] h-11 px-8 rounded-full text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)]">
-                  <Plus className="h-4 w-4 mr-2" /> Create Proposal
-                </Button>
-              </motion.div>
-            ) : (
-              <div className="grid gap-4">
-                {proposals.slice(0, 10).map((proposal, i) => (
-                  <motion.div
-                    key={proposal.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="rounded-2xl border-none bg-white p-5 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] group"
-                  >
-                    <div className="flex-1 min-w-0 flex items-center gap-5">
-                      <div className="h-10 w-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
-                        <FileText className="h-4 w-4 text-slate-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-display font-semibold text-slate-900 truncate text-[15px]">
-                          {proposal.title}
-                        </h3>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 flex-wrap">
-                          {proposal.client_name && <span className="font-medium text-slate-700">{proposal.client_name}</span>}
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 opacity-70" />
-                            {new Date(proposal.created_at).toLocaleDateString()}
-                          </span>
-                          <span className={`capitalize px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${statusColors[proposal.status] || "bg-slate-100 text-slate-500"}`}>
-                            {proposal.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 rounded-full border-slate-200 text-slate-500 hover:text-[#0033ff] hover:bg-[#0033ff]/10 hover:border-[#0033ff]/20"
-                        onClick={() => setSelectedProposal(proposal)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {!isFree && (
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => deleteProposal(proposal.id)}
+                          variant="outline"
+                          className="gap-2 h-11 px-5 rounded-xl font-bold bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Lock className="h-4 w-4" /> ANALYZE PITCH
                         </Button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Upgrade to Pro to unlock AI analysis</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-xl text-red-500 hover:bg-red-50"
+                    onClick={() => deleteProposal(selectedProposal.id)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
-            )}
-          </>
-        )}
+
+              <div className="rounded-[40px] border border-slate-100 bg-white p-8 sm:p-12 shadow-2xl">
+                <ProposalRenderer
+                  content={selectedProposal.generated_content}
+                  mode={selectedProposal.proposal_mode}
+                  branding={userBranding}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </AuthLayout>
   );
