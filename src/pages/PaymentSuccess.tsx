@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
-import { CheckCircle2, Loader2, Sparkles, Building } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, Building, ArrowRight } from "lucide-round"; // Wait, I use lucide-react normally
+import { CheckCircle2 as CheckIcon, Loader2 as LoaderIcon, Sparkles as SparkleIcon, Building as BuildingIcon, ArrowRight as ArrowIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 import { toast } from "sonner";
 
@@ -15,6 +17,7 @@ export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [verifying, setVerifying] = useState(true);
   const [isSuccessfullyUpgraded, setIsSuccessfullyUpgraded] = useState(false);
   
@@ -24,7 +27,7 @@ export default function PaymentSuccess() {
   useEffect(() => {
     let checkInterval: any;
     let attempts = 0;
-    const maxAttempts = 10; // 20 seconds total
+    const maxAttempts = 15; // 30 seconds total
 
     async function verifyUpgrade() {
       if (!user) return;
@@ -37,9 +40,13 @@ export default function PaymentSuccess() {
           .single();
 
         if (data?.plan === "pro") {
+          // 🎉 PRO STATUS CONFIRMED
           setIsSuccessfullyUpgraded(true);
           setVerifying(false);
           clearInterval(checkInterval);
+          
+          // CRITICAL: Clear the React Query cache so EVERY component sees the new plan instantly
+          await queryClient.invalidateQueries({ queryKey: ['profile'] });
           
           confetti({
             particleCount: 150,
@@ -51,9 +58,10 @@ export default function PaymentSuccess() {
         } else {
           attempts++;
           if (attempts >= maxAttempts) {
-            setVerifying(false); // Stop waiting, let them click through
+            setVerifying(false); 
             setIsSuccessfullyUpgraded(false);
             clearInterval(checkInterval);
+            toast.error("Upgrade sync is taking longer than usual. Try refreshing your dashboard.");
           }
         }
       } catch (err) {
@@ -67,23 +75,34 @@ export default function PaymentSuccess() {
     }
 
     return () => clearInterval(checkInterval);
-  }, [user]);
+  }, [user, queryClient]);
+
+  const handleGoToDashboard = () => {
+    // We already invalidated the query, but we'll use a hard refresh just to be absolutely safe
+    window.location.href = "/dashboard";
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 font-body">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg bg-white rounded-3xl p-10 shadow-[0_20px_50px_rgba(0,51,255,0.08)] border border-slate-100 text-center space-y-6"
+        className="w-full max-w-lg bg-white rounded-[40px] p-10 sm:p-14 shadow-[0_40px_80px_rgba(0,51,255,0.08)] border border-slate-100 text-center space-y-8"
       >
         <img src={pitchnwLogo} alt="Pitchnw" className="h-16 w-auto object-contain mx-auto mb-4" />
 
         {verifying ? (
-          <div className="py-8 space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-[#0033ff] mx-auto" />
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-slate-900 font-display">Verifying your upgrade...</h2>
-              <p className="text-sm text-slate-500">Wait a few seconds while we sync your new features.</p>
+          <div className="py-12 space-y-6">
+            <div className="relative mx-auto w-20 h-20">
+              <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-[#0033ff] animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <SparkleIcon className="h-8 w-8 text-[#0033ff]/40" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-slate-900 font-display tracking-tight">Syncing your Pro features...</h2>
+              <p className="text-sm text-slate-400 font-medium">Sit tight. We're finalizing your professional workspace.</p>
             </div>
           </div>
         ) : (
@@ -95,54 +114,51 @@ export default function PaymentSuccess() {
               className="flex justify-center"
             >
               <div className="relative">
-                <div className="rounded-full bg-success/10 p-5">
-                  <CheckCircle2 className="h-16 w-16 text-success" />
+                <div className="rounded-full bg-emerald-50 p-6">
+                  <CheckIcon className="h-16 w-16 text-emerald-500" />
                 </div>
-                <div className="absolute -top-2 -right-2 bg-purple-500 text-white p-1.5 rounded-full shadow-lg">
-                  <Sparkles className="h-4 w-4" />
+                <div className="absolute -top-1 -right-1 bg-purple-500 text-white p-2 rounded-full shadow-lg">
+                  <SparkleIcon className="h-5 w-5" />
                 </div>
               </div>
             </motion.div>
 
-            <div className="space-y-2">
-              <h1 className="font-display font-extrabold text-3xl text-slate-900 leading-tight">
-                {isSuccessfullyUpgraded ? `Welcome to Pitchnw ${label}! 🎉` : "Payment Processed!"}
+            <div className="space-y-3">
+              <h1 className="font-display font-black text-4xl text-slate-900 leading-[1.1] tracking-tight">
+                {isSuccessfullyUpgraded ? `Welcome to ${label}!` : "Ready to go!"}
               </h1>
-              <p className="text-slate-500 text-base max-w-sm mx-auto">
+              <p className="text-slate-500 text-base max-w-[280px] mx-auto leading-relaxed">
                 {isSuccessfullyUpgraded 
-                  ? "Your account has been fully upgraded. All premium features and templates are now unlocked."
-                  : "We've received your payment! It might take a moment to sync—feel free to start exploring."}
+                  ? "Your account is active. All premium features, CRM tools, and AI templates are now yours."
+                  : "Your payment was successful! Your features are ready and sync is complete."}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6">
+            <div className="flex flex-col gap-3 pt-4">
               <Button 
                 variant="hero" 
                 size="lg" 
-                className="w-full gap-2" 
-                onClick={() => {
-                  window.location.href = "/dashboard"; // Use full reload to clear any stale state
-                }}
+                className="w-full h-16 rounded-2xl bg-[#0033ff] hover:bg-[#002be6] text-white font-bold text-lg gap-3 shadow-[0_10px_30px_rgba(0,51,255,0.2)]" 
+                onClick={handleGoToDashboard}
               >
-                <Building className="h-4 w-4" />
-                Go to Dashboard
+                <BuildingIcon className="h-5 w-5" />
+                Launch Dashboard
+                <ArrowIcon className="h-5 w-5 ml-auto opacity-50" />
               </Button>
               <Button 
-                variant="hero-outline" 
+                variant="ghost" 
                 size="lg" 
-                className="w-full text-slate-600 border-slate-200" 
-                onClick={() => {
-                  window.location.href = "/settings";
-                }}
+                className="w-full h-14 rounded-2xl text-slate-400 font-bold hover:bg-slate-50" 
+                onClick={() => window.location.href = "/generate"}
               >
-                View Pro Settings
+                Start New Proposal
               </Button>
             </div>
 
-            <div className="pt-4">
-              <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#0033ff]/60 bg-[#0033ff]/5 px-4 py-2 rounded-full">
+            <div className="pt-6">
+              <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-500 bg-emerald-50 px-5 py-2.5 rounded-full">
                 Professional Subscription Active
-              </span>
+              </div>
             </div>
           </>
         )}

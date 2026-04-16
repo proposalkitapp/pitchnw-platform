@@ -4,8 +4,7 @@ import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shiel
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/use-profile";
 import pitchnwLogo from "@/assets/pitchnw-logo.png";
 
 import {
@@ -33,31 +32,16 @@ export function AppSidebar() {
   const location = useLocation().pathname;
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [displayName, setDisplayName] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  // null = free, 'pro' = paid
-  const [plan, setPlan] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("username, display_name, is_admin, plan")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => {
-          setDisplayName(data?.display_name || data?.username || user.email?.split("@")[0] || "User");
-          setIsAdmin(data?.is_admin || false);
-          // null means free plan; only 'pro' is a paid plan
-          setPlan(data?.plan ?? null);
-        });
-    }
-  }, [user]);
+  const { data: profile } = useProfile();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
+  const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "User";
+  const isAdmin = profile?.is_admin || false;
+  const plan = profile?.plan ?? null;
 
   return (
     <Sidebar collapsible="icon" className="border-r-0 dark bg-black text-slate-200">

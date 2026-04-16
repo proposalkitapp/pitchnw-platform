@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
@@ -50,58 +51,54 @@ const getDealScore = (status: string) => {
 
 export default function CRM() {
   const { user } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProposals, setLoadingProposals] = useState(true);
   const [view, setView] = useState<"table" | "kanban">("table");
-  // null = free plan, 'pro' = paid
-  const [plan, setPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
-      fetchData();
+      fetchProposals();
     }
   }, [user]);
 
-  const fetchData = async () => {
+  const fetchProposals = async () => {
     if (!user?.id) return;
-    
     try {
-      const [{ data: profs, error: profError }, { data: props, error: propError }] = await Promise.all([
-        supabase.from("profiles").select("plan").eq("user_id", user.id).single(),
-        supabase.from("proposals").select("id, title, client_name, project_type, budget, status, created_at, public_slug").eq("user_id", user.id).order("created_at", { ascending: false }),
-      ]);
+      const { data, error } = await supabase
+        .from("proposals")
+        .select("id, title, client_name, project_type, budget, status, created_at, public_slug")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
       
-      if ((profError || propError) && user?.id) {
-        console.error("CRM fetch error:", profError || propError);
+      if (error) {
+        console.error("CRM fetch error:", error);
         toast.error("Failed to load pipeline data");
       } else {
-        // null = free; 'pro' = paid
-        setPlan(profs?.plan ?? null);
-        setProposals(props || []);
+        setProposals(data || []);
       }
     } catch (err) {
       console.error("CRM fetch data error:", err);
     } finally {
-      setLoading(false);
+      setLoadingProposals(false);
     }
   };
 
-  const isFree = !plan;
+  const isFree = profile?.plan !== 'pro';
 
   const updateStatus = async (id: string, status: string) => {
     setProposals((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
     const { error } = await supabase.from("proposals").update({ status }).eq("id", id);
     if (error) {
       toast.error("Failed to update status");
-      fetchData();
+      fetchProposals();
     } else {
       toast.success(status === "won" ? "Marked as Won! 🎉" : status === "lost" ? "Marked as Lost." : `Status updated to ${status}`);
     }
   };
 
   const deleteProposal = async (id: string) => {
-    // Free users cannot delete proposals — prevents limit bypass
     if (isFree) {
       toast.error('Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals freely.');
       return;
@@ -117,17 +114,19 @@ export default function CRM() {
     ? Math.round((proposals.filter((p) => p.status === "won").length / proposals.length) * 100)
     : 0;
 
+  const loading = profileLoading || loadingProposals;
+
   if (isFree && !loading) {
     return (
       <AuthLayout>
-        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 font-body">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-md bg-white p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100"
           >
             <div className="text-6xl mb-6">📊</div>
-            <h2 className="font-syne font-extrabold text-3xl text-slate-900 mb-4">Master Your Pipeline</h2>
+            <h2 className="font-display font-extrabold text-3xl text-slate-900 mb-4 leading-tight">Master Your Pipeline</h2>
             <p className="text-slate-500 mb-8 leading-relaxed">
               The CRM Pipeline Dashboard is a Pro feature. 
               Track deals, see probability scores, and manage your sales flow with ease.
@@ -147,7 +146,7 @@ export default function CRM() {
 
   return (
     <AuthLayout>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto font-body">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <h1 className="font-display text-3xl font-bold">CRM Pipeline</h1>
@@ -209,7 +208,7 @@ export default function CRM() {
                   <TableHead>Client</TableHead>
                   <TableHead>Project</TableHead>
                   <TableHead>Budget</TableHead>
-                  {!isFree && <TableHead>Score</TableHead>}
+                  <TableHead>Score</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -221,19 +220,17 @@ export default function CRM() {
                     <TableCell className="font-medium text-card-foreground">{p.client_name || "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{p.project_type || "—"}</TableCell>
                     <TableCell className="text-sm">{p.budget || "TBD"}</TableCell>
-                    {!isFree && (
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-10 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${getDealScore(p.status) >= 75 ? 'bg-success' : 'bg-primary'}`} 
-                              style={{ width: `${getDealScore(p.status)}%` }} 
-                            />
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-500">{getDealScore(p.status)}%</span>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-10 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${getDealScore(p.status) >= 75 ? 'bg-success' : 'bg-primary'}`} 
+                            style={{ width: `${getDealScore(p.status)}%` }} 
+                          />
                         </div>
-                      </TableCell>
-                    )}
+                        <span className="text-[10px] font-bold text-slate-500">{getDealScore(p.status)}%</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || statusColors.draft}`}>
                         {p.status}
@@ -257,12 +254,9 @@ export default function CRM() {
                             <X className="h-4 w-4" />
                           </Button>
                         )}
-                        {/* Only show delete for Pro users */}
-                        {!isFree && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteProposal(p.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteProposal(p.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -296,14 +290,12 @@ export default function CRM() {
                         {p.budget && (
                           <span className="text-xs font-medium text-primary mt-1 inline-block">{p.budget}</span>
                         )}
-                        {!isFree && (
-                          <div className="flex items-center justify-between mt-2">
-                             <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden mr-2">
-                                <div className="h-full bg-[#7C6FF7]" style={{ width: `${getDealScore(p.status)}%` }} />
-                             </div>
-                             <span className="text-[9px] font-black text-slate-400">{getDealScore(p.status)}%</span>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-between mt-2">
+                            <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden mr-2">
+                              <div className="h-full bg-[#7C6FF7]" style={{ width: `${getDealScore(p.status)}%` }} />
+                            </div>
+                            <span className="text-[9px] font-black text-slate-400">{getDealScore(p.status)}%</span>
+                        </div>
                         <div className="flex gap-1 mt-2">
                           {col !== "won" && (
                             <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "won"); }} className="text-xs text-success hover:underline">Won</button>

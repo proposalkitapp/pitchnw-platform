@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { FileText, Plus, Trash2, Clock, Eye, Download, BarChart3, TrendingUp, CalendarDays, Link2, Zap, Lock, Brain, Sparkles } from "lucide-react";
@@ -14,7 +14,8 @@ import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ProposalRenderer, type ProposalBranding } from "@/components/ProposalRenderer";
+import { type ProposalBranding } from "@/components/ProposalRenderer";
+import { ProposalRenderer } from "@/components/ProposalRenderer";
 
 interface Proposal {
   id: string;
@@ -36,19 +37,15 @@ function getGreeting(): string {
 
 export default function Dashboard() {
   const { session, loading: authLoading } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
   const navigate = useNavigate();
+  
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingProposals, setLoadingProposals] = useState(true);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
-  const [displayName, setDisplayName] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
-  // null = free plan, 'pro' = paid
-  const [plan, setPlan] = useState<string | null>(null);
-  const [proposalsUsed, setProposalsUsed] = useState(0);
-  const [userBranding, setUserBranding] = useState<ProposalBranding>({});
   const [showSkeleton, setShowSkeleton] = useState(true);
 
-  // After 500ms, force showSkeleton to false to show whatever data we have
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSkeleton(false);
@@ -56,25 +53,7 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ['profile', session?.user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('proposals_used, plan, display_name, onboarding_completed, brand_logo_url, brand_name, company_name, portfolio_url')
-        .eq('id', session?.user?.id)
-        .single();
-      return data;
-    },
-    enabled: !!session?.user?.id,
-    staleTime: 0, // Ensure plan changes are reflected immediately on return
-  });
-
   const fetchProposals = async (userId: string) => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
     try {
       const { data, error } = await supabase
         .from("proposals")
@@ -91,7 +70,7 @@ export default function Dashboard() {
     } catch (err) {
       console.error("fetchProposals error:", err);
     } finally {
-      setLoading(false);
+      setLoadingProposals(false);
     }
   };
 
@@ -99,31 +78,29 @@ export default function Dashboard() {
     if (session?.user?.id) {
       fetchProposals(session.user.id);
     } else if (!authLoading && session === null) {
-      setLoading(false);
+      setLoadingProposals(false);
     }
   }, [session, authLoading]);
 
-  // Sync profile data to local state for components expecting it
+  // Sync onboarding state
   useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.display_name?.split(" ")[0] || "there");
-      setPlan(profile.plan ?? null);
-      setProposalsUsed(profile.proposals_used || 0);
-      setUserBranding({
-        logoUrl: profile.brand_logo_url,
-        headerTitle: profile.brand_name,
-        companyName: profile.company_name,
-        displayName: profile.display_name,
-        portfolioUrl: profile.portfolio_url,
-      });
-      if (!profile.onboarding_completed) {
-        setShowOnboarding(true);
-      }
+    if (profile && !profile.onboarding_completed) {
+      setShowOnboarding(true);
     }
   }, [profile]);
 
-  const isFree = !plan;
-  const isPro = plan === 'pro';
+  const isFree = profile?.plan !== 'pro';
+  const isPro = profile?.plan === 'pro';
+  const displayName = profile?.display_name?.split(" ")[0] || "there";
+  const proposalsUsed = profile?.proposals_used || 0;
+
+  const userBranding: ProposalBranding = {
+    logoUrl: profile?.brand_logo_url,
+    headerTitle: profile?.brand_name,
+    companyName: profile?.company_name,
+    displayName: profile?.display_name,
+    portfolioUrl: profile?.portfolio_url,
+  };
 
   const deleteProposal = async (id: string) => {
     if (isFree) {
@@ -149,17 +126,13 @@ export default function Dashboard() {
   }).length;
   const winRate = totalProposals > 0 ? Math.round((wonProposals / totalProposals) * 100) : 0;
 
-  // Usage indicator data
-  const used = profile?.proposals_used || 0;
-  const remaining = Math.max(0, 3 - used);
-  
+  const used = proposalsUsed;
   const usageColors = [
-    { bar: "#4EEAA0", text: "3 proposals remaining" }, // 0 used
-    { bar: "#7C6FF7", text: "2 proposals remaining" }, // 1 used
-    { bar: "#FFD166", text: "1 proposal remaining" }, // 2 used
-    { bar: "#FF6B8A", text: "No proposals remaining" } // 3 used
+    { bar: "#4EEAA0", text: "3 proposals remaining" },
+    { bar: "#7C6FF7", text: "2 proposals remaining" },
+    { bar: "#FFD166", text: "1 proposal remaining" },
+    { bar: "#FF6B8A", text: "No proposals remaining" }
   ];
-
   const currentUsage = usageColors[Math.min(used, 3)];
 
   const stats = [
@@ -176,21 +149,20 @@ export default function Dashboard() {
     lost: "bg-destructive/10 text-destructive",
   };
 
-  // Free: can create if proposals_used < 3; Pro: unlimited
-  const hasHitFreeLimit = isFree && used >= 3;
+  const loading = profileLoading || loadingProposals;
 
   return (
     <AuthLayout>
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto font-body">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="font-sans text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900">
             {getGreeting()}, {displayName} 👋
           </h1>
           <p className="text-slate-500 mt-1 text-sm">Here is your proposal overview.</p>
@@ -198,7 +170,6 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {/* Usage / Total Proposals Card */}
           {loading && showSkeleton ? (
             <Skeleton className="h-[100px] rounded-2xl" />
           ) : isFree ? (
@@ -288,11 +259,10 @@ export default function Dashboard() {
         {/* Followups Section — Pro Only */}
         {!isFree && (
           <div className="mb-10">
-            <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+            <h3 className="font-display text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
               <Clock className="h-3 w-3" /> Upcoming Follow-ups
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               {/* Fixed mock followups for UI demonstration since table might be empty */}
                {[
                  { id: '1', title: 'Follow up with ' + (proposals[0]?.client_name || 'Client'), date: 'Tomorrow' },
                  { id: '2', title: 'Send contract to ' + (proposals[1]?.client_name || 'Client B'), date: 'In 2 days' }
@@ -340,7 +310,7 @@ export default function Dashboard() {
         <Button
           className="w-full mb-10 h-14 bg-[#0033ff] hover:bg-[#002be6] text-white shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] rounded-xl font-semibold text-base transition-all duration-200"
           onClick={() => {
-            if (hasHitFreeLimit) {
+            if (isFree && used >= 3) {
               toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
               navigate("/checkout");
               return;
@@ -395,15 +365,6 @@ export default function Dashboard() {
                   </TooltipContent>
                 </Tooltip>
               )}
-              {selectedProposal.proposal_mode && (
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                  selectedProposal.proposal_mode === "sales_pitch"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-secondary text-muted-foreground"
-                }`}>
-                  {selectedProposal.proposal_mode === "sales_pitch" ? "🎯 Sales Pitch" : "📄 Formal Proposal"}
-                </span>
-              )}
             </div>
             <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
               <h2 className="font-display text-2xl font-bold mb-6 text-card-foreground">
@@ -419,7 +380,7 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-4 mt-6">
-              <h2 className="font-sans text-xl font-bold text-slate-900">
+              <h2 className="font-display text-xl font-bold text-slate-900">
                 Recent Proposals
               </h2>
             </div>
@@ -437,7 +398,7 @@ export default function Dashboard() {
                 className="text-center py-24 rounded-2xl border border-dashed border-slate-200 bg-white"
               >
                 <FileText className="h-16 w-16 text-slate-200 mx-auto mb-4" />
-                <h2 className="font-sans text-xl font-bold mb-2 text-slate-800">No proposals yet</h2>
+                <h2 className="font-display text-xl font-bold mb-2 text-slate-800">No proposals yet</h2>
                 <p className="text-slate-500 mb-6 text-sm">
                   Generate your first AI proposal in under 60 seconds.
                 </p>
@@ -460,7 +421,7 @@ export default function Dashboard() {
                         <FileText className="h-4 w-4 text-slate-400" />
                       </div>
                       <div>
-                        <h3 className="font-sans font-semibold text-slate-900 truncate text-[15px]">
+                        <h3 className="font-display font-semibold text-slate-900 truncate text-[15px]">
                           {proposal.title}
                         </h3>
                         <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 flex-wrap">
@@ -472,15 +433,6 @@ export default function Dashboard() {
                           <span className={`capitalize px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${statusColors[proposal.status] || "bg-slate-100 text-slate-500"}`}>
                             {proposal.status}
                           </span>
-                          {proposal.proposal_mode && (
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wide ${
-                              proposal.proposal_mode === "sales_pitch"
-                                ? "bg-[#0033ff]/10 text-[#0033ff]"
-                                : "bg-slate-100 text-slate-600"
-                            }`}>
-                              {proposal.proposal_mode === "sales_pitch" ? "🎯 SALES PITCH" : "📄 FORMAL"}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -493,19 +445,6 @@ export default function Dashboard() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {proposal.public_slug && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0 rounded-full border-slate-200 text-slate-500 hover:text-[#0033ff] hover:bg-[#0033ff]/10 hover:border-[#0033ff]/20"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/p/${proposal.public_slug}`);
-                            toast.success("Client link copied! 🔗");
-                          }}
-                        >
-                          <Link2 className="h-4 w-4" />
-                        </Button>
-                      )}
                       {!isFree && (
                         <Button
                           variant="ghost"

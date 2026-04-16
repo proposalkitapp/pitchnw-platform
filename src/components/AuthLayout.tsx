@@ -1,42 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/use-profile";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useTheme } from "@/hooks/use-theme";
-import { Button } from "@/components/ui/button";
-import { Moon, Sun, Search, User as UserIcon, Sparkles } from "lucide-react";
+import { Search, User as UserIcon, Sparkles } from "lucide-react";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const { isDark, toggle } = useTheme();
-  const [displayName, setDisplayName] = useState<string>("");
-  const [plan, setPlan] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate("/auth");
-      return;
     }
+  }, [user, authLoading, navigate]);
 
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("display_name, username, plan")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data }) => {
-          setDisplayName(data?.display_name || data?.username || user.email?.split('@')[0] || "User");
-          setPlan(data?.plan ?? null);
-        });
-    }
-  }, [user, loading, navigate]);
-
-  if (loading) {
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -48,6 +33,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return null;
+
+  const displayName = profile?.display_name || profile?.username || user.email?.split('@')[0] || "User";
+  const plan = profile?.plan ?? null;
 
   return (
     <SidebarProvider>
