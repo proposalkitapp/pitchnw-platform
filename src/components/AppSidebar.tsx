@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield, Brain, Lock } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield, Brain, Lock, Target } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,8 +28,10 @@ const navItems = [
 
 const proNavItems = [
   { title: "CRM Pipeline", url: "/crm", icon: Kanban, pro: true },
-  { title: "Win-Rate Coach", url: "/coach", icon: Brain, pro: true },
+  { title: "Strategic Coach", url: "/coach", icon: Brain, pro: true },
+  { title: "Pitch Analysis", url: "/proposals", icon: Target, pro: true }, // Re-using proposals but can be focused analysis
 ];
+
 
 export function AppSidebar() {
   const { state } = useSidebar();

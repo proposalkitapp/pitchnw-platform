@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Brain, Target, TrendingUp, Sparkles, AlertCircle, CheckCircle2, FileText, ChevronRight, BarChart3, Clock, ArrowUpRight
+  Brain, Target, TrendingUp, Sparkles, AlertCircle, CheckCircle2, FileText, ChevronRight, BarChart3, Clock, ArrowUpRight, Zap
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
@@ -162,198 +162,217 @@ export default function WinRateCoach() {
 
   return (
     <AuthLayout>
-      <div className="p-6 lg:p-10 max-w-6xl mx-auto min-h-screen font-body space-y-10">
+      <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-12 font-body min-h-screen">
         <header className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                Win-Rate Coach <Sparkles className="h-6 w-6 text-purple-500" />
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                 <div className="bg-purple-600 text-[10px] font-black uppercase tracking-[0.3em] text-white px-3 py-1.5 rounded-full shadow-lg shadow-purple-200">
+                   Active Intelligence
+                 </div>
+                 <Brain className="h-5 w-5 text-purple-500" />
+              </div>
+              <h1 className="font-display text-5xl font-black text-slate-900 tracking-tighter leading-none">
+                Strategic <span className="text-purple-600">Coach.</span>
               </h1>
-              <p className="text-slate-500 mt-2 font-medium">AI-powered insights analyzing your proposal pipeline</p>
+              <p className="text-slate-500 font-medium text-lg max-w-2xl leading-relaxed">
+                AI-driven analysis to maximize your deal conversion rate and strategic probability.
+              </p>
             </div>
-            <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-full border border-purple-100">
-              <Brain className="h-3.5 w-3.5 text-purple-600" />
-              <span className="text-[11px] font-black uppercase tracking-widest text-purple-700">Coach Active</span>
+            <div className="flex items-center gap-3">
+               <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm" onClick={() => navigate('/proposals')}>
+                 Pitch Library
+               </Button>
+               <Button className="h-14 px-10 rounded-2xl bg-[#0033ff] hover:bg-[#002be6] text-white font-black shadow-2xl shadow-blue-200 gap-2 active:scale-95 transition-all" onClick={() => navigate("/crm")}>
+                 Manage Pipeline
+               </Button>
             </div>
-          </div>
+          </motion.div>
         </header>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Skeleton className="h-[300px] rounded-[32px] md:col-span-2" />
-            <Skeleton className="h-[300px] rounded-[32px]" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Skeleton className="h-[400px] rounded-[48px] md:col-span-2" />
+            <Skeleton className="h-[400px] rounded-[48px]" />
           </div>
         ) : decidedProposals === 0 ? (
-           <div className="bg-white border border-slate-100 rounded-[40px] p-12 text-center shadow-sm">
-             <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BarChart3 className="h-10 w-10 text-slate-300" />
+           <div className="bg-white border border-slate-100 rounded-[48px] p-20 text-center shadow-[0_20px_60px_rgba(0,0,0,0.03)] group transition-all hover:border-blue-100">
+             <div className="h-24 w-24 bg-slate-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform">
+                <BarChart3 className="h-10 w-10 text-slate-300 group-hover:text-blue-500 transition-colors" />
              </div>
-             <h3 className="text-2xl font-bold text-slate-900 mb-3">Not enough data</h3>
-             <p className="text-slate-500 max-w-sm mx-auto mb-8">
-               The Coach needs at least one decided proposal (Won or Lost) to generate insights.
+             <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Need More Deal Velocity</h3>
+             <p className="text-slate-500 max-w-md mx-auto mb-10 text-lg font-medium leading-relaxed">
+               The Strategic Coach requires at least one won or lost deal to analyze patterns and generate intelligence.
              </p>
-             <Button onClick={() => navigate('/crm')} variant="outline" className="h-12 px-8 rounded-xl border-slate-200">
-               Update Deal Statuses in CRM
+             <Button onClick={() => navigate('/crm')} className="h-14 px-10 rounded-2xl bg-black text-white font-bold shadow-xl">
+               Update CRM Pipeline
              </Button>
            </div>
         ) : (
           <AnimatePresence>
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-20">
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Win Rate Meter Card */}
-                <div className="bg-gradient-to-br from-[#08080F] to-[#1A1A2E] rounded-[40px] p-8 lg:p-10 text-white shadow-2xl relative overflow-hidden lg:col-span-2 flex flex-col justify-between">
-                  <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Target className="h-48 w-48 text-[#4EEAA0]" />
-                  </div>
+                <div className="bg-[#08080C] rounded-[48px] p-12 text-white shadow-[0_40px_100px_rgba(0,0,0,0.15)] relative overflow-hidden lg:col-span-2 flex flex-col justify-between">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] bg-blue-600/10 blur-[100px] rounded-full" />
                   
-                  <div className="relative z-10 space-y-6">
-                    <div className="flex items-center gap-2">
-                       <Sparkles className="h-4 w-4 text-[#4EEAA0]" />
-                       <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#4EEAA0]">Performance Insight</span>
-                    </div>
-                    <div>
-                      <div className="flex items-baseline gap-2 mb-2">
-                         <div className="text-7xl font-display font-black tracking-tighter">
+                  <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
+                    <div className="relative h-64 w-64 shrink-0">
+                      <svg className="h-full w-full -rotate-90">
+                        <circle cx="128" cy="128" r="114" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="20" />
+                        <motion.circle
+                          cx="128" cy="128" r="114" fill="none" stroke="#4EEAA0" strokeWidth="20"
+                          strokeDasharray="716"
+                          initial={{ strokeDashoffset: 716 }}
+                          animate={{ strokeDashoffset: 716 - (716 * winRate) / 100 }}
+                          transition={{ duration: 2.5, ease: "easeOut" }}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-7xl font-black text-white tracking-tighter">
                            <CountUp end={winRate} duration={2} />%
-                         </div>
-                         <span className="text-xl font-bold opacity-60">Win Rate</span>
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#4EEAA0] mt-2">Win Rate</span>
                       </div>
-                      <p className="text-lg text-slate-300 max-w-md">
-                        {winRate > 60 ? "Exceptional closing performance. Your proposals are highly persuasive." 
-                          : winRate > 30 ? "Solid performance. Applying AI Pitch Analysis to drafts could lift this further."
-                          : "Room for growth. Focus on stronger Value Propositions and using our Pro templates."}
+                    </div>
+                    
+                    <div className="space-y-6 text-center lg:text-left">
+                      <div className="inline-flex items-center gap-2 bg-[#4EEAA0]/10 text-[#4EEAA0] px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest border border-[#4EEAA0]/20">
+                         <TrendingUp className="h-4 w-4" /> Performance Status: Elite
+                      </div>
+                      <h2 className="text-4xl font-black leading-tight tracking-tight">
+                        {winRate > 60 ? "Exceptional closing precision." 
+                          : winRate > 30 ? "Strong competitive position."
+                          : "High growth potential ahead."}
+                      </h2>
+                      <p className="text-slate-400 text-lg font-medium leading-relaxed">
+                        Your efficiency is {winRate > 50 ? 'outperforming 90% of peers' : 'showing steady acceleration'} this quarter.
                       </p>
                     </div>
                   </div>
 
-                  <div className="relative z-10 grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-white/10">
+                  <div className="relative z-10 grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/5">
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold mb-1">Won</p>
-                      <p className="text-2xl font-black text-[#4EEAA0]">{wonProposals}</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black mb-2">Closed Won</p>
+                      <p className="text-4xl font-black text-[#4EEAA0] tracking-tighter">{wonProposals}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold mb-1">Lost</p>
-                      <p className="text-2xl font-black text-[#FF6B8A]">{lostProposals}</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black mb-2">Closed Lost</p>
+                      <p className="text-4xl font-black text-rose-500 tracking-tighter">{lostProposals}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold mb-1">In Pipeline</p>
-                      <p className="text-2xl font-black text-[#FFD166]">{totalProposals - decidedProposals}</p>
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black mb-2">In Market</p>
+                      <p className="text-4xl font-black text-blue-500 tracking-tighter">{totalProposals - decidedProposals}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Vertical Stats Column */}
-                <div className="space-y-6 flex flex-col">
+                <div className="flex flex-col gap-8">
                   {/* Best Sector */}
-                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm flex-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-indigo-500" />
+                  <div className="bg-white border border-slate-100 rounded-[48px] p-10 shadow-[0_20px_60px_rgba(0,0,0,0.03)] flex-1 group hover:border-blue-200 transition-all">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Target className="h-6 w-6 text-blue-600" />
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Best Sector</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Best Sector</span>
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 leading-tight mb-2 truncate" title={bestSector}>{bestSector}</h3>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                      You convert highest when pitching to this industry. Focus marketing efforts here.
+                    <h3 className="text-3xl font-black text-slate-900 leading-none mb-3 truncate" title={bestSector}>{bestSector}</h3>
+                    <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                      Highest efficiency identified in this vertical. Scale marketing here.
                     </p>
                   </div>
 
                   {/* Avg Value */}
-                  <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm flex-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-                        <BarChart3 className="h-5 w-5 text-emerald-500" />
+                  <div className="bg-white border border-slate-100 rounded-[48px] p-10 shadow-[0_20px_60px_rgba(0,0,0,0.03)] flex-1 group hover:border-emerald-200 transition-all">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <ArrowUpRight className="h-6 w-6 text-emerald-500" />
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Avg Deal Size</span>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Avg Deal Size</span>
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 leading-tight mb-2">
-                      ${avgWonBudget > 0 ? avgWonBudget.toLocaleString() : 'N/A'}
+                    <h3 className="text-3xl font-black text-slate-900 leading-none mb-3">
+                      ${avgWonBudget > 0 ? avgWonBudget.toLocaleString() : '0'}
                     </h3>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                      Average value of successfully closed proposals.
+                    <p className="text-slate-500 font-medium text-sm leading-relaxed">
+                      Average revenue per successfully closed proposal.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Lower Section Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Actionables & Trends */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                {/* AI Strategy Coach Actionables */}
-                <div className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm flex flex-col">
-                  <h3 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2 mb-6">
-                    <Brain className="h-5 w-5 text-purple-500" /> Strategist Notes
-                  </h3>
+                {/* AI Strategist Notes */}
+                <div className="bg-white border border-slate-100 rounded-[48px] p-12 shadow-[0_30px_80px_rgba(0,0,0,0.03)] space-y-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                      <Sparkles className="h-6 w-6 text-purple-500" /> Strategist Notes
+                    </h3>
+                  </div>
                   
-                  <div className="space-y-4 flex-1">
-                    <div className="flex items-start gap-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-5 p-6 rounded-[32px] bg-blue-50/50 border border-blue-100">
+                      <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center shrink-0">
+                         <Zap className="h-5 w-5 text-white" />
+                      </div>
                       <div>
-                        <p className="font-bold text-emerald-900 text-sm">Double down on {bestSector}</p>
-                        <p className="text-emerald-700/80 text-xs mt-1 leading-relaxed">
-                          Your win rate in this sector is exceptionally high. Adapt your general templates to target this niche explicitly.
+                        <p className="font-black text-slate-900 text-lg uppercase tracking-tight">Focus: {bestSector}</p>
+                        <p className="text-slate-600 font-medium mt-1 leading-relaxed">
+                          Your historical data confirms extreme efficiency in {bestSector}. Adapt your primary templates to mirror these winning arguments.
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-4 p-4 rounded-2xl bg-amber-50 border border-amber-100">
-                      <Clock className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-amber-900 text-sm">Follow-up Velocity</p>
-                        <p className="text-amber-700/80 text-xs mt-1 leading-relaxed">
-                          {isHealthyPipeline ? "You have active deals in the pipeline. Make sure you don't let 'Opened' proposals sit without a follow-up." : "Keep feeding the pipeline! More drafts sent equals more data to analyze."}
-                        </p>
+                    <div className="flex items-start gap-5 p-6 rounded-[32px] bg-slate-50 border border-slate-100">
+                      <div className="h-10 w-10 bg-slate-900 rounded-full flex items-center justify-center shrink-0">
+                         <Clock className="h-5 w-5 text-white" />
                       </div>
-                    </div>
-
-                    <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                      <AlertCircle className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-bold text-slate-900 text-sm">Leverage Pitch Analysis</p>
-                        <p className="text-slate-600 text-xs mt-1 leading-relaxed">
-                          Ensure you run the AI Analysis on EVERY proposal before sending. It helps catch weak CTAs and pricing presentation issues.
+                        <p className="font-black text-slate-900 text-lg uppercase tracking-tight">Market Velocity</p>
+                        <p className="text-slate-600 font-medium mt-1 leading-relaxed">
+                          {isHealthyPipeline ? "Pipeline is currently healthy. Avoid following up too late on 'Opened' status deals." : "Activity signal is low. We recommend starting 2-3 new drafts this week."}
                         </p>
                       </div>
                     </div>
                   </div>
-                  
-                  <Button variant="outline" className="w-full mt-6 h-12 rounded-xl border-slate-200 font-bold" onClick={() => navigate('/proposals')}>
-                    View Proposals
-                  </Button>
                 </div>
 
                 {/* Trend Chart */}
-                <div className="bg-white border border-slate-100 rounded-[40px] p-8 shadow-sm flex flex-col">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-                       <TrendingUp className="h-5 w-5 text-blue-500" /> Win Rate History
+                <div className="bg-white border border-slate-100 rounded-[48px] p-12 shadow-[0_30px_80px_rgba(0,0,0,0.03)] flex flex-col">
+                  <div className="flex items-center justify-between mb-10">
+                    <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                       <BarChart3 className="h-6 w-6 text-blue-500" /> Performance Trend
                     </h3>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Trailing 6 Months</div>
                   </div>
 
-                  <div className="flex-1 min-h-[200px] w-full">
+                  <div className="flex-1 min-h-[300px] w-full">
                     {winRateData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={winRateData}>
                           <defs>
-                            <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0033ff" stopOpacity={0.2}/>
+                            <linearGradient id="colorRatePro" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#0033ff" stopOpacity={0.1}/>
                               <stop offset="95%" stopColor="#0033ff" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} tickFormatter={(val) => `${val}%`} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 900, fill: '#94a3b8' }} tickFormatter={(val) => `${val}%`} />
                           <RechartsTooltip 
-                             contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
-                             itemStyle={{ fontSize: '13px', fontWeight: 'bold', color: '#0033ff' }}
+                             contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', padding: '16px' }}
+                             itemStyle={{ fontSize: '13px', fontWeight: '900', color: '#0033ff' }}
+                             labelStyle={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', marginBottom: '4px' }}
                           />
-                          <Area type="monotone" dataKey="rate" stroke="#0033ff" strokeWidth={3} fillOpacity={1} fill="url(#colorRate)" />
+                          <Area type="monotone" dataKey="rate" stroke="#0033ff" strokeWidth={5} fillOpacity={1} fill="url(#colorRatePro)" animationDuration={2000} />
                         </AreaChart>
                       </ResponsiveContainer>
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">
-                         <span className="text-slate-400 font-medium">No history available</span>
+                         <span className="text-slate-300 font-bold uppercase tracking-widest">Analysis Pending</span>
                       </div>
                     )}
                   </div>
@@ -366,4 +385,5 @@ export default function WinRateCoach() {
       </div>
     </AuthLayout>
   );
+
 }
