@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -9,12 +7,9 @@ import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
-import {
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Eye, Check, X, Trash2, Plus, BarChart3, TrendingUp,
+  Eye, CheckCircle2, XCircle, Trash2, Plus, BarChart3, TrendingUp, DollarSign, Brain, Sparkles, Filter
 } from "lucide-react";
 
 interface Proposal {
@@ -29,14 +24,14 @@ interface Proposal {
 }
 
 const statusColors: Record<string, string> = {
-  draft: "bg-secondary text-muted-foreground",
-  sent: "bg-blue-500/10 text-blue-400",
-  opened: "bg-warning/10 text-warning",
-  won: "bg-success/10 text-success",
-  lost: "bg-destructive/10 text-destructive",
+  draft: "bg-slate-100 text-slate-500 border-slate-200",
+  sent: "bg-blue-50 text-[#0033ff] border-blue-100",
+  opened: "bg-amber-50 text-amber-600 border-amber-100",
+  won: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  lost: "bg-rose-50 text-rose-600 border-rose-100",
 };
 
-const kanbanColumns = ["sent", "opened", "draft", "won", "lost"];
+const kanbanColumns = ["draft", "sent", "opened", "won", "lost"];
 
 const getDealScore = (status: string) => {
   switch (status.toLowerCase()) {
@@ -55,7 +50,6 @@ export default function CRM() {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
-  const [view, setView] = useState<"table" | "kanban">("table");
 
   useEffect(() => {
     if (user) {
@@ -74,7 +68,6 @@ export default function CRM() {
       
       if (error) {
         console.error("CRM fetch error:", error);
-        toast.error("Failed to load pipeline data");
       } else {
         setProposals(data || []);
       }
@@ -98,7 +91,8 @@ export default function CRM() {
     }
   };
 
-  const deleteProposal = async (id: string) => {
+  const deleteProposal = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isFree) {
       toast.error('Free accounts cannot delete proposals. Upgrade to Pro to manage your proposals freely.');
       return;
@@ -114,6 +108,14 @@ export default function CRM() {
     ? Math.round((proposals.filter((p) => p.status === "won").length / proposals.length) * 100)
     : 0;
 
+  const pipelineValue = proposals.reduce((acc, p) => {
+    if (!["won", "lost"].includes(p.status) && p.budget && typeof p.budget === "string") {
+      const numeric = parseFloat(p.budget.replace(/[^0-9.]/g, ''));
+      return isNaN(numeric) ? acc : acc + numeric;
+    }
+    return acc;
+  }, 0);
+
   const loading = profileLoading || loadingProposals;
 
   if (isFree && !loading) {
@@ -123,18 +125,19 @@ export default function CRM() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md bg-white p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100"
+            className="max-w-md bg-white p-12 rounded-[40px] shadow-2xl border border-slate-100"
           >
-            <div className="text-6xl mb-6">📊</div>
-            <h2 className="font-display font-extrabold text-3xl text-slate-900 mb-4 leading-tight">Master Your Pipeline</h2>
-            <p className="text-slate-500 mb-8 leading-relaxed">
+            <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
+              <BarChart3 className="h-12 w-12 text-[#0033ff]" />
+            </div>
+            <h2 className="font-display font-black text-3xl text-slate-900 mb-4 leading-tight">Master Your Pipeline</h2>
+            <p className="text-slate-500 mb-8 leading-relaxed font-medium">
               The CRM Pipeline Dashboard is a Pro feature. 
               Track deals, see probability scores, and manage your sales flow with ease.
             </p>
             <Button 
-              size="lg"
-              className="w-full h-14 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)]"
-              onClick={() => navigate('/checkout')}
+               className="w-full h-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)] active:scale-95 transition-all"
+               onClick={() => navigate('/checkout')}
             >
               Unlock CRM with Pro
             </Button>
@@ -146,169 +149,138 @@ export default function CRM() {
 
   return (
     <AuthLayout>
-      <div className="p-6 lg:p-8 max-w-6xl mx-auto font-body">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <h1 className="font-display text-3xl font-bold">CRM Pipeline</h1>
-            <Button variant="hero" className="gap-2" onClick={() => navigate("/generate")}>
-              <Plus className="h-4 w-4" /> Add to Pipeline
-            </Button>
-          </div>
-        </motion.div>
+      <div className="p-6 lg:p-10 max-w-7xl mx-auto font-body space-y-10 min-h-screen">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              CRM Pipeline
+            </h1>
+            <p className="text-slate-500 font-medium mt-2">Manage your active deals and track conversions.</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex gap-4">
+             <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200 font-bold text-slate-600" onClick={() => navigate('/coach')}>
+               <Brain className="h-4 w-4 mr-2 text-purple-500" /> AI Coach
+             </Button>
+             <Button className="h-12 px-6 rounded-xl bg-[#0033ff] hover:bg-[#002be6] text-white font-bold shadow-lg shadow-blue-200 gap-2" onClick={() => navigate("/generate")}>
+               <Plus className="h-4 w-4" /> New Pitch
+             </Button>
+          </motion.div>
+        </header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Premium Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
+            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-[32px]" />)
           ) : (
-            [
-              { label: "Active Deals", value: totalActive, icon: BarChart3, color: "text-primary" },
-              { label: "Win Rate", value: `${winRate}%`, icon: TrendingUp, color: "text-success" },
-              { label: "Total Won", value: proposals.filter((p) => p.status === "won").length, icon: Check, color: "text-success" },
-              { label: "Total Lost", value: proposals.filter((p) => p.status === "lost").length, icon: X, color: "text-destructive" },
-            ].map((stat, i) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-xl border border-border bg-card p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{stat.label}</span>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <>
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Active Deals</span>
+                  <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-[#0033ff]" />
+                  </div>
                 </div>
-                <div className="font-display text-2xl font-bold text-card-foreground">{stat.value}</div>
-              </motion.div>
-            ))
+                <div className="text-4xl font-black text-slate-900">{totalActive}</div>
+              </div>
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Win Rate</span>
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  </div>
+                </div>
+                <div className="text-4xl font-black text-slate-900">{winRate}%</div>
+              </div>
+              <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400">Active Pipeline Value</span>
+                  <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-amber-500" />
+                  </div>
+                </div>
+                <div className="text-4xl font-black text-slate-900">${pipelineValue.toLocaleString()}</div>
+              </div>
+              <div className="bg-gradient-to-br from-[#08080F] to-[#1A1A2E] text-white p-8 rounded-[32px] shadow-xl relative overflow-hidden flex flex-col justify-center items-start cursor-pointer hover:scale-[1.02] transition-transform" onClick={() => navigate('/coach')}>
+                <Sparkles className="absolute top-4 right-4 h-24 w-24 text-purple-500 opacity-20" />
+                <span className="text-[10px] uppercase font-black tracking-[0.2em] text-purple-400 mb-2">Strategy</span>
+                <span className="text-xl font-black leading-tight max-w-[80%]">Run AI Analysis on pipeline</span>
+                <ArrowRightIcon className="mt-4 h-5 w-5 text-white/50" />
+              </div>
+            </>
           )}
         </div>
 
-        {/* View Toggle */}
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/50 w-fit mb-6">
-          {(["table", "kanban"] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors capitalize ${view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-              {v}
-            </button>
-          ))}
-        </div>
-
+        {/* Premium Kanban Board */}
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)}
+          <div className="space-y-4">
+            <Skeleton className="h-[400px] w-full rounded-[40px]" />
           </div>
         ) : proposals.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 rounded-xl border border-dashed border-border">
-            <BarChart3 className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-            <h2 className="font-display text-xl font-semibold mb-2">Your pipeline is empty</h2>
-            <p className="text-muted-foreground mb-6">Proposals you send appear here automatically.</p>
-            <Button variant="hero" onClick={() => navigate("/generate")} className="gap-2">
-              <Plus className="h-4 w-4" /> Create a Proposal
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white border-2 border-dashed border-slate-200 text-center py-32 rounded-[40px]">
+            <BarChart3 className="h-20 w-20 text-slate-300 mx-auto mb-6" />
+            <h2 className="font-display text-2xl font-black text-slate-900 mb-3">Your pipeline is empty</h2>
+            <p className="text-slate-500 font-medium mb-8 max-w-sm mx-auto">Generate a pitch to start tracking it automatically across your sales stages.</p>
+            <Button className="h-14 bg-[#0033ff] text-white px-8 rounded-2xl font-bold shadow-lg shadow-blue-200" onClick={() => navigate("/generate")}>
+               Create First Pitch
             </Button>
           </motion.div>
-        ) : view === "table" ? (
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {proposals.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium text-card-foreground">{p.client_name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{p.project_type || "—"}</TableCell>
-                    <TableCell className="text-sm">{p.budget || "TBD"}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-10 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${getDealScore(p.status) >= 75 ? 'bg-success' : 'bg-primary'}`} 
-                            style={{ width: `${getDealScore(p.status)}%` }} 
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-500">{getDealScore(p.status)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`capitalize px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || statusColors.draft}`}>
-                        {p.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/dashboard")}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {p.status !== "won" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:text-success" onClick={() => updateStatus(p.id, "won")}>
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {p.status !== "lost" && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => updateStatus(p.id, "lost")}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteProposal(p.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
         ) : (
-          /* Kanban View */
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {kanbanColumns.map((col) => {
               const items = proposals.filter((p) => p.status === col);
               return (
-                <div key={col} className="rounded-xl border border-border bg-card/50 p-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-display text-sm font-semibold capitalize text-card-foreground">{col}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[col]}`}>
+                <div key={col} className="bg-slate-50/50 rounded-[32px] border border-slate-100 p-4 flex flex-col gap-4">
+                  <div className="flex items-center justify-between px-2 pt-2">
+                    <h3 className="font-black text-sm uppercase tracking-wider text-slate-700">{col}</h3>
+                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${statusColors[col]}`}>
                       {items.length}
                     </span>
                   </div>
-                  <div className="space-y-2 min-h-[100px]">
+                  
+                  <div className="flex-1 space-y-4 min-h-[200px]">
                     {items.map((p) => (
                       <motion.div
                         key={p.id}
                         layout
-                        className="rounded-lg border border-border bg-card p-3 cursor-pointer hover:border-primary/30 transition-colors"
-                        onClick={() => navigate("/dashboard")}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] cursor-pointer hover:border-[#0033ff]/30 hover:shadow-[0_8px_30px_rgba(0,51,255,0.08)] transition-all group relative"
+                        onClick={() => navigate(`/proposals/${p.id}`)}
                       >
-                        <p className="font-display text-sm font-semibold text-card-foreground truncate">{p.client_name || "No client"}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.project_type || p.title}</p>
-                        {p.budget && (
-                          <span className="text-xs font-medium text-primary mt-1 inline-block">{p.budget}</span>
-                        )}
-                        <div className="flex items-center justify-between mt-2">
-                            <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden mr-2">
-                              <div className="h-full bg-[#7C6FF7]" style={{ width: `${getDealScore(p.status)}%` }} />
-                            </div>
-                            <span className="text-[9px] font-black text-slate-400">{getDealScore(p.status)}%</span>
+                        <p className="font-bold text-slate-900 text-sm leading-tight mb-1 truncate pr-8">{p.client_name || "Prospect"}</p>
+                        <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{p.project_type || p.title}</p>
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-black text-slate-900">{p.budget || "TBD"}</span>
+                          <span className="text-[10px] font-bold text-slate-400">{new Date(p.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}</span>
                         </div>
-                        <div className="flex gap-1 mt-2">
-                          {col !== "won" && (
-                            <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "won"); }} className="text-xs text-success hover:underline">Won</button>
-                          )}
-                          {col !== "lost" && (
-                            <button onClick={(e) => { e.stopPropagation(); updateStatus(p.id, "lost"); }} className="text-xs text-destructive hover:underline">Lost</button>
-                          )}
+                        
+                        {/* Probability Score */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden mr-3">
+                              <div className={`h-full ${getDealScore(col) >= 75 ? 'bg-emerald-500' : 'bg-[#0033ff]'}`} style={{ width: `${getDealScore(col)}%` }} />
+                            </div>
+                            <span className="text-[10px] font-black tracking-widest text-[#0033ff]">{getDealScore(col)}%</span>
+                        </div>
+
+                        {/* Quick Actions overlay */}
+                        <div className="absolute top-4 right-4 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                           {col !== "won" && (
+                             <button onClick={() => updateStatus(p.id, "won")} className="h-7 w-7 bg-white border border-emerald-100 rounded-lg flex items-center justify-center hover:bg-emerald-50 text-emerald-500 shadow-sm transition-colors" title="Mark Won">
+                               <CheckCircle2 className="h-3.5 w-3.5" />
+                             </button>
+                           )}
+                           {col !== "lost" && (
+                             <button onClick={() => updateStatus(p.id, "lost")} className="h-7 w-7 bg-white border border-rose-100 rounded-lg flex items-center justify-center hover:bg-rose-50 text-rose-500 shadow-sm transition-colors" title="Mark Lost">
+                               <XCircle className="h-3.5 w-3.5" />
+                             </button>
+                           )}
+                           <button onClick={(e) => deleteProposal(p.id, e)} className="h-7 w-7 bg-white border border-slate-100 rounded-lg flex items-center justify-center hover:bg-red-50 text-red-500 shadow-sm transition-colors" title="Delete">
+                             <Trash2 className="h-3.5 w-3.5" />
+                           </button>
                         </div>
                       </motion.div>
                     ))}
-                    {items.length === 0 && (
-                      <p className="text-xs text-muted-foreground text-center py-4">No items</p>
-                    )}
                   </div>
                 </div>
               );
@@ -318,4 +290,10 @@ export default function CRM() {
       </div>
     </AuthLayout>
   );
+}
+
+function ArrowRightIcon(props: any) {
+  return (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+  )
 }

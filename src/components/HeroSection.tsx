@@ -100,44 +100,121 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1, duration: 0.6 }}
-          className="mt-16 max-w-5xl mx-auto relative px-4"
+          className="mt-20 max-w-5xl mx-auto relative px-4 flex items-center justify-center min-h-[400px] lg:min-h-[500px]"
         >
-          {/* Main Dashboard Image */}
-          <div className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/30">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-destructive/40" />
-                <div className="w-3 h-3 rounded-full bg-warning/40" />
-                <div className="w-3 h-3 rounded-full bg-success/40" />
-              </div>
-              <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md bg-background text-xs font-mono text-muted-foreground border border-border">
-                  pitchnw.app/dashboard
-                </div>
-              </div>
-            </div>
-            <img 
-              src={dashboardMockup} 
-              alt="Dashboard Preview" 
-              className="w-full h-auto object-cover aspect-[16/10] sm:aspect-auto"
-            />
+          {/* Background Ambient Glow */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-[300px] h-[300px] bg-primary/20 rounded-full blur-[100px] animate-pulse" />
           </div>
 
-          {/* Overlapping Proposal Preview */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.3, duration: 0.8 }}
-            className="absolute -bottom-6 -right-2 sm:-right-8 w-48 sm:w-72 rounded-xl border border-border bg-background p-2 shadow-2xl hidden xs:block"
-          >
-            <div className="rounded-lg overflow-hidden border border-border">
-              <img 
-                src={proposalPreview} 
-                alt="Proposal Template Preview" 
-                className="w-full h-auto"
-              />
-            </div>
-          </motion.div>
+          <div className="relative z-10 w-full max-w-4xl flex items-center justify-center gap-6 flex-wrap">
+            {/* Floating Glass Card 1 */}
+            <motion.div
+              animate={{ y: [0, -15, 0], rotate: [ -2, -4, -2 ] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="w-72 bg-white/10 backdrop-blur-3xl border border-white/20 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl p-6 relative overflow-hidden"
+              style={{
+                 backgroundImage: "linear-gradient(to bottom right, rgba(255,255,255,0.2), rgba(255,255,255,0.05))"
+              }}
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-30">
+                <div className="h-20 w-20 rounded-full bg-blue-400 blur-2xl" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-400 to-primary flex items-center justify-center shadow-lg">
+                    <span className="text-white font-black text-xl">S</span>
+                  </div>
+                  <div>
+                    <div className="h-3 w-20 bg-slate-300 rounded-full mb-1" />
+                    <div className="h-2 w-12 bg-slate-200 rounded-full" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-slate-200/50 rounded-full" />
+                  <div className="h-2 w-[85%] bg-slate-200/40 rounded-full" />
+                  <div className="h-2 w-[60%] bg-slate-200/30 rounded-full" />
+                </div>
+                <div className="pt-2">
+                  <div className="flex items-center justify-between">
+                     <div className="h-6 w-24 rounded-full bg-emerald-500/20 border border-emerald-500/30 font-black text-[10px] uppercase text-emerald-500 flex items-center justify-center tracking-widest">
+                       Deal Won
+                     </div>
+                     <span className="font-black text-slate-700">$12,000</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Floating Glass Card 2 (Center highlight) */}
+            <motion.div
+              animate={{ y: [-10, 10, -10], rotate: [ 0, 2, 0 ] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="w-80 bg-white/20 backdrop-blur-3xl border border-white/40 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] rounded-[40px] p-8 relative overflow-hidden z-20 -mt-10"
+              style={{
+                 backgroundImage: "linear-gradient(to bottom right, rgba(255,255,255,0.4), rgba(255,255,255,0.1))"
+              }}
+            >
+              <div className="absolute -top-10 -left-10 p-4 opacity-40">
+                <div className="h-32 w-32 rounded-full bg-purple-500 blur-3xl" />
+              </div>
+              <div className="relative z-10 space-y-6">
+                <div className="flex items-center justify-between">
+                   <div className="px-3 py-1 bg-white/50 border border-white rounded-full text-[9px] font-black uppercase tracking-widest text-slate-800 shadow-sm">
+                      Pitch Setup
+                   </div>
+                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+                </div>
+                <div>
+                   <h3 className="text-2xl font-black font-display tracking-tight text-slate-900 leading-none mb-2">Acme Corp Redesign</h3>
+                   <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Generating Proposal...</p>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-2 w-[100%] bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" />
+                  <div className="h-2 w-[90%] bg-slate-200/80 rounded-full" />
+                  <div className="h-2 w-[70%] bg-slate-200/80 rounded-full" />
+                </div>
+                <div className="flex gap-2 pt-2">
+                   <div className="h-10 flex-1 rounded-2xl bg-white/60 flex items-center justify-center font-black text-xs text-slate-700 shadow-sm backdrop-blur-sm">Edit</div>
+                   <div className="h-10 flex-1 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center font-black text-xs text-white shadow-lg">Send</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Floating Glass Card 3 */}
+            <motion.div
+              animate={{ y: [0, -20, 0], rotate: [ 2, 4, 2 ] }}
+              transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              className="w-72 bg-white/10 backdrop-blur-3xl border border-white/20 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] rounded-3xl p-6 relative overflow-hidden"
+              style={{
+                 backgroundImage: "linear-gradient(to bottom right, rgba(255,255,255,0.2), rgba(255,255,255,0.05))"
+              }}
+            >
+              <div className="absolute bottom-0 left-0 p-4 opacity-30">
+                <div className="h-24 w-24 rounded-full bg-amber-400 blur-2xl" />
+              </div>
+              <div className="relative z-10 space-y-4">
+                 <div className="flex gap-3 items-center">
+                    <div className="h-8 w-8 rounded-full border border-amber-200 flex items-center justify-center bg-white/50">
+                       <span className="text-[14px]">🔥</span>
+                    </div>
+                    <div>
+                      <div className="h-2 w-16 bg-slate-300 rounded-full mb-1.5" />
+                      <div className="h-1.5 w-10 bg-slate-200 rounded-full" />
+                    </div>
+                 </div>
+                 <div className="bg-white/40 border border-white/50 rounded-xl p-4 mt-2">
+                    <div className="flex justify-between items-center mb-2">
+                       <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Client View</span>
+                       <span className="text-xs font-bold text-amber-600">Active</span>
+                    </div>
+                    <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                       <div className="h-full bg-amber-500 w-[65%]" />
+                    </div>
+                 </div>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
     </section>

@@ -172,6 +172,10 @@ export default async function handler(req: Req, res: Res) {
             product_cart: [{ product_id: productId, quantity: 1 }],
             customer: customer?.email ? { email: customer.email, name: customer.name } : undefined,
             return_url,
+            metadata: {
+                user_id: userId,
+                plan: "pro",
+            },
         });
 
         // Return hosted checkout URL and session id

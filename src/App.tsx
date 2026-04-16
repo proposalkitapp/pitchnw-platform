@@ -24,6 +24,7 @@ import Testimonials from "./pages/Testimonials.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import PitchAnalysis from "./pages/PitchAnalysis.tsx";
+import WinRateCoach from "./pages/WinRateCoach.tsx";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +50,7 @@ const App = () => (
             <Route path="/p/:slug" element={<ClientPortal />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/proposals" element={<Dashboard />} /> {/* For now, map to dashboard list */}
-            <Route path="/coach" element={<Dashboard />} /> {/* For now, map to dashboard coach widgets */}
+            <Route path="/coach" element={<WinRateCoach />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/testimonials" element={<Testimonials />} />
