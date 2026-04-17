@@ -11,17 +11,20 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
   ResponsiveContainer 
 } from 'recharts';
+import { useTheme } from "@/hooks/use-theme";
 import { 
   FileText, Plus, Trash2, Eye, Download, 
   BarChart3, TrendingUp, Link2, 
   Lock, Brain, Sparkles, Zap, ArrowRight,
-  BarChart2, Target, DollarSign, Clock, CheckCircle2
+  BarChart2, Target, DollarSign, Clock, CheckCircle2,
+  Moon, Sun
 } from "lucide-react";
 import { toast } from "sonner";
 import { exportProposalAsPdf } from "@/lib/export-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ProposalRenderer } from "@/components/ProposalRenderer";
+import { LiquidGlassToggle } from "@/components/LiquidGlassToggle";
 
 interface Proposal {
   id: string;
@@ -62,6 +65,8 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, []);
 
+  const { isDark, toggle: toggleTheme } = useTheme();
+
   const fetchProposals = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -91,8 +96,8 @@ export default function Dashboard() {
   }, [session, authLoading]);
 
   const plan = profile?.plan || 'free';
-  const isPro = plan === 'pro';
-  const isFree = plan !== 'pro';
+  const isFreelancer = plan === 'pro';
+  const isBasic = plan !== 'pro';
   const displayName = profile?.display_name?.split(" ")[0] || profile?.username || "there";
   const usedCount = profile?.proposals_used || 0;
 
@@ -111,8 +116,8 @@ export default function Dashboard() {
   }, [proposals]);
 
   const deleteProposal = async (id: string) => {
-    if (!isPro) {
-      toast.error('Upgrade to Pro to delete proposals.');
+    if (!isFreelancer) {
+      toast.error('Upgrade to Freelancer to delete proposals.');
       return;
     }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
@@ -211,9 +216,32 @@ export default function Dashboard() {
   if (isPro) {
     return (
       <AuthLayout>
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen font-body space-y-10">
-          <AnimatePresence mode="wait">
-            {!selectedProposal ? (
+        <div className="relative min-h-screen overflow-hidden">
+          {/* Liquid Waves Background */}
+          <div className="absolute inset-0 pointer-events-none z-0">
+            <motion.div 
+              animate={{ 
+                x: [0, 50, 0],
+                y: [0, 30, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+              className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-400/10 blur-[120px]" 
+            />
+            <motion.div 
+              animate={{ 
+                x: [0, -40, 0],
+                y: [0, 50, 0],
+                scale: [1.1, 1, 1.1]
+              }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-400/10 blur-[100px]" 
+            />
+          </div>
+
+          <div className="relative z-10 p-6 lg:p-10 max-w-[1600px] mx-auto space-y-10">
+            <AnimatePresence mode="wait">
+              {!selectedProposal ? (
               <motion.div 
                 key="pro-dashboard"
                 initial={{ opacity: 0, y: 15 }} 
@@ -221,25 +249,26 @@ export default function Dashboard() {
                 className="space-y-10"
               >
                 {/* Pro Header */}
-                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-100">
+                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="bg-purple-600 text-[10px] font-black uppercase tracking-widest text-white px-2.5 py-1 rounded-md shadow-lg shadow-purple-200">
-                        Pro Command Center
+                        Freelancer Hub
                       </div>
                       <Sparkles className="h-4 w-4 text-purple-500 animate-pulse" />
                     </div>
-                    <h1 className="font-display text-5xl font-black text-slate-900 tracking-tighter">
+                    <h1 className="font-display text-5xl font-black text-foreground tracking-tighter">
                       {greeting}, {displayName}
                     </h1>
-                    <p className="text-slate-500 font-medium text-lg">Your pitch engine is running at peak performance.</p>
+                    <p className="text-muted-foreground font-medium text-lg">Your pitch engine is running at peak performance.</p>
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all" onClick={() => navigate('/settings')}>
+                    <LiquidGlassToggle />
+                    <Button variant="outline" className="h-14 px-8 rounded-2xl border-border font-bold text-muted-foreground hover:bg-muted/50 transition-all" onClick={() => navigate('/settings')}>
                       Setup Branding
                     </Button>
-                    <Button className="h-14 px-10 rounded-2xl bg-[#0033ff] text-white font-black hover:bg-[#002be6] shadow-2xl shadow-blue-300 gap-2 active:scale-95 transition-all" onClick={() => navigate('/generate')}>
+                    <Button className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black hover:opacity-90 shadow-2xl shadow-primary/20 gap-2 active:scale-95 transition-all" onClick={() => navigate('/generate')}>
                       <Plus className="h-5 w-5 stroke-[3px]" /> Create New Pitch
                     </Button>
                   </div>
@@ -253,7 +282,7 @@ export default function Dashboard() {
                     
                     {/* Primary Stats Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.03)] group hover:border-blue-200 transition-all">
+                      <div className="bg-card p-8 group transition-all">
                         <div className="flex items-center justify-between mb-6">
                           <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Total Pipeline</span>
                           <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
@@ -266,7 +295,7 @@ export default function Dashboard() {
                         <p className="text-slate-400 text-xs mt-4 font-bold">+12.5% from last month</p>
                       </div>
 
-                      <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.03)] group hover:border-emerald-200 transition-all">
+                      <div className="bg-card/50 backdrop-blur-xl border border-white/10 p-8 rounded-[32px] group hover:border-emerald-200 transition-all">
                         <div className="flex items-center justify-between mb-6">
                           <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Winning Rate</span>
                           <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
@@ -281,7 +310,7 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      <div className="bg-gradient-to-br from-[#08080F] to-[#25254D] p-8 rounded-[40px] shadow-2xl relative overflow-hidden group cursor-pointer" onClick={() => navigate('/coach')}>
+                      <div className="bg-gradient-to-br from-[#08080F] to-[#25254D] p-8 rounded-[32px] shadow-2xl relative overflow-hidden group cursor-pointer" onClick={() => navigate('/coach')}>
                         <div className="relative z-10 h-full flex flex-col justify-between">
                            <div>
                               <div className="flex items-center gap-2 mb-4">
@@ -299,7 +328,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Chart & Recent Activity Container */}
-                    <div className="bg-white rounded-[48px] border border-slate-100 shadow-[0_30px_90px_rgba(0,0,0,0.04)] overflow-hidden">
+                    <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden">
                       <div className="p-10 flex flex-wrap items-center justify-between gap-6 border-b border-slate-50">
                         <h3 className="text-2xl font-black text-slate-900">Performance Trends</h3>
                         <div className="flex gap-2">
@@ -376,7 +405,7 @@ export default function Dashboard() {
                   {/* Sidebar Panel */}
                   <div className="space-y-8">
                      {/* Pro Quick Actions Card */}
-                     <div className="bg-[#0033ff] p-10 rounded-[48px] text-white shadow-2xl shadow-blue-200 space-y-8 relative overflow-hidden">
+                     <div className="bg-[#0033ff] p-10 rounded-[32px] text-white shadow-2xl shadow-blue-200 space-y-8 relative overflow-hidden">
                         <Zap className="absolute -top-6 -right-6 h-32 w-32 opacity-10" />
                         <h4 className="text-xl font-black relative z-10">Command Center</h4>
                         <div className="space-y-4 relative z-10">
@@ -393,7 +422,7 @@ export default function Dashboard() {
                      </div>
 
                      {/* Intelligence Feed */}
-                     <div className="bg-white p-10 rounded-[48px] border border-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.03)] space-y-8">
+                     <div className="bg-card/50 backdrop-blur-xl border border-white/10 p-10 rounded-[32px] space-y-8">
                         <div className="flex items-center justify-between">
                            <h4 className="text-lg font-black text-slate-900">Intelligence</h4>
                            <Brain className="h-5 w-5 text-purple-500" />
@@ -469,16 +498,40 @@ export default function Dashboard() {
             )}
           </AnimatePresence>
         </div>
-      </AuthLayout>
+      </div>
+    </AuthLayout>
     );
   }
 
-  // Free Version of Dashboard (Refined to encourage Pro)
+  // Basic Version of Dashboard
   return (
     <AuthLayout>
-      <div className="p-6 lg:p-10 max-w-6xl mx-auto min-h-screen font-body space-y-10">
-        <AnimatePresence mode="wait">
-          {!selectedProposal ? (
+      <div className="relative min-h-screen overflow-hidden">
+        {/* Liquid Waves Background */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <motion.div 
+            animate={{ 
+              x: [0, 60, 0],
+              y: [0, -40, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] rounded-full bg-blue-300/10 blur-[100px]" 
+          />
+          <motion.div 
+            animate={{ 
+              x: [0, -70, 0],
+              y: [0, 30, 0],
+              scale: [1.2, 1, 1.2]
+            }}
+            transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-purple-300/10 blur-[120px]" 
+          />
+        </div>
+
+        <div className="relative z-10 p-6 lg:p-10 max-w-6xl mx-auto space-y-10">
+          <AnimatePresence mode="wait">
+            {!selectedProposal ? (
             <motion.div 
               key="free-dashboard"
               initial={{ opacity: 0, y: 10 }} 
@@ -487,16 +540,19 @@ export default function Dashboard() {
             >
               <header className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <h1 className="font-display text-4xl font-black text-slate-900 tracking-tight">
+                  <h1 className="font-display text-4xl font-black text-foreground tracking-tight">
                     {greeting}, {displayName} 👋
                   </h1>
-                  <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 flex items-center justify-between gap-6 shadow-sm shadow-amber-100/50">
-                    <p className="text-sm font-bold text-amber-700 flex items-center gap-2">
-                      <Lock className="h-3.5 w-3.5" /> Basic plan · {3 - Math.min(usedCount, 3)} left
-                    </p>
-                    <button onClick={() => navigate('/checkout')} className="text-sm font-black text-amber-900 hover:scale-105 transition-transform">
-                      Upgrade & Unlock →
-                    </button>
+                  <div className="flex items-center gap-4">
+                    <LiquidGlassToggle />
+                    <div className="bg-amber-500/10 border border-amber-500/20 backdrop-blur-md rounded-2xl px-5 py-3 flex items-center justify-between gap-6 shadow-sm">
+                      <p className="text-sm font-bold text-amber-600 flex items-center gap-2">
+                        <Lock className="h-3.5 w-3.5" /> Basic plan · {3 - Math.min(usedCount, 3)} left
+                      </p>
+                      <button onClick={() => navigate('/checkout')} className="text-sm font-black text-amber-700 hover:scale-105 transition-transform">
+                        Get Freelancer Access →
+                      </button>
+                    </div>
                   </div>
                 </div>
               </header>
@@ -529,9 +585,9 @@ export default function Dashboard() {
                   <Sparkles className="absolute top-4 right-4 h-12 w-12 text-blue-500 opacity-20" />
                   <Zap className="h-8 w-8 opacity-40" />
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">PRO ACCESS</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">FREELANCER</p>
                     <h3 className="text-xl font-black mb-4">Elite Engine</h3>
-                    <Button className="w-full h-11 bg-white text-black hover:bg-slate-50 font-bold border-none shadow-none">Go Pro</Button>
+                    <Button className="w-full h-11 bg-white text-black hover:bg-slate-50 font-bold border-none shadow-none">Go Freelancer</Button>
                   </div>
                 </div>
               </div>
@@ -541,7 +597,7 @@ export default function Dashboard() {
                 <Button className="h-14 px-8 rounded-2xl bg-[#0033ff] text-white font-bold hover:bg-[#002be6] shadow-lg shadow-blue-200 gap-2 active:scale-95 transition-all" disabled={usedCount >= 3} onClick={() => navigate('/generate')}>
                   <Plus className="h-4 w-4" /> + New Pitch
                 </Button>
-                <Button variant="outline" className="h-14 px-8 rounded-2xl border-slate-100 font-bold text-slate-600 hover:bg-slate-50" onClick={() => navigate('/marketplace')}>Browse Templates</Button>
+                <Button variant="outline" disabled className="h-14 px-8 rounded-2xl border-slate-100 font-bold text-slate-400 opacity-50 cursor-not-allowed">Templates (Freelancer only)</Button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -601,12 +657,12 @@ export default function Dashboard() {
                       <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center">
                          <Sparkles className="h-6 w-6 text-blue-400" />
                       </div>
-                      <h4 className="text-xl font-black leading-tight">Unlock AI Strategy & CRM Analytics</h4>
+                      <h4 className="text-xl font-black leading-tight">Unlock AI Strategy & Marketplace</h4>
                       <p className="text-slate-400 text-sm leading-relaxed">
-                        Upgrade to Pro to manage your pipeline, get AI closing advice, and see exactly why you're winning deals.
+                        Upgrade to Freelancer to manage your pipeline, get AI closing advice, and see exactly why you're winning deals.
                       </p>
                       <Button className="w-full h-14 bg-white text-black hover:bg-slate-100 font-bold rounded-2xl" onClick={() => navigate('/checkout')}>
-                         See Pro Features
+                         Unlock Freelancer Plan
                       </Button>
                    </div>
                 </div>
@@ -638,15 +694,17 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
       </div>
-    </AuthLayout>
+    </div>
+  </AuthLayout>
   );
 }
 
-function Card({ label, children, icon: Icon, color = "text-slate-900", iconColor = "text-slate-400" }: any) {
+
+function Card({ label, children, icon: Icon, color = "text-foreground", iconColor = "text-muted-foreground" }: any) {
   return (
-    <div className="bg-white border border-slate-100 rounded-[32px] p-8 shadow-sm">
+    <div className="bg-card p-8 group">
        <div className="flex items-center justify-between mb-6">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
           {Icon && <Icon className={`h-5 w-5 ${iconColor} opacity-50`} />}
        </div>
        <div className={color}>{children}</div>

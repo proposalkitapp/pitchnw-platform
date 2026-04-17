@@ -73,7 +73,7 @@ export default function CRM() {
     }
   };
 
-  const isFree = profile?.plan !== 'pro';
+  const isFreelancer = profile?.plan === 'pro';
 
   const updateStatus = async (id: string, status: string) => {
     const originalProposals = [...proposals];
@@ -102,28 +102,34 @@ export default function CRM() {
 
   const loading = profileLoading || loadingProposals;
 
-  if (isFree && !loading) {
+  if (!isFreelancer && !loading) {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 font-body">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md bg-white p-12 rounded-[40px] shadow-2xl border border-slate-100"
+            className="max-w-md bg-card p-12 rounded-[40px] shadow-2xl relative overflow-hidden"
           >
-            <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
-              <BarChart3 className="h-12 w-12 text-[#0033ff]" />
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+               <BarChart3 className="h-24 w-24 text-primary" />
             </div>
-            <h2 className="font-display font-black text-3xl text-slate-900 mb-4 leading-tight">Master Your Pipeline</h2>
-            <p className="text-slate-500 mb-8 leading-relaxed font-medium">
-              The CRM Pipeline Dashboard is a Pro feature. 
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <BarChart3 className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="font-display font-black text-3xl text-foreground mb-4">Master Your Pipeline</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
+              The CRM Pipeline Dashboard is a <span className="text-primary font-bold">Freelancer</span> feature. 
               Track deals, see probability scores, and manage your sales flow with ease.
             </p>
             <Button 
-               className="w-full h-14 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)] active:scale-95 transition-all"
+               className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all"
                onClick={() => navigate('/checkout')}
             >
-              Unlock CRM with Pro
+              Get Freelancer Access
+            </Button>
+            <Button variant="ghost" className="mt-4 text-muted-foreground font-bold" onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
             </Button>
           </motion.div>
         </div>

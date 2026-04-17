@@ -84,7 +84,7 @@ export default function Checkout() {
   };
 
   const busy = loading !== null;
-  const isPro = currentPlan === "pro" && subscriptionStatus === "active";
+  const isFreelancer = currentPlan === "pro" && subscriptionStatus === "active";
 
   if (loadingProfile) {
     return (
@@ -94,13 +94,13 @@ export default function Checkout() {
     );
   }
 
-  // Already on Pro — redirect to settings
-  if (isPro) {
+  // Already on Freelancer — redirect to settings
+  if (isFreelancer) {
     return (
       <div className="min-h-screen bg-[#08080F] font-body text-foreground flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
           <img src={pitchnwLogo} alt="Pitchnw" className="h-20 w-auto object-contain mx-auto mb-6" />
-          <h1 className="font-display font-extrabold text-2xl mb-3">You're already on Pro!</h1>
+          <h1 className="font-display font-extrabold text-2xl mb-3">You're already a Freelancer!</h1>
           <p className="text-muted-foreground mb-6 text-sm">You have full access to all features.</p>
           <Button variant="hero" onClick={() => navigate("/dashboard")}>
             Go to Dashboard
@@ -119,9 +119,9 @@ export default function Checkout() {
           className="text-center mb-10"
         >
           <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
-          <h1 className="font-display font-extrabold text-4xl text-center mb-3">Upgrade to Pro</h1>
+          <h1 className="font-display font-extrabold text-4xl text-center mb-3">Unlock Freelancer</h1>
           <p className="text-muted-foreground text-center max-w-lg mx-auto">
-            Start your 3-day free trial. Cancel anytime.
+            Everything you need to build, track, and win deals.
           </p>
         </motion.div>
 
@@ -135,12 +135,12 @@ export default function Checkout() {
           <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1">
             3-DAY FREE TRIAL
           </span>
-          <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground mt-4">Pro</p>
+          <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground mt-4">Freelancer Plan</p>
           <div className="mt-2 mb-4 flex items-baseline gap-1">
             <span className="font-display font-extrabold text-5xl text-card-foreground">$2.99</span>
             <span className="text-muted-foreground text-sm">/month</span>
           </div>
-          <p className="text-sm text-muted-foreground mb-6">Unlimited proposals. No limits. Full access.</p>
+          <p className="text-sm text-muted-foreground mb-6">Unlimited proposals, templates, and analytics.</p>
           <ul className="space-y-3 mb-8 flex-1 text-sm text-muted-foreground">
             {[
               "Unlimited AI proposal generation",

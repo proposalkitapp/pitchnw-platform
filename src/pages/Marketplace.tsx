@@ -7,12 +7,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Star, ArrowRight, Search } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { templates, categories } from "@/lib/templates";
+import { useProfile } from "@/hooks/use-profile";
+import { Lock } from "lucide-react";
 
 export default function Marketplace() {
+  const { data: profile, isLoading } = useProfile();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
+
+  const isFreelancer = profile?.plan === 'pro';
+
+  if (isLoading) return null;
+
+  if (!isFreelancer) {
+    return (
+      <AuthLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md bg-card p-12 rounded-[40px] shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+               <Lock className="h-24 w-24 text-primary" />
+            </div>
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <Star className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="font-display font-black text-3xl text-foreground mb-4">Elite Marketplace</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
+              Access 8+ industry-winning proposal templates designed by top closure specialists. Available exclusively on the <span className="text-primary font-bold text-lg">Freelancer</span> plan.
+            </p>
+            <Button 
+               className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all"
+               onClick={() => navigate('/checkout')}
+             >
+              Upgrade to Freelancer
+            </Button>
+            <Button variant="ghost" className="mt-4 text-muted-foreground font-bold" onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
+            </Button>
+          </motion.div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   const filtered = templates.filter((t) => {
     const matchesCategory = activeCategory === "all" || t.categorySlug === activeCategory;

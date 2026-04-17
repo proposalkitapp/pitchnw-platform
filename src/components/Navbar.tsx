@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import pitchnwLogo from "../assets/pitchnw-logo.png";
+import { LiquidGlassToggle } from "./LiquidGlassToggle";
 
 const publicNavLinks = [
   { label: "Features", href: "#features" },
@@ -20,7 +21,7 @@ const publicNavLinks = [
 const authNavLinks = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "New Proposal", path: "/generate", icon: FileText },
-  { label: "Settings", path: "/settings", icon: Settings },
+  { label: "Account", path: "/settings", icon: Settings },
 ];
 
 export function Navbar() {
@@ -133,9 +134,7 @@ export function Navbar() {
         )}
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={toggle} className="text-muted-foreground h-9 w-9">
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
+          <LiquidGlassToggle />
 
           {user ? (
             <Button
@@ -219,7 +218,7 @@ export function Navbar() {
                     </a>
                   ))}
                   <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}>
-                    Get Started (Basic)
+                    Get Started (Free)
                   </Button>
                 </>
               )}

@@ -62,7 +62,7 @@ export default function Settings() {
         setUsername(data.username || "");
         setCompanyName(data.company_name || "");
         setSignatureData(data.signature_data || null);
-        // null = free; 'pro' = paid
+        // null = free; 'pro' = paid (Freelancer)
         setCurrentPlan(data.plan ?? null);
         setProposalsUsed(data.proposals_used || 0);
         setBrandName(data.brand_name || "");
@@ -178,18 +178,18 @@ export default function Settings() {
 
   // Cancellation logic removed
 
-  const isPro = currentPlan === "pro";
-  const isFree = !currentPlan;
+  const isFreelancer = currentPlan === "pro";
+  const isBasic = !currentPlan;
 
   const trialActive =
     trialEndsAt &&
     new Date(trialEndsAt) > new Date() &&
-    isFree &&
+    isBasic &&
     subscriptionStatus !== "active";
   const trialExpired =
     trialEndsAt &&
     new Date(trialEndsAt) <= new Date() &&
-    isFree;
+    isBasic;
   const trialDaysLeft = trialActive
     ? Math.max(0, Math.ceil((new Date(trialEndsAt!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -501,9 +501,7 @@ export default function Settings() {
                 </p>
 
                 {/* Pro — active */}
-                {isPro && (
-                  <div className="space-y-1 pt-2">
-                    <p className="font-medium text-foreground">💜 Pro Plan · Active</p>
+                    <p className="font-medium text-foreground">💜 Freelancer Plan · Active</p>
                     <p className="text-sm text-muted-foreground">You have full access to all premium features.</p>
                     <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -527,7 +525,7 @@ export default function Settings() {
 
 
                 {/* Free plan — no trial */}
-                {isFree && subscriptionStatus !== "active" && !trialActive && !trialExpired && (
+                {isBasic && subscriptionStatus !== "active" && !trialActive && !trialExpired && (
                   <div className="pt-2 space-y-1">
                     <p className="font-medium text-foreground">Basic Plan</p>
                     <p className="text-sm text-muted-foreground">
@@ -538,12 +536,12 @@ export default function Settings() {
                 )}
               </div>
 
-              {/* Pro plan card — shown only when user is not already on Pro */}
-              {!isPro && (
+              {/* Freelancer plan card — shown only when user is not already on Freelancer */}
+              {!isFreelancer && (
                 <div className="rounded-xl border-2 border-primary bg-gradient-to-br from-primary/10 via-card/90 to-card/80 p-6 shadow-[0_0_30px_-10px_hsl(var(--primary))]">
-                  <h3 className="font-display text-xl font-bold text-card-foreground mb-1">Pro Plan</h3>
+                  <h3 className="font-display text-xl font-bold text-card-foreground mb-1">Freelancer Plan</h3>
                   <div className="mt-1 mb-4">
-                    <span className="font-display text-3xl font-extrabold text-card-foreground">Pro access</span>
+                    <span className="font-display text-3xl font-extrabold text-card-foreground">Full access</span>
                   </div>
                   <ul className="space-y-2 mb-6">
                     {[
@@ -565,7 +563,7 @@ export default function Settings() {
                     className="w-full gap-2"
                     onClick={() => navigate("/checkout")}
                   >
-                    Upgrade to Pro now
+                    Upgrade to Freelancer
                   </Button>
                 </div>
               )}

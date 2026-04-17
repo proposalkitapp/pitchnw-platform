@@ -6,53 +6,65 @@
 
 @layer base {
   :root {
-    --background: 240 10% 96%;
+    --background: 210 80% 98%;
     --foreground: 240 10% 6%;
-    --card: 0 0% 100%;
+    --card: 0 0% 100% / 0.5;
     --card-foreground: 240 10% 6%;
-    --popover: 0 0% 100%;
+    --popover: 0 0% 100% / 0.8;
     --popover-foreground: 240 10% 6%;
     --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 90%;
+    --secondary: 210 50% 90% / 0.5;
     --secondary-foreground: 240 10% 10%;
-    --muted: 240 5% 92%;
+    --muted: 210 50% 92% / 0.5;
     --muted-foreground: 215 16% 47%;
-    --accent: 239 84% 67%;
+    --accent: 265 84% 67%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
-    --border: 240 6% 85%;
-    --input: 240 6% 85%;
+    --border: 210 20% 85% / 0.5;
+    --input: 210 20% 88%;
     --ring: 239 84% 67%;
-    --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
+    --radius: 2rem;
+    --sidebar-background: 210 40% 98% / 0.8;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 210 30% 95%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-border: 210 20% 91% / 0.5;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    --surface: 0 0% 100%;
+    --surface: 210 50% 98%;
     --surface-foreground: 240 10% 6%;
-    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(260 84% 60%));
-    --gradient-hero: linear-gradient(180deg, hsl(240 10% 96%) 0%, hsl(240 10% 92%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(280 84% 70%));
+    --gradient-hero: linear-gradient(180deg, hsl(210 100% 98%) 0%, hsl(260 100% 98%) 100%);
     --shadow-glow: 0 0 60px -12px hsl(239 84% 67% / 0.2);
-    /* Claymorphism Variables */
+    
+    /* New Concept Colors - Light (Creamy Blue & Purple) */
+    --creamy-blue: 200 100% 95%;
+    --creamy-purple: 280 80% 92%;
+    --glass-wave: radial-gradient(at 0% 0%, hsla(200, 100%, 92%, 0.8) 0, transparent 50%), 
+                  radial-gradient(at 100% 100%, hsla(280, 80% , 95%, 0.8) 0, transparent 50%);
+    
+    /* Liquid Glass Variables */
+    --glass-blur: 16px;
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-bg: rgba(255, 255, 255, 0.2);
+    
+    /* Enhanced Claymorphism - Light (Creamy) */
     --clay-shadow: 
-      8px 8px 16px rgba(0, 0, 0, 0.06), 
-      -8px -8px 16px rgba(255, 255, 255, 0.8), 
-      inset 2px 2px 4px rgba(255, 255, 255, 0.9), 
-      inset -2px -2px 4px rgba(0, 0, 0, 0.04);
+      12px 12px 24px rgba(174, 184, 214, 0.2), 
+      -12px -12px 24px rgba(255, 255, 255, 0.9), 
+      inset 4px 4px 8px rgba(255, 255, 255, 0.8), 
+      inset -4px -4px 8px rgba(174, 184, 214, 0.1);
     --clay-shadow-hover: 
-      12px 12px 20px rgba(0, 0, 0, 0.06), 
-      -12px -12px 20px rgba(255, 255, 255, 0.8), 
-      inset 2px 2px 4px rgba(255, 255, 255, 0.9), 
-      inset -2px -2px 4px rgba(0, 0, 0, 0.02);
+      16px 16px 32px rgba(174, 184, 214, 0.25), 
+      -16px -16px 32px rgba(255, 255, 255, 1), 
+      inset 4px 4px 8px rgba(255, 255, 255, 0.8), 
+      inset -4px -4px 8px rgba(174, 184, 214, 0.05);
     --clay-shadow-active: 
       inset 4px 4px 8px rgba(0, 0, 0, 0.06), 
       inset -4px -4px 8px rgba(255, 255, 255, 0.6);
@@ -64,54 +76,59 @@
   }
 
   .dark {
-    --background: 240 17% 4%;
-    --foreground: 240 20% 98%;
-    --card: 240 14% 10%;
-    --card-foreground: 240 20% 98%;
-    --popover: 240 14% 10%;
-    --popover-foreground: 240 20% 98%;
+    --background: 240 40% 2%;
+    --foreground: 240 10% 98%;
+    --card: 240 20% 5% / 0.6;
+    --card-foreground: 240 10% 98%;
+    --popover: 240 20% 6% / 0.9;
+    --popover-foreground: 240 10% 98%;
     --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 14% 14%;
-    --secondary-foreground: 240 20% 98%;
-    --muted: 240 14% 14%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 239 84% 67%;
+    --secondary: 240 20% 10% / 0.5;
+    --secondary-foreground: 240 10% 98%;
+    --muted: 240 20% 8% / 0.5;
+    --muted-foreground: 240 10% 60%;
+    --accent: 280 84% 67%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
-    --border: 240 14% 14%;
-    --input: 240 14% 14%;
+    --border: 240 30% 12% / 0.4;
+    --input: 240 30% 10% / 0.8;
     --ring: 239 84% 67%;
-    --radius: 1.5rem;
-    --sidebar-background: 240 17% 4%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --radius: 2rem;
+    --sidebar-background: 240 25% 3% / 0.9;
+    --sidebar-foreground: 240 10% 90%;
+    --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 240 30% 8%;
+    --sidebar-accent-foreground: 240 10% 98%;
+    --sidebar-border: 240 20% 10% / 0.5;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    --surface: 240 14% 10%;
-    --surface-foreground: 240 20% 98%;
-    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(270 80% 65%));
-    --gradient-hero: linear-gradient(180deg, hsl(240 17% 4%) 0%, hsl(240 17% 6%) 100%);
-    --shadow-glow: 0 0 80px -12px hsl(239 84% 67% / 0.3);
+    --surface: 240 25% 3%;
+    --surface-foreground: 240 10% 98%;
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(290 80% 65%));
+    --gradient-hero: linear-gradient(180deg, hsl(240 25% 1%) 0%, hsl(240 20% 4%) 100%);
+    --shadow-glow: 0 0 100px -20px hsl(239 84% 67% / 0.4);
 
-    /* Dark Mode Claymorphism Variables */
+    /* Liquid Glass Variables - Dark */
+    --glass-blur: 24px;
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-bg: rgba(0, 0, 0, 0.3);
+
+    /* Shadow Strength Dark Glass */
     --clay-shadow: 
-      8px 8px 16px rgba(0, 0, 0, 0.4), 
-      -8px -8px 16px rgba(255, 255, 255, 0.02), 
-      inset 2px 2px 4px rgba(255, 255, 255, 0.05), 
-      inset -2px -2px 4px rgba(0, 0, 0, 0.4);
+      12px 12px 24px rgba(0, 0, 0, 0.8), 
+      -4px -4px 12px rgba(255, 255, 255, 0.01), 
+      inset 1px 1px 2px rgba(255, 255, 255, 0.02), 
+      inset -1px -1px 2px rgba(0, 0, 0, 0.6);
     --clay-shadow-hover: 
-      12px 12px 20px rgba(0, 0, 0, 0.5), 
-      -12px -12px 20px rgba(255, 255, 255, 0.02), 
-      inset 2px 2px 4px rgba(255, 255, 255, 0.06), 
-      inset -2px -2px 4px rgba(0, 0, 0, 0.5);
+      16px 16px 32px rgba(0, 0, 0, 0.9), 
+      -4px -4px 12px rgba(255, 255, 255, 0.02), 
+      inset 1px 1px 2px rgba(255, 255, 255, 0.03), 
+      inset -1px -1px 2px rgba(0, 0, 0, 0.7);
     --clay-shadow-active: 
       inset 4px 4px 8px rgba(0, 0, 0, 0.6), 
       inset -4px -4px 8px rgba(255, 255, 255, 0.02);
@@ -130,6 +147,12 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     scroll-behavior: smooth;
+    background-attachment: fixed;
+    background-image: var(--glass-wave);
+  }
+  .dark body {
+    background-image: radial-gradient(at 0% 0%, hsla(240, 40%, 4%, 1) 0, transparent 50%), 
+                    radial-gradient(at 100% 100%, hsla(240, 40%, 8%, 1) 0, transparent 50%);
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
@@ -157,12 +180,55 @@
     background-color: hsl(var(--surface));
   }
   .bg-card, [class*="bg-card"] {
+    background-color: var(--glass-bg) !important;
+    backdrop-filter: blur(var(--glass-blur)) !important;
     box-shadow: var(--clay-shadow) !important;
-    border: none !important;
+    border: 1px solid var(--glass-border) !important;
     border-radius: var(--radius) !important;
   }
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+  
+  /* Liquid Glass Toggle Button */
+  .liquid-glass-toggle {
+    position: relative;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--clay-shadow);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .liquid-glass-toggle:hover {
+    box-shadow: var(--clay-shadow-hover);
+    transform: scale(1.05);
+  }
+  
+  .liquid-glass-toggle:active {
+    transform: scale(0.95);
+  }
+
+  .liquid-glass-toggle::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    filter: blur(8px);
+  }
+
+  .liquid-glass-toggle:hover::before {
+    opacity: 0.3;
   }
   .parallax-layer {
     will-change: transform;

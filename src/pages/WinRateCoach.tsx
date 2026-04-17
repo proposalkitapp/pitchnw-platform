@@ -46,7 +46,7 @@ export default function WinRateCoach() {
     }
   }, [session]);
 
-  const isPro = profile?.plan === 'pro';
+  const isFreelancer = profile?.plan === 'pro';
 
   const totalProposals = proposals.length;
   const wonProposals = proposals.filter(p => p.status === 'won').length;
@@ -131,28 +131,33 @@ export default function WinRateCoach() {
 
   const loading = profileLoading || loadingProposals;
 
-  if (!isPro && !loading) {
+  if (!isFreelancer && !loading) {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md bg-white p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100"
+            className="max-w-md bg-card p-12 rounded-[40px] shadow-2xl relative overflow-hidden"
           >
-            <div className="h-20 w-20 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Brain className="h-10 w-10 text-purple-600" />
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+               <Brain className="h-24 w-24 text-primary" />
             </div>
-            <h2 className="font-display font-extrabold text-3xl text-slate-900 mb-4 leading-tight">AI Win-Rate Coach</h2>
-            <p className="text-slate-500 mb-8 leading-relaxed">
-              Unlock the Coach feature to discover exactly why you win and lose deals, get sector specific insights, and actionable strategies based on your historical performance.
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <Brain className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="font-display font-black text-3xl text-foreground mb-4 leading-tight">AI Strategy Coach</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
+              Discover exactly why you win and lose deals. The Strategic Coach is a <span className="text-primary font-bold">Freelancer</span> exclusive feature.
             </p>
             <Button 
-              size="lg"
-              className="w-full h-14 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)]"
-              onClick={() => navigate('/checkout')}
+               className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all"
+               onClick={() => navigate('/checkout')}
             >
-              Unlock Features with Pro
+              Unlock Coach & Intelligence
+            </Button>
+            <Button variant="ghost" className="mt-4 text-muted-foreground font-bold" onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
             </Button>
           </motion.div>
         </div>

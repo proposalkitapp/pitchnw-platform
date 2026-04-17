@@ -78,29 +78,36 @@ export default function PitchAnalysis() {
     enabled: !!id,
   });
 
-  const isPro = profile?.plan === 'pro';
+  const isFreelancer = profile?.plan === 'pro';
 
-  if (!isPro && profile) {
+  if (profile && !isFreelancer) {
     return (
       <AuthLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md bg-white p-10 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100"
+            className="max-w-md bg-card p-12 rounded-[40px] shadow-2xl relative overflow-hidden"
           >
-            <div className="text-6xl mb-6">🔒</div>
-            <h2 className="font-syne font-extrabold text-3xl text-slate-900 mb-4">Pitch Analysis is a Pro Feature</h2>
-            <p className="text-slate-500 mb-8 leading-relaxed">
-              Upgrade to Pro to get AI-powered scoring and improvement suggestions for every proposal you send. 
-              Know exactly what to fix before your client reads it.
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+               <Zap className="h-24 w-24 text-primary" />
+            </div>
+            <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <Sparkles className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="font-display font-black text-3xl text-foreground mb-4 leading-tight">Elite Pitch Intelligence</h2>
+            <p className="text-muted-foreground mb-8 leading-relaxed font-medium">
+              Pitch Analysis is a <span className="text-primary font-bold">Freelancer</span> exclusive feature. 
+              Know exactly what to fix before your client reads your proposal with AI-driven scoring.
             </p>
             <Button 
-              size="lg"
-              className="w-full h-14 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold text-lg shadow-[0_10px_20px_rgba(0,51,255,0.2)]"
-              onClick={() => navigate('/checkout')}
+               className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all"
+               onClick={() => navigate('/checkout')}
             >
-              Upgrade to Pro — $12/mo
+              Get Freelancer Access
+            </Button>
+            <Button variant="ghost" className="mt-4 text-muted-foreground font-bold" onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
             </Button>
           </motion.div>
         </div>
