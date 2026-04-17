@@ -9,6 +9,7 @@ import { Star, ArrowRight, Search } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from "@/hooks/use-profile";
 import { Lock } from "lucide-react";
+import { templates, categories } from "@/lib/templates";
 
 export default function Marketplace() {
   const { data: profile, isLoading } = useProfile();
@@ -69,7 +70,7 @@ export default function Marketplace() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="font-display text-3xl font-bold">Template Marketplace</h1>
           <p className="text-muted-foreground mt-1">
-            Browse 8 distinct proposal templates built for different industries. All templates are included in the Basic plan.
+            Browse 8 distinct proposal templates built for different industries. All templates are included in the Freelancer plan.
           </p>
         </motion.div>
 
@@ -137,7 +138,7 @@ export default function Marketplace() {
               <div className="p-5">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-display text-sm font-semibold text-card-foreground">{template.name}</h3>
-                  <span className="text-xs font-semibold text-success px-2 py-0.5 rounded-full bg-success/10">Free</span>
+                  <span className="text-xs font-semibold text-primary px-2 py-0.5 rounded-full bg-primary/10">Freelancer</span>
                 </div>
                 <span
                   className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 mb-2"

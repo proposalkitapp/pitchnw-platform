@@ -212,8 +212,8 @@ export default function Dashboard() {
 
   const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
 
-  // Pro Command Center View
-  if (isPro) {
+  // Freelancer Command Center View
+  if (isFreelancer) {
     return (
       <AuthLayout>
         <div className="relative min-h-screen overflow-hidden">

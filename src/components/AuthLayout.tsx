@@ -48,7 +48,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   const displayName = profile?.display_name || profile?.username || user.email?.split('@')[0] || "User";
   const plan = profile?.plan ?? null;
-  const isPro = plan === "pro";
+  const isFreelancer = plan === "pro";
 
   const handleSignOut = async () => {
     await signOut();
@@ -76,7 +76,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                   <div className="flex items-center gap-3 bg-white border border-slate-100 pl-4 pr-3 py-2 rounded-2xl cursor-pointer hover:bg-slate-50 transition-all hover:shadow-sm group">
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-2">
-                        {isPro && <Sparkles className="h-3 w-3 text-purple-500 fill-purple-500" />}
+                        {isFreelancer && <Sparkles className="h-3 w-3 text-purple-500 fill-purple-500" />}
                         <span className="text-[13px] font-bold truncate max-w-[140px] leading-tight text-slate-900">{displayName}</span>
                       </div>
                       <span className="text-[10px] font-medium text-slate-400">Account Settings</span>
@@ -87,7 +87,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                       ) : (
                         <UserIcon className="h-4 w-4 text-slate-400" />
                       )}
-                      {isPro && (
+                      {isFreelancer && (
                         <div className="absolute inset-0 border-2 border-purple-500/20 rounded-xl pointer-events-none" />
                       )}
                     </div>

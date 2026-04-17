@@ -500,7 +500,9 @@ export default function Settings() {
                   Manage your plan and access to premium features.
                 </p>
 
-                {/* Pro — active */}
+                {/* Freelancer — active */}
+                {isFreelancer && (
+                  <div className="space-y-1 pt-2">
                     <p className="font-medium text-foreground">💜 Freelancer Plan · Active</p>
                     <p className="text-sm text-muted-foreground">You have full access to all premium features.</p>
                     <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-between">
@@ -508,7 +510,7 @@ export default function Settings() {
                         <Zap className="h-4 w-4 text-primary" />
                         <span className="text-sm font-bold text-slate-700">Priority Support Active</span>
                       </div>
-                      <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">Pro Only</span>
+                      <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">Freelancer Only</span>
                     </div>
                   </div>
                 )}

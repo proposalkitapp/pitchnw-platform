@@ -41,7 +41,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
 
-  const isPro = profile?.plan === "pro";
+  const isFreelancer = profile?.plan === "pro";
   const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "User";
   const isAdmin = profile?.is_admin || false;
 
@@ -80,9 +80,9 @@ export function AppSidebar() {
                 );
               })}
 
-              {/* Pro Items with Lock for Free Users */}
+              {/* Freelancer Items with Lock for Basic Users */}
               <div className="pt-4 pb-2">
-                 {!collapsed && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-3 mb-2">Pro Tools</p>}
+                 {!collapsed && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-3 mb-2">Freelancer Tools</p>}
                  {proNavItems.map((item) => {
                    const isActive = location === item.url;
                    return (
@@ -91,21 +91,21 @@ export function AppSidebar() {
                          asChild 
                          isActive={isActive} 
                          className="px-3 py-6 rounded-xl transition-all duration-200"
-                         onClick={() => !isPro && navigate('/checkout')}
+                         onClick={() => !isFreelancer && navigate('/checkout')}
                        >
-                         <div className={`flex items-center w-full cursor-pointer ${isPro ? 'text-slate-400 hover:text-white' : 'text-slate-600'}`}>
+                         <div className={`flex items-center w-full cursor-pointer ${isFreelancer ? 'text-slate-400 hover:text-white' : 'text-slate-600'}`}>
                            <NavLink
-                             to={isPro ? item.url : "#"}
+                             to={isFreelancer ? item.url : "#"}
                              end
                              className="flex items-center w-full"
-                             activeClassName={isPro ? "bg-purple-600 text-white font-medium shadow-[0_4px_14px_0_rgba(168,85,247,0.39)]" : ""}
-                             onClick={(e) => !isPro && e.preventDefault()}
+                             activeClassName={isFreelancer ? "bg-purple-600 text-white font-medium shadow-[0_4px_14px_0_rgba(168,85,247,0.39)]" : ""}
+                             onClick={(e) => !isFreelancer && e.preventDefault()}
                            >
-                              {isPro ? <item.icon className="h-5 w-5 mr-3" /> : <Lock className="h-5 w-5 mr-3 text-slate-600" />}
+                              {isFreelancer ? <item.icon className="h-5 w-5 mr-3" /> : <Lock className="h-5 w-5 mr-3 text-slate-600" />}
                               {!collapsed && (
                                 <div className="flex items-center justify-between w-full">
                                   <span className="text-[15px] font-medium">{item.title}</span>
-                                  {!isPro && <Lock className="h-3 w-3 opacity-40" />}
+                                  {!isFreelancer && <Lock className="h-3 w-3 opacity-40" />}
                                 </div>
                               )}
                            </NavLink>
@@ -143,21 +143,21 @@ export function AppSidebar() {
               <div className="min-w-0">
                 <p className="text-sm font-bold text-white truncate">{displayName}</p>
                 <span className={`inline-flex items-center text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
-                  isPro ? "bg-purple-500/20 text-purple-400" :
+                  isFreelancer ? "bg-purple-500/20 text-purple-400" :
                   "bg-slate-500/20 text-slate-400"
                 }`}>
-                  {isPro ? "PRO" : "FREE"}
+                  {isFreelancer ? "Freelancer" : "Basic"}
                 </span>
               </div>
             )}
           </div>
           
-          {!collapsed && !isPro && (
+          {!collapsed && !isFreelancer && (
             <button 
               onClick={() => navigate('/checkout')}
               className="w-full mt-4 py-2.5 rounded-xl bg-purple-600 text-white text-[11px] font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-900/20"
             >
-              Upgrade to Pro
+              Get Freelancer Access
             </button>
           )}
         </div>
