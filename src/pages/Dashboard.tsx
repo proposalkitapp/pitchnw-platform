@@ -492,7 +492,7 @@ export default function Dashboard() {
                   </h1>
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3 flex items-center justify-between gap-6 shadow-sm shadow-amber-100/50">
                     <p className="text-sm font-bold text-amber-700 flex items-center gap-2">
-                      <Lock className="h-3.5 w-3.5" /> Free plan · {3 - Math.min(usedCount, 3)} left
+                      <Lock className="h-3.5 w-3.5" /> Basic plan · {3 - Math.min(usedCount, 3)} left
                     </p>
                     <button onClick={() => navigate('/checkout')} className="text-sm font-black text-amber-900 hover:scale-105 transition-transform">
                       Upgrade & Unlock →

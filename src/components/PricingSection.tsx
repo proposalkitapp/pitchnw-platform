@@ -8,8 +8,26 @@ import { useAuth } from "@/hooks/use-auth";
 
 const plans = [
   {
+    name: "Basic",
+    price: "Free",
+    period: "forever",
+    badge: "Get Started",
+    description: "Perfect for testing the waters",
+    features: [
+      "3 lifetime AI proposals",
+      "Standard sales copy",
+      "2 basic pitch templates",
+      "Personal branding only",
+      "Public proposal links",
+      "Manual signatures",
+    ],
+    cta: "Start for free",
+    variant: "outline" as const,
+    highlighted: false,
+  },
+  {
     name: "Pro",
-    price: "$12",
+    price: "$2.99",
     period: "/month",
     badge: "Unlimited Access",
     description: "Everything you need to pitch and win",
@@ -51,7 +69,7 @@ export function PricingSection() {
         <FadeInView className="text-center mb-14">
           <span className="inline-block text-xs font-semibold text-primary tracking-widest uppercase bg-primary/5 border border-primary/10 rounded-full px-3 py-1 mb-4">Pricing</span>
           <h2 className="font-display font-syne text-3xl sm:text-4xl lg:text-5xl font-[800] mt-2 mb-4">
-            One plan. Everything included.
+            Simple pricing. Unlimited power.
           </h2>
           <p className="text-muted-foreground text-base lg:text-lg max-w-xl mx-auto">
             Upgrade to Pro to unlock unlimited power.<br/>
@@ -59,7 +77,7 @@ export function PricingSection() {
           </p>
         </FadeInView>
 
-        <div className="max-w-[480px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan, i) => (
             <FadeInView key={i} delay={i * 0.1}>
               <div

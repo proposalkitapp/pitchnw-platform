@@ -137,7 +137,7 @@ export default function Checkout() {
           </span>
           <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground mt-4">Pro</p>
           <div className="mt-2 mb-4 flex items-baseline gap-1">
-            <span className="font-display font-extrabold text-5xl text-card-foreground">$12</span>
+            <span className="font-display font-extrabold text-5xl text-card-foreground">$2.99</span>
             <span className="text-muted-foreground text-sm">/month</span>
           </div>
           <p className="text-sm text-muted-foreground mb-6">Unlimited proposals. No limits. Full access.</p>

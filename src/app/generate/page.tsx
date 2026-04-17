@@ -172,7 +172,7 @@ export default function ProposalGenerator() {
         
         // Handle specific limit_reached error from backend
         if (error.context?.status === 403 || error.message?.includes("limit_reached")) {
-          toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.", { id: "gen" });
+          toast.error("You've used all 3 Basic proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
           router.push("/settings");
           return;
         }

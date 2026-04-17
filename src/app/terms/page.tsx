@@ -23,10 +23,10 @@ export default function TermsOfService() {
         <p>You may need to register via email or Google OAuth to use the service. You are responsible for safeguarding your password and any other credentials used to access your account. You agree not to disclose your password to any third party.</p>
 
         <h2 className="font-display text-xl mt-8 font-semibold text-foreground">4. Plans and Access</h2>
-        <p>We offer Free and Pro tiers. You may upgrade your account to the Pro tier at any time within the platform. Access to premium features is granted upon upgrade and may be subject to future fees as described in the platform.</p>
+        <p>We offer Basic and Pro tiers. You may upgrade your account to the Pro tier at any time within the platform. Access to premium features is granted upon upgrade and may be subject to future fees as described in the platform.</p>
 
         <h2 className="font-display text-xl mt-8 font-semibold text-foreground">5. Fair Use</h2>
-        <p>The Free plan allows for standard proposal generation (up to 3 proposals). Our paid plans provide additional benefits such as CRM features and analytics. Any misuse, circumvention of tier limits, or abuse of the AI generation APIs may result in the suspension of your account.</p>
+        <p>The Basic plan allows for standard proposal generation (up to 3 proposals). Our paid plans provide additional benefits such as CRM features and analytics. Any misuse, circumvention of tier limits, or abuse of the AI generation APIs may result in the suspension of your account.</p>
 
         <h2 className="font-display text-xl mt-8 font-semibold text-foreground">6. Content and Intellectual Property</h2>
         <p>You retain full rights to the content you create and distribute using Pitchnw. However, our underlying templates, designs, algorithms, and application code are the intellectual property of Pitchnw.</p>

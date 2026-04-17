@@ -159,7 +159,7 @@ export default function Dashboard() {
 
   const deleteProposal = async (id: string) => {
     if (plan === "free") {
-      toast.error("Free plan users cannot delete proposals. Upgrade to Standard to manage your proposals.");
+      toast.error("Basic plan users cannot delete proposals. Upgrade to Pro to manage your proposals.");
       return;
     }
     const { error } = await supabase.from("proposals").delete().eq("id", id);
@@ -285,7 +285,7 @@ export default function Dashboard() {
       bgColor: "bg-primary/10",
       onClick: () => {
         if (!canCreateProposal) {
-          toast.error("You've used all 3 free proposals. Upgrade to Standard for unlimited access.");
+          toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.");
           navigate("/settings");
           return;
         }
@@ -464,7 +464,7 @@ export default function Dashboard() {
                       <Zap className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <span className="text-sm font-semibold text-card-foreground block">Free Plan</span>
+                      <span className="text-sm font-semibold text-card-foreground block">Basic Plan</span>
                       <span className="text-[11px] text-muted-foreground">
                         {Math.min(totalProposals, 3)} of 3 proposals used
                       </span>

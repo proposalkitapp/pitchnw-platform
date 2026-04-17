@@ -222,7 +222,7 @@ export default function ProposalGenerator() {
 
       if (error) {
         if (error.context?.status === 403 || error.message?.includes("limit_reached")) {
-          toast.error("You've used all 3 free proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
+          toast.error("You've used all 3 Basic proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
           navigate("/checkout");
           return;
         }
@@ -305,10 +305,10 @@ export default function ProposalGenerator() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6 gap-6 font-body">
           <div className="text-6xl">🔒</div>
           <h2 className="font-display font-extrabold text-3xl text-slate-900 leading-tight">
-            You have used all 3 free proposals
+            You have used all 3 Basic proposals
           </h2>
           <p className="text-slate-500 max-w-md leading-relaxed">
-            Free accounts include 3 proposals for life.
+            Basic accounts include 3 proposals for life.
             Upgrade to Pro for unlimited proposal generation
             and access to every premium feature.
           </p>
@@ -317,7 +317,7 @@ export default function ProposalGenerator() {
             className="h-14 px-8 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold shadow-lg"
             onClick={() => navigate('/checkout')}
           >
-            Upgrade to Pro — $12/mo
+            Upgrade to Pro — $2.99/mo
           </Button>
           <p className="text-[11px] text-slate-400 font-medium tracking-wide uppercase">
             Existing proposals remain fully accessible

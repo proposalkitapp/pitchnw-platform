@@ -22,14 +22,14 @@ export function CTASection() {
           </h2>
           <p className="text-base lg:text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
             Join freelancers who are winning more projects with AI-powered proposals.
-            Start for free — no credit card required.
+            Start with the Basic plan — no credit card required.
           </p>
           <Button
             variant="hero"
             size="xl"
             onClick={() => navigate(user ? "/dashboard" : "/auth?mode=signup")}
           >
-            Get Started Free
+            Get Started Basic
             <ArrowRight className="h-5 w-5" />
           </Button>
         </FadeInView>

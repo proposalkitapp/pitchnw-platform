@@ -10,7 +10,7 @@ import proposalPreview from "@/assets/proposal-preview.png";
 
 const badges = [
   "No Credit Card Required",
-  "3 Free Proposals",
+  "3 Basic Proposals",
   "AI-Powered",
 ];
 
@@ -38,7 +38,7 @@ export function HeroSection() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
           </span>
-          <span className="text-xs font-medium text-primary tracking-wide">Now live — Free to start</span>
+          <span className="text-xs font-medium text-primary tracking-wide">Now live — Basic plan available</span>
         </motion.div>
 
         <motion.h1
@@ -69,7 +69,7 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8"
         >
           <Button variant="hero" size="xl" onClick={handleGetStarted} className="text-base">
-            Start Free
+            Start Basic
             <ArrowRight className="h-5 w-5" />
           </Button>
           <Button

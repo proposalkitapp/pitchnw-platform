@@ -529,7 +529,7 @@ export default function Settings() {
                 {/* Free plan — no trial */}
                 {isFree && subscriptionStatus !== "active" && !trialActive && !trialExpired && (
                   <div className="pt-2 space-y-1">
-                    <p className="font-medium text-foreground">Free Plan</p>
+                    <p className="font-medium text-foreground">Basic Plan</p>
                     <p className="text-sm text-muted-foreground">
                       {Math.min(proposalsUsed, 3)} of 3 lifetime proposals used
                     </p>

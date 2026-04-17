@@ -29,7 +29,7 @@ export default function Marketplace() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="font-display text-3xl font-bold">Template Marketplace</h1>
           <p className="text-muted-foreground mt-1">
-            Browse 8 distinct proposal templates built for different industries. All templates are free.
+            Browse 8 distinct proposal templates built for different industries. All templates are included in the Basic plan.
           </p>
         </motion.div>
 
