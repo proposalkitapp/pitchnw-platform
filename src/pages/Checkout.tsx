@@ -88,7 +88,7 @@ export default function Checkout() {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -97,7 +97,7 @@ export default function Checkout() {
   // Already on Freelancer — redirect to settings
   if (isFreelancer) {
     return (
-      <div className="min-h-screen bg-[#08080F] font-body text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-background font-body text-foreground flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
           <img src={pitchnwLogo} alt="Pitchnw" className="h-20 w-auto object-contain mx-auto mb-6" />
           <h1 className="font-display font-extrabold text-2xl mb-3">You're already a Freelancer!</h1>
@@ -111,7 +111,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080F] font-body text-foreground">
+    <div className="min-h-screen bg-background font-body text-foreground">
       <div className="mx-auto max-w-md px-4 py-12 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -143,20 +143,20 @@ export default function Checkout() {
           <p className="text-sm text-muted-foreground mb-6">Unlimited proposals, templates, and analytics.</p>
           <ul className="space-y-3 mb-8 flex-1 text-sm text-muted-foreground">
             {[
-              "Unlimited AI proposal generation",
-              "High-converting sales copy output",
-              "8 professional pitch templates",
-              "Branding kit (logo + header)",
-              "Client portal with private link",
-              "Digital signatures",
-              "Proposal analytics",
-              "Full CRM pipeline",
-              "PDF export",
-              "Manage proposals",
+              "Unlimited AI Proposals",
+              "Premium Sales Copy",
+              "8 Pitch Templates",
+              "Branding Kit (Logo + Header)",
+              "Client Portal & Link",
+              "Digital Signatures",
+              "Proposal Analytics",
+              "Full CRM Pipeline",
+              "PDF Export",
+              "Manage Proposals",
             ].map((f) => (
-              <li key={f} className="flex gap-2">
+              <li key={f} className="flex gap-2 text-left">
                 <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                {f}
+                <span className="flex-1 break-words leading-tight">{f}</span>
               </li>
             ))}
           </ul>

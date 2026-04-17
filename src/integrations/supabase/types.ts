@@ -199,6 +199,144 @@ export type Database = {
         }
         Relationships: []
       }
+      followups: {
+        Row: {
+          id: string
+          proposal_id: string | null
+          user_id: string | null
+          due_date: string
+          note: string | null
+          is_completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          proposal_id?: string | null
+          user_id?: string | null
+          due_date: string
+          note?: string | null
+          is_completed?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          proposal_id?: string | null
+          user_id?: string | null
+          due_date?: string
+          note?: string | null
+          is_completed?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followups_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      pitch_analyses: {
+        Row: {
+          id: string
+          proposal_id: string
+          user_id: string
+          overall_score: number
+          grade: string
+          category_scores: Json
+          strengths: Json
+          weaknesses: Json
+          suggestions: Json
+          summary: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          proposal_id: string
+          user_id: string
+          overall_score: number
+          grade: string
+          category_scores?: Json
+          strengths?: Json
+          weaknesses?: Json
+          suggestions?: Json
+          summary?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          proposal_id?: string
+          user_id?: string
+          overall_score?: number
+          grade?: string
+          category_scores?: Json
+          strengths?: Json
+          weaknesses?: Json
+          suggestions?: Json
+          summary?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitch_analyses_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitch_analyses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      templates: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          category: string | null
+          is_free: boolean
+          is_published: boolean
+          content: Json
+          price_usd: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          category?: string | null
+          is_free?: boolean
+          is_published?: boolean
+          content?: Json
+          price_usd?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          category?: string | null
+          is_free?: boolean
+          is_published?: boolean
+          content?: Json
+          price_usd?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

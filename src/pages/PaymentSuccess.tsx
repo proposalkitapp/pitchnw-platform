@@ -50,7 +50,7 @@ export default function PaymentSuccess() {
 
   if (status === 'verifying') {
     return (
-      <div className="min-h-screen bg-[#08080F] flex flex-col items-center justify-center gap-8 font-body">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-8 font-body">
         <motion.div 
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -66,7 +66,7 @@ export default function PaymentSuccess() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-[#08080F] flex flex-col items-center justify-center gap-10 font-body text-center p-6">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-10 font-body text-center p-6">
         <div className="h-20 w-20 bg-red-500/10 rounded-3xl flex items-center justify-center">
            <Zap className="h-10 w-10 text-red-500" />
         </div>
@@ -88,7 +88,7 @@ export default function PaymentSuccess() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080F] flex flex-col items-center justify-center font-body p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center font-body p-6 relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
       

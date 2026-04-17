@@ -204,6 +204,8 @@ export default function Admin() {
                       <TableCell className="text-sm text-muted-foreground">{u.company_name || "—"}</TableCell>
                       <TableCell>{planBadge(u.plan)}</TableCell>
                       <TableCell>{proposals.filter((p) => p.user_id === u.user_id).length}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(u.created_at).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
                   ))}

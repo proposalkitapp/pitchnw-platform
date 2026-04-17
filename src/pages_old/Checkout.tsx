@@ -107,7 +107,7 @@ export default function Checkout() {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -115,7 +115,7 @@ export default function Checkout() {
 
   if (isUpgrading) {
     return (
-      <div className="min-h-screen bg-[#08080F] font-body text-foreground">
+      <div className="min-h-screen bg-background font-body text-foreground">
          <div className="mx-auto max-w-md px-4 py-16">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
               <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
@@ -178,7 +178,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080F] font-body text-foreground">
+    <div className="min-h-screen bg-background font-body text-foreground">
       <div className="mx-auto max-w-[840px] px-4 py-12 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -211,24 +211,24 @@ export default function Checkout() {
             <p className="text-sm text-muted-foreground mb-6">For freelancers who pitch regularly</p>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm text-muted-foreground">
               {[
-                "Unlimited AI proposal generation",
-                "High-converting sales copy output",
-                "8 professional pitch templates",
-                "Branding kit (logo + header)",
-                "Client portal with private link",
-                "Digital signatures",
-                "Proposal analytics",
-                "Sophisticated CRM pipeline",
-                "PDF export",
+                "Unlimited AI Proposals",
+                "Premium Sales Copy",
+                "8 Pitch Templates",
+                "Branding Kit (Logo & Header)",
+                "Client Portal & Link",
+                "Digital Signatures",
+                "Proposal Analytics",
+                "CRM Pipeline Dashboard",
+                "PDF Export Tools",
               ].map((f) => (
-                <li key={f} className="flex gap-2">
+                <li key={f} className="flex gap-2 text-left">
                   <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  {f}
+                  <span className="flex-1 break-words leading-tight">{f}</span>
                 </li>
               ))}
-              <li className="flex gap-2 text-muted-foreground/70">
+              <li className="flex gap-2 text-muted-foreground/70 text-left">
                 <X className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                AI Win-Rate Coach
+                <span className="flex-1 break-words leading-tight">AI Win-Rate Coach</span>
               </li>
             </ul>
             <Button
@@ -263,10 +263,10 @@ export default function Checkout() {
             </div>
             <p className="text-sm text-muted-foreground mb-6">Everything in Pro, plus power features</p>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm text-muted-foreground">
-              {["Everything in Pro", "AI Win-Rate Coach", "Advanced analytics", "Priority support"].map((f) => (
-                <li key={f} className="flex gap-2">
+              {["Everything in Pro", "AI Win-Rate Coach", "Advanced Analytics", "Priority Support"].map((f) => (
+                <li key={f} className="flex gap-2 text-left">
                   <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  {f}
+                  <span className="flex-1 break-words leading-tight">{f}</span>
                 </li>
               ))}
             </ul>

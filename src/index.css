@@ -233,6 +233,21 @@
   .parallax-layer {
     will-change: transform;
   }
+  .clay-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--clay-shadow);
+    border: 1px solid var(--glass-border);
+  }
+  .clay-style {
+    box-shadow: var(--clay-shadow);
+  }
+  .font-syne {
+    font-family: 'Syne', sans-serif;
+  }
+  .font-dm {
+    font-family: 'DM Sans', sans-serif;
+  }
 }
 
 /* Grain overlay - only in dark mode */

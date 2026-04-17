@@ -108,7 +108,7 @@ export default function Checkout() {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-[#08080F] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -116,7 +116,7 @@ export default function Checkout() {
 
   if (isUpgrading) {
     return (
-      <div className="min-h-screen bg-[#08080F] font-body text-foreground">
+      <div className="min-h-screen bg-background font-body text-foreground">
         <div className="mx-auto max-w-md px-4 py-16">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
             <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain mx-auto mb-6" />
@@ -143,7 +143,7 @@ export default function Checkout() {
             </div>
 
             <div className="space-y-4 mb-8 text-sm text-card-foreground">
-              <p>By upgrading, you will immediately gain access to all the features of the <strong>Pro</strong> tier.</p>
+              <p>By upgrading, you will immediately gain access to all the features of the <strong>Freelancer</strong> tier.</p>
               <div className="bg-success/10 text-success px-4 py-3 rounded-xl flex gap-3 text-sm">
                 <Check className="h-5 w-5 shrink-0 mt-0.5" />
                 Enjoy full access to all premium features.
@@ -179,7 +179,7 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08080F] font-body text-foreground">
+    <div className="min-h-screen bg-background font-body text-foreground">
       <div className="mx-auto max-w-[840px] px-4 py-12 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -207,7 +207,7 @@ export default function Checkout() {
             <span className="inline-flex self-start rounded-full bg-success/15 text-success text-xs font-medium px-3 py-1 mb-4 mt-2">
               3-day free trial
             </span>
-            <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground">Pro</p>
+            <p className="font-display font-bold uppercase tracking-wide text-xl text-card-foreground">Freelancer</p>
             <div className="mt-2 mb-4 flex items-baseline gap-1">
               <span className="font-display font-extrabold text-5xl text-card-foreground">$12</span>
               <span className="text-muted-foreground text-sm">/month</span>
@@ -215,22 +215,22 @@ export default function Checkout() {
             <p className="text-sm text-muted-foreground mb-6">Everything you need to pitch and win</p>
             <ul className="space-y-2.5 mb-8 flex-1 text-sm text-muted-foreground">
               {[
-                "Unlimited AI proposal generation",
-                "High-converting sales copy output",
-                "8 professional pitch templates",
-                "Branding kit (logo + header title)",
-                "Client portal with private link",
-                "Digital signatures (creator + client)",
-                "Proposal analytics",
-                "Sophisticated CRM pipeline",
-                "PDF export",
+                "Unlimited AI Proposals",
+                "Premium Sales Copy",
+                "8 Pitch Templates",
+                "Branding Kit (Logo & Headers)",
+                "Client Portal & Link",
+                "Digital Signatures",
+                "Proposal Analytics",
+                "CRM Pipeline Dashboard",
+                "PDF Export Tools",
                 "AI Win-Rate Coach",
-                "Follow-up reminders",
-                "Priority support"
+                "Automated Reminders",
+                "Priority Support"
               ].map((f) => (
                 <li key={f} className="flex gap-2">
                   <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  {f}
+                  <span className="flex-1 break-words leading-tight">{f}</span>
                 </li>
               ))}
             </ul>

@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,45 +13,32 @@ serve(async (req) => {
 
   try {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
     if (!anthropicKey) {
       return new Response(JSON.stringify({ error: 'Missing ANTHROPIC_API_KEY' }), { status: 500, headers: corsHeaders })
     }
 
-    const { proposalText } = await req.json()
-    if (!proposalText) {
-      return new Response(JSON.stringify({ error: 'Missing proposalText' }), { status: 400, headers: corsHeaders })
-    }
+    const { wonProposals, lostProposals } = await req.json()
 
     const systemPrompt = `You are a senior sales proposal consultant with 20 years of experience helping freelancers and agencies win high-value clients. You have reviewed thousands of proposals and know exactly what makes clients say yes and what makes them say no. Your feedback is specific, honest, and actionable. You never give vague advice.
 Return ONLY raw valid JSON. No markdown.`
 
-    const userPrompt = `Review this proposal and score it out of 100.
+    const userPrompt = `Analyze these proposal outcomes and find patterns.
 
-PROPOSAL:
-${proposalText}
+WON PROPOSALS:
+${JSON.stringify(wonProposals, null, 2)}
+
+LOST PROPOSALS:
+${JSON.stringify(lostProposals, null, 2)}
 
 Return this exact JSON:
 {
-  "score": number 0-100,
-  "grade": "A" | "B" | "C" | "D" | "F",
-  "summary": "one sentence verdict to the author",
-  "strengths": [
-    { "point": "string", "why": "string" }
+  "winRate": number percentage,
+  "totalAnalyzed": number,
+  "patterns": [
+    { "title": "string", "detail": "string" }
   ],
-  "weaknesses": [
-    { "point": "string", "why": "string" }
-  ],
-  "suggestions": [
-    {
-      "section": "string",
-      "issue": "string",
-      "fix": "string",
-      "priority": "high" | "medium" | "low"
-    }
-  ]
+  "topRecommendation": "string"
 }`
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -73,7 +59,7 @@ Return this exact JSON:
     const data = await response.json()
     const content = data.content?.[0]?.text || ''
     
-    // Clean JSON from possible markdown
+    // Clean JSON
     const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim()
     const result = JSON.parse(jsonStr)
 

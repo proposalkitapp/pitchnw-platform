@@ -26,26 +26,24 @@ const plans = [
     highlighted: false,
   },
   {
-    name: "Pro",
+    name: "Freelancer",
     price: "$2.99",
     period: "/month",
     badge: "Unlimited Access",
     description: "Everything you need to pitch and win",
     features: [
-      "Unlimited AI proposal generation",
-      "High-converting sales copy output",
-      "8 professional pitch templates",
-      "Branding kit (logo + header title)",
-      "Client portal with private link",
-      "Digital signatures (creator + client)",
-      "Proposal analytics",
-      "Sophisticated CRM pipeline",
-      "PDF export",
+      "Unlimited AI Proposals",
+      "Premium Sales Copy",
+      "Branding Kit (Logo & Headers)",
+      "Client Portal & Link",
+      "Digital Signatures",
+      "Proposal Analytics",
+      "CRM Pipeline Dashboard",
+      "PDF Export Tools",
       "AI Win-Rate Coach",
-      "Follow-up reminders",
-      "Priority support"
+      "Priority Support"
     ],
-    cta: "Upgrade to Pro now",
+    cta: "Get Freelancer Access",
     variant: "hero" as const,
     highlighted: true,
   },
@@ -72,7 +70,7 @@ export function PricingSection() {
             Simple pricing. Unlimited power.
           </h2>
           <p className="text-muted-foreground text-base lg:text-lg max-w-xl mx-auto">
-            Upgrade to Pro to unlock unlimited power.<br/>
+            Get Freelancer access to unlock unlimited power.<br />
             No commitment. Cancel anytime.
           </p>
         </FadeInView>
@@ -81,11 +79,10 @@ export function PricingSection() {
           {plans.map((plan, i) => (
             <FadeInView key={i} delay={i * 0.1}>
               <div
-                className={`relative rounded-2xl border p-6 lg:p-8 transition-all duration-300 ${
-                  plan.highlighted
+                className={`relative rounded-2xl border p-6 lg:p-8 transition-all duration-300 ${plan.highlighted
                     ? "border-primary bg-card pt-10 shadow-lg shadow-primary/[0.06] scale-[1.02]"
                     : "border-border bg-card hover:border-primary/20"
-                }`}
+                  }`}
               >
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-success/15 text-success px-4 py-1 flex items-center justify-center text-xs font-semibold">
@@ -102,7 +99,7 @@ export function PricingSection() {
                   {plan.features.map((feature, j) => (
                     <li key={j} className="flex items-start gap-2.5 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      {feature}
+                      <span className="flex-1 break-words leading-tight">{feature}</span>
                     </li>
                   ))}
                 </ul>

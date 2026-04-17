@@ -494,7 +494,7 @@ export default function Settings() {
                         {plan.features.map((f, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                             <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                            {f}
+                            <span className="flex-1 break-words leading-tight">{f}</span>
                           </li>
                         ))}
                       </ul>
