@@ -79,14 +79,7 @@ export default function Admin() {
     }
   };
 
-  const updateUserPlan = async (userId: string, plan: string) => {
-    const { error } = await supabase.from("profiles").update({ plan }).eq("user_id", userId);
-    if (error) toast.error("Failed to update plan");
-    else {
-      toast.success(`Plan updated to ${plan}`);
-      setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, plan } : u)));
-    }
-  };
+
 
   if (isAdmin === null) {
     return (
@@ -208,7 +201,6 @@ export default function Admin() {
                     <TableHead>Plan</TableHead>
                     <TableHead>Proposals</TableHead>
                     <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -221,17 +213,6 @@ export default function Admin() {
                       <TableCell>{proposals.filter((p) => p.user_id === u.user_id).length}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(u.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <select
-                          value={u.plan}
-                          onChange={(e) => updateUserPlan(u.user_id, e.target.value)}
-                          className="text-xs rounded-md border border-border bg-background px-2 py-1 text-foreground"
-                        >
-                          <option value="free">Free</option>
-                          <option value="pro">Pro</option>
-                          <option value="standard">Standard</option>
-                        </select>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -21,22 +21,6 @@ export default function PaymentSuccess() {
           return
         }
 
-        // Update plan directly in database
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            plan: 'pro',
-            subscription_status: 'active',
-            proposals_used: 0 // Reset or give unlimited feel
-          })
-          .eq('user_id', session.user.id)
-
-        if (updateError) {
-          console.error('Plan update error:', updateError)
-          setStatus('error')
-          return
-        }
-
         // Force refresh the session
         await supabase.auth.refreshSession()
 
