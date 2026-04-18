@@ -10,10 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle, Zap } from "lucide-react";
+import { User, Building, Save, Lock, Loader2, CreditCard, Check, PenTool, Image, Upload, AlertTriangle, Zap, Palette } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { useNavigate } from 'react-router-dom';
+import { LiquidGlassToggle } from "@/components/LiquidGlassToggle";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -211,10 +212,11 @@ export default function Settings() {
           <h1 className="font-display text-3xl font-bold mb-6">Settings</h1>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="billing">Billing & Plans</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="profile" className="truncate">Profile</TabsTrigger>
+              <TabsTrigger value="appearance" className="truncate">Appearance</TabsTrigger>
+              <TabsTrigger value="security" className="truncate">Security</TabsTrigger>
+              <TabsTrigger value="billing" className="truncate">Billing</TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
@@ -447,6 +449,26 @@ export default function Settings() {
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {saving ? "Saving..." : "Save Profile"}
               </Button>
+            </TabsContent>
+
+            {/* Appearance Tab */}
+            <TabsContent value="appearance" className="space-y-6">
+              <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h2 className="font-display text-lg font-semibold flex items-center gap-2 text-card-foreground">
+                      <Palette className="h-5 w-5 text-primary" /> Visual Mode
+                    </h2>
+                    <p className="text-sm text-muted-foreground">Toggle between Light and Dark mode vibes.</p>
+                  </div>
+                  <LiquidGlassToggle />
+                </div>
+                <div className="p-4 bg-muted/50 rounded-2xl border border-border mt-4">
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed italic">
+                    Note: Our "Liquid Glass" engine adapts to your preference. Switching modes will update the entire workspace experience.
+                  </p>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Security Tab */}

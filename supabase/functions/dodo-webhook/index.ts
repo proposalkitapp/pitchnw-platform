@@ -12,7 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const { type, data } = await req.json();
+    const event = await req.json();
+    const { type, data } = event;
     
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -21,56 +22,62 @@ serve(async (req) => {
 
     console.log(`Webhook received: ${type}`);
 
+    // Standard extraction for metadata which should be on the 'data' object
+    const metadata = (data?.metadata || {}) as Record<string, string>;
+    const userId = metadata?.user_id || metadata?.userId;
+    const plan = metadata?.plan || 'pro';
+    const email = data?.customer?.email || data?.email;
+
     switch (type) {
-      case 'payment.succeeded': {
-        const metadata = data.metadata as Record<string, string>;
-        const userId = metadata?.user_id;
-        const plan = metadata?.plan;
+      case 'payment.succeeded':
+      case 'subscription.active':
+      case 'subscription.created': {
+        console.log(`Processing ${type} for user:`, userId, 'email:', email);
 
-        console.log('Payment succeeded for user:', userId, 'plan:', plan);
-
-        if (!userId) {
-          console.error('No user_id in payment metadata');
+        if (!userId && !email) {
+          console.error('No identifiable user (userId or email) in webhook data');
           break;
         }
 
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            plan: plan || 'pro',
-            subscription_status: 'active',
-            dodo_subscription_id: data.subscription_id as string || null
-          })
-          .eq('user_id', userId);
+        const updatePayload: any = {
+          plan: plan,
+          subscription_status: 'active',
+          subscription_period_end: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+
+        if (data?.id && type.startsWith('subscription')) {
+          updatePayload.dodo_subscription_id = data.id;
+        } else if (data?.subscription_id) {
+          updatePayload.dodo_subscription_id = data.subscription_id;
+        }
+
+        let query = supabase.from('profiles').update(updatePayload);
+
+        if (userId) {
+          query = query.eq('user_id', userId);
+        } else {
+          query = query.eq('email', email);
+        }
+
+        const { error: updateError } = await query;
 
         if (updateError) {
-          console.error('Failed to update plan:', updateError);
+          console.error(`Failed to update plan on ${type}:`, updateError);
         } else {
-          console.log('Plan updated to pro for user:', userId);
+          console.log(`Successfully processed ${type} for user:`, userId || email);
         }
         break;
       }
 
-      case 'subscription.active': {
-        const subId = data.id as string;
-        const metadata = data.metadata as Record<string, string>;
-        const userId = metadata?.user_id;
-
-        if (userId) {
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              plan: 'pro',
-              subscription_status: 'active',
-              dodo_subscription_id: subId
-            })
-            .eq('user_id', userId);
-
-          if (updateError) {
-            console.error('Failed to update plan on subscription.active:', updateError);
-          } else {
-            console.log('Subscription activated for:', userId);
-          }
+      case 'subscription.cancelled':
+      case 'subscription.expired': {
+        if (userId || email) {
+          const query = userId 
+            ? supabase.from('profiles').update({ subscription_status: 'cancelled', plan: 'free' }).eq('user_id', userId)
+            : supabase.from('profiles').update({ subscription_status: 'cancelled', plan: 'free' }).eq('email', email);
+          
+          await query;
+          console.log(`Subscription ${type} for user:`, userId || email);
         }
         break;
       }

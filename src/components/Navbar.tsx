@@ -25,7 +25,6 @@ const authNavLinks = [
 ];
 
 export function Navbar() {
-  const { isDark, toggle } = useTheme();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -34,7 +33,7 @@ export function Navbar() {
   const location = useLocation().pathname;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
+    const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -49,8 +48,6 @@ export function Navbar() {
         .then(({ data }) => {
           setDisplayName(data?.display_name || data?.username || user.email?.split("@")[0] || "User");
         });
-    } else {
-      setDisplayName(null);
     }
   }, [user]);
 
@@ -73,59 +70,47 @@ export function Navbar() {
   };
 
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/90 backdrop-blur-xl border-b border-border"
-          : "bg-transparent border-b border-transparent"
-      }`}
-    >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
-        <div className="flex items-center gap-4">
+    <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-all duration-300 ${scrolled ? "p-4" : "p-0"}`}>
+      <motion.nav
+        initial={false}
+        animate={{
+          width: scrolled ? "auto" : "100%",
+          maxWidth: scrolled ? "1100px" : "100%",
+          height: scrolled ? 60 : 80,
+          borderRadius: scrolled ? 9999 : 0,
+          backgroundColor: scrolled ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 1)",
+          boxShadow: scrolled ? "0 10px 40px -10px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.05)" : "none",
+          border: scrolled ? "1px solid #e5e5e5" : "1px solid transparent",
+          paddingLeft: scrolled ? 24 : 40,
+          paddingRight: scrolled ? 10 : 40,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`pointer-events-auto flex items-center justify-between backdrop-blur-xl group relative`}
+      >
+        {/* Left: Logo */}
+        <div className="flex items-center gap-4 shrink-0">
           <a
             href="/"
             onClick={(e) => { e.preventDefault(); navigate("/"); }}
-            className="flex items-center gap-2"
+            className="flex items-center"
           >
-            <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
+            <img 
+              src={pitchnwLogo} 
+              alt="Pitchnw" 
+              className={`transition-all duration-300 ${scrolled ? "h-10" : "h-20"} w-auto object-contain`} 
+            />
           </a>
-
-          {user && displayName && (
-            <span className="hidden md:inline text-sm text-muted-foreground font-medium">
-              Welcome, <span className="text-foreground">{displayName}</span>
-            </span>
-          )}
         </div>
 
-        {user ? (
-          <nav className="hidden md:flex items-center gap-1">
-            {authNavLinks.map((link) => {
-              const isActive = location === link.path;
-              return (
-                <Button
-                  key={link.path}
-                  variant={isActive ? "secondary" : "ghost"}
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => navigate(link.path)}
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Button>
-              );
-            })}
-          </nav>
-        ) : (
-          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+        {/* Center: Nav Links (Hidden in scrolled state or mobile) */}
+        {!scrolled && (
+          <nav className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {publicNavLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                className="text-[15px] font-semibold text-slate-600 hover:text-black transition-colors duration-200 whitespace-nowrap"
               >
                 {link.label}
               </a>
@@ -133,96 +118,102 @@ export function Navbar() {
           </nav>
         )}
 
-        <div className="flex items-center gap-6">
-          <LiquidGlassToggle />
-          
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 md:gap-4 h-full">
+          {scrolled && (
+            <div className="mr-2 hidden md:flex items-center animate-in fade-in zoom-in duration-300">
+               <LiquidGlassToggle />
+            </div>
+          )}
+
           {!user ? (
-            <div className="hidden md:flex items-center gap-6">
-              <button 
-                onClick={() => navigate("/auth?mode=login")}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
-              >
-                Sign In
-              </button>
+            <div className="flex items-center gap-4 md:gap-8 mr-1 md:mr-2">
+              {!scrolled && (
+                <button 
+                  onClick={() => navigate("/auth?mode=login")}
+                  className="hidden md:block text-[15px] font-bold text-slate-600 hover:text-black transition-all"
+                >
+                  Sign In
+                </button>
+              )}
               <Button
-                className="bg-black text-white hover:bg-black/90 px-6 rounded-full font-[800] h-10 shadow-xl transition-all active:scale-95"
+                className={`transition-all duration-300 rounded-full font-black shadow-xl active:scale-95 ${
+                  scrolled 
+                    ? "bg-black text-white hover:bg-black/90 h-10 px-6 text-xs" 
+                    : "bg-black text-white hover:bg-black/90 h-14 px-10 text-base"
+                }`}
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 Get Started
               </Button>
             </div>
           ) : (
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold text-muted-foreground hidden md:flex"
+                onClick={() => navigate("/dashboard")}
+              >
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold text-muted-foreground mr-2"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
+            </div>
+          )}
+
+          {!scrolled && (
             <Button
               variant="ghost"
-              size="sm"
-              className="font-bold text-muted-foreground"
-              onClick={handleSignOut}
+              size="icon"
+              className="lg:hidden text-foreground h-10 w-10 ml-2"
+              onClick={() => setMobileOpen(!mobileOpen)}
             >
-              Sign Out
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           )}
         </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden text-foreground h-9 w-9"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl overflow-hidden"
-          >
-            <div className="flex flex-col gap-1 p-4">
-              {user ? (
-                <>
-                  <div className="px-4 py-2 text-sm text-muted-foreground font-medium mb-1">
-                    Welcome, <span className="text-foreground">{displayName}</span>
-                  </div>
-                  {authNavLinks.map((link) => (
-                    <Button
-                      key={link.path}
-                      variant={location === link.path ? "secondary" : "ghost"}
-                      className="justify-start gap-2"
-                      onClick={() => { navigate(link.path); setMobileOpen(false); }}
-                    >
-                      <link.icon className="h-4 w-4" /> {link.label}
-                    </Button>
-                  ))}
-                  <Button variant="ghost" className="justify-start gap-2 text-destructive" onClick={() => { handleSignOut(); setMobileOpen(false); }}>
-                    <LogOut className="h-4 w-4" /> Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  {publicNavLinks.map((link) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      onClick={(e) => handleNavClick(e, link.href)}
-                      className="rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                  <Button variant="hero" size="lg" className="mt-2" onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}>
-                    Get Started (Free)
-                  </Button>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.header>
+        {/* Mobile Menu (Overlay) */}
+        <AnimatePresence>
+          {mobileOpen && !scrolled && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-full left-0 right-0 mt-4 bg-white rounded-3xl border border-slate-100 shadow-2xl p-6 lg:hidden"
+            >
+              <div className="flex flex-col gap-2">
+                {publicNavLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
+                    className="rounded-2xl px-6 py-4 text-base font-bold text-slate-600 hover:text-black hover:bg-slate-50 transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+                <hr className="my-2 border-slate-100" />
+                <Button 
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full h-14 rounded-2xl" 
+                  onClick={() => { navigate("/auth?mode=signup"); setMobileOpen(false); }}
+                >
+                  Get Started (Free)
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+    </div>
   );
 }

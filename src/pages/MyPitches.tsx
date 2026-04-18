@@ -165,18 +165,18 @@ export default function MyPitches() {
                 <tbody className="divide-y divide-white/5">
                   {filteredProposals.map((p) => (
                     <tr key={p.id} className="group hover:bg-white/[0.01] transition-colors">
-                      <td className="px-8 py-6">
-                        <div className="font-bold text-white text-[15px] mb-1 group-hover:text-primary transition-colors cursor-pointer" onClick={() => navigate(`/proposals` /* To be updated if I add separate view */)}>
+                      <td className="px-8 py-6 max-w-[300px]">
+                        <div className="font-bold text-white text-[15px] mb-1 group-hover:text-primary transition-colors cursor-pointer truncate" onClick={() => navigate(`/proposals`)}>
                           {p.title}
                         </div>
                         <div className="flex items-center gap-2 text-[12px] text-slate-400">
-                          <span>{p.client_name || "No client specified"}</span>
+                          <span className="truncate max-w-[120px]">{p.client_name || "No client specified"}</span>
                           <span className="h-1 w-1 rounded-full bg-white/10" />
                           <span>{format(new Date(p.created_at), "MMM d, yyyy")}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="text-[13px] text-slate-300 font-medium">{p.project_type || "Standard Pitch"}</div>
+                        <div className="text-[13px] text-slate-300 font-medium truncate max-w-[150px]">{p.project_type || "Standard Pitch"}</div>
                       </td>
                       <td className="px-8 py-6">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusColors[p.status] || statusColors.draft}`}>

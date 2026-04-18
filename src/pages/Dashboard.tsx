@@ -264,7 +264,6 @@ export default function Dashboard() {
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <LiquidGlassToggle />
                     <Button variant="outline" className="h-14 px-8 rounded-2xl border-border font-bold text-muted-foreground hover:bg-muted/50 transition-all" onClick={() => navigate('/settings')}>
                       Setup Branding
                     </Button>
@@ -289,7 +288,7 @@ export default function Dashboard() {
                             <DollarSign className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
                           </div>
                         </div>
-                        <div className="text-5xl font-black text-slate-900">
+                        <div className="text-4xl md:text-5xl font-black text-slate-900 truncate">
                           $<CountUp end={pipelineValue} separator="," />
                         </div>
                         <p className="text-slate-400 text-xs mt-4 font-bold">+12.5% from last month</p>
@@ -302,7 +301,7 @@ export default function Dashboard() {
                             <Target className="h-6 w-6 text-emerald-500 group-hover:text-white transition-colors" />
                           </div>
                         </div>
-                        <div className="text-5xl font-black text-slate-900">
+                        <div className="text-4xl md:text-5xl font-black text-slate-900 truncate">
                           <CountUp end={winRate} />%
                         </div>
                         <div className="mt-4 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -376,9 +375,9 @@ export default function Dashboard() {
                            <tbody className="divide-y divide-slate-50">
                               {proposals.slice(0, 4).map(p => (
                                 <tr key={p.id} className="group hover:bg-slate-50/30 transition-colors">
-                                  <td className="px-10 py-6">
-                                     <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{p.title}</div>
-                                     <div className="text-xs text-slate-400 font-medium">{p.client_name || "New Client"}</div>
+                                  <td className="px-10 py-6 max-w-[200px]">
+                                     <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{p.title}</div>
+                                     <div className="text-xs text-slate-400 font-medium truncate">{p.client_name || "New Client"}</div>
                                   </td>
                                   <td className="px-10 py-6">
                                      <div className="font-black text-slate-900">{p.budget || "—"}</div>
@@ -544,8 +543,7 @@ export default function Dashboard() {
                     {greeting}, {displayName} 👋
                   </h1>
                   <div className="flex items-center gap-4">
-                    <LiquidGlassToggle />
-                    <div className="bg-amber-500/10 border border-amber-500/20 backdrop-blur-md rounded-2xl px-5 py-3 flex items-center justify-between gap-6 shadow-sm">
+                    <div className="bg-amber-500/10 border border-amber-500/20 backdrop-blur-md rounded-2xl px-5 py-3 flex items-center justify-between gap-6 shadow-sm overflow-hidden max-w-full">
                       <p className="text-sm font-bold text-amber-600 flex items-center gap-2">
                         <Lock className="h-3.5 w-3.5" /> Basic plan · {3 - Math.min(usedCount, 3)} left
                       </p>

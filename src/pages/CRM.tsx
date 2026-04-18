@@ -296,7 +296,7 @@ function Column({ stage, proposals, followups }: { stage: any, proposals: Propos
       style={{ borderColor: isOver ? stage.color : 'transparent' }}
     >
       <div className="flex items-center justify-between mb-4 px-1">
-        <h3 className="font-sans font-[600] text-[13px] tracking-wider uppercase" style={{ color: stage.color }}>
+        <h3 className="font-sans font-[600] text-[13px] tracking-wider uppercase truncate max-w-[140px]" style={{ color: stage.color }}>
           {stage.name}
         </h3>
         <span 
@@ -467,7 +467,7 @@ function ProposalCard({
       )}
 
       {/* Card Content */}
-      <h4 className="font-display font-[700] text-[15px] text-[#EEEEFF] mb-2 truncate">
+      <h4 className="font-display font-[700] text-[15px] text-[#EEEEFF] mb-2 truncate max-w-full">
         {proposal.client_name || 'Potential Client'}
       </h4>
 

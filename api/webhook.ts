@@ -63,28 +63,28 @@ export default async function handler(req: Req, res: Res) {
 
         await verifier.verify(rawPayload, webhookHeaders);
 
-        // Safe to parse after successful verification
         const event = JSON.parse(rawPayload);
+        const { type, data } = event;
 
-        // Process only payment.succeeded for this handler
-        if (event?.type === "payment.succeeded") {
-            // Metadata set at checkoutSessions.create is typically echoed on payment data
+        // Process activation events
+        if (type === "payment.succeeded" || type === "subscription.active" || type === "subscription.created") {
+            // Metadata set at checkoutSessions.create can be at different levels
+            // For one-time payments it might be in 'data.metadata'
+            // For subscriptions it is in 'data.metadata' (if it's the subscription object)
+            // Sometimes it's at the event root level depending on the payload flavor
             const meta =
-                event?.data?.metadata ??
-                event?.data?.checkout?.metadata ??
+                data?.metadata ??
+                data?.checkout?.metadata ??
                 event?.metadata ??
                 {};
 
-            const sessionId: string | undefined =
-                meta.sessionId ?? meta.session_id ?? undefined;
-            const userId: string | undefined =
-                meta.userId ?? meta.user_id ?? undefined;
+            const userId: string | undefined = meta.user_id ?? meta.userId ?? undefined;
+            const email: string | undefined = data?.customer?.email ?? data?.email ?? undefined;
+            const plan = meta.plan ?? "pro";
 
-            if (!sessionId && !userId) {
-                // Log but still acknowledge to avoid retries; you can track this to investigate
-                console.warn("payment.succeeded received without sessionId or userId in metadata");
+            if (!userId && !email) {
+                console.warn(`${type} received without user_id or email mapping`);
             } else {
-                // Update Postgres (Supabase) to mark the session as paid
                 const supabaseUrl = process.env.SUPABASE_URL;
                 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -92,55 +92,50 @@ export default async function handler(req: Req, res: Res) {
                     console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
                 } else {
                     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+                    
+                    const updatePayload: any = {
+                        plan: plan,
+                        subscription_status: "active",
+                        subscription_period_end: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString(),
+                    };
 
-                    // 1. Mark the session as paid (if proposal_sessions exists)
-                    if (sessionId) {
-                        const { error: sessionErr } = await supabase
-                            .from("proposal_sessions")
-                            .upsert(
-                                [
-                                    {
-                                        session_id: sessionId,
-                                        paid: true,
-                                        paid_at: new Date().toISOString(),
-                                    },
-                                ],
-                                { onConflict: "session_id" }
-                            );
-                        if (sessionErr) console.warn("Supabase upsert warning (proposal_sessions):", sessionErr.message);
+                    // Add subscription ID if present
+                    if (data?.id && type.startsWith("subscription")) {
+                        updatePayload.dodo_subscription_id = data.id;
+                    } else if (data?.subscription_id) {
+                        updatePayload.dodo_subscription_id = data.subscription_id;
                     }
 
-                    // 2. CRITICAL: Upgrade the User Profile to Pro
-                    if (userId) {
-                        console.log(`Upgrading user ${userId} to Pro...`);
-                        const { error: profileErr } = await supabase
-                            .from("profiles")
-                            .update({
-                                plan: "pro",
-                                subscription_status: "active",
-                                subscription_period_end: new Date(Date.now() + 32 * 24 * 60 * 60 * 1000).toISOString(), // ~1 month from now
-                            })
-                            .eq("user_id", userId);
+                    let query = supabase.from("profiles").update(updatePayload);
 
-                        if (profileErr) {
-                            console.error("Failed to upgrade user profile in profiles table:", profileErr);
-                        } else {
-                            console.log(`Successfully upgraded user ${userId} to Pro.`);
-                        }
-                    } else if (event?.data?.customer?.email) {
-                        // Fallback: Try to find user by email if userId is missing
-                        const email = event.data.customer.email;
-                        console.log(`Attempting fallback upgrade for email ${email}...`);
-                        const { data: profile } = await supabase
-                            .from("profiles")
-                            .select("user_id")
-                            .eq("email", email)
-                            .maybeSingle(); // Note: This depends on having 'email' in profiles table
-                        
-                        // Note: If email isn't in profiles, we can't do much here without more complex logic.
-                        // But since we fixed the frontend to send userId, this fallback is just a safety measure.
+                    if (userId) {
+                        query = query.eq("user_id", userId);
+                    } else {
+                        query = query.eq("email", email);
+                    }
+
+                    const { error: profileErr } = await query;
+
+                    if (profileErr) {
+                        console.error(`Failed to upgrade user profile on ${type}:`, profileErr);
+                    } else {
+                        console.log(`Successfully upgraded user ${userId || email} to Pro via ${type}.`);
                     }
                 }
+            }
+        } else if (type === "subscription.cancelled" || type === "subscription.expired") {
+            const meta = data?.metadata ?? {};
+            const userId = meta.user_id ?? meta.userId;
+            const email = data?.customer?.email ?? data?.email;
+
+            if (userId || email) {
+                const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+                const query = userId 
+                    ? supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("user_id", userId)
+                    : supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("email", email);
+                
+                await query;
+                console.log(`Deactivated account for ${userId || email} due to ${type}`);
             }
         }
 

@@ -72,7 +72,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-5">
-              <LiquidGlassToggle />
+              {/* Toggle removed from here, now in settings */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <div className="flex items-center gap-3 bg-background border border-border pl-4 pr-3 py-2 rounded-2xl cursor-pointer hover:bg-muted transition-all hover:shadow-sm group">
