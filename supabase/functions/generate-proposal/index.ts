@@ -180,15 +180,21 @@ serve(async (req) => {
     const sym = symbols[currency] || '$'
 
     // BUILD CLAUDE PROMPT
-    const systemPrompt = proposalMode === 'sales_pitch'
-      ? `You are a world-class sales copywriter who writes proposals that close deals. 
-         Write every section as a high-converting sales document. Speak directly to the client's fears and desired outcomes. Every paragraph must move the client closer to saying yes. Use specific, concrete language. Frame pricing as investment. Make the call to action feel obvious and low-risk.
-         NEVER use markdown characters.
-         Return ONLY raw valid JSON.`
-      : `You are a senior business proposal writer.
-         Write clearly, formally, and professionally.
-         NEVER use markdown characters.
-         Return ONLY raw valid JSON.`
+    const systemPrompt = `You are an expert freelance sales consultant and professional proposal writer with 15+ years of experience closing high-value B2B and B2C freelance contracts.
+
+Your job is to write a compelling, sales-worthy freelance proposal. Every proposal you write must feel COMPLETELY UNIQUE in structure, tone, and narrative.
+
+STRICT RULES:
+1. NEVER use the same opening sentence, hook, or framing twice. Rotate between: a bold claim, a question, a pain point, a short story, a stat, or a direct empathy statement.
+2. ALWAYS vary the proposal structure. Rotate between these formats:
+   - Problem → Solution → Proof → Investment → CTA
+   - Vision → Strategy → Deliverables → Timeline → Investment
+   - Pain → Insight → Approach → Results → Next Step
+   - Story → Method → Outcomes → Scope → Terms → CTA
+3. Write in a warm but professional tone — like a trusted expert, not a salesperson.
+4. Tailor every section specifically to the client's industry, pain points, and goals — do not use generic placeholder language.
+5. Use active voice. Be specific. Avoid clichés like "I am passionate about", "results-driven", "synergy", or "leverage".
+6. Return ONLY raw valid JSON. No markdown backticks or extra text.`
 
     const userPrompt = `Write a proposal for this project:
 Client: ${clientName}${clientCompany ? ', ' + clientCompany : ''}

@@ -15,7 +15,7 @@ const publicNavLinks = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Templates", href: "#marketplace" },
+  { label: "Contact", href: "/contact" },
 ];
 
 const authNavLinks = [
@@ -119,7 +119,7 @@ export function Navbar() {
             })}
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {publicNavLinks.map((link) => (
               <a
                 key={link.href}
@@ -133,37 +133,35 @@ export function Navbar() {
           </nav>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           <LiquidGlassToggle />
-
-          {user ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden md:inline-flex text-muted-foreground h-9 w-9"
-              onClick={handleSignOut}
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
+          
+          {!user ? (
+            <div className="hidden md:flex items-center gap-6">
+              <button 
                 onClick={() => navigate("/auth?mode=login")}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
               >
-                Sign in
-              </Button>
+                Sign In
+              </button>
               <Button
-                variant="hero"
-                size="sm"
+                className="bg-black text-white hover:bg-black/90 px-6 rounded-full font-[800] h-10 shadow-xl transition-all active:scale-95"
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 Get Started
               </Button>
             </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="font-bold text-muted-foreground"
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </Button>
           )}
+        </div>
 
           <Button
             variant="ghost"
@@ -174,7 +172,6 @@ export function Navbar() {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
-      </div>
 
       <AnimatePresence>
         {mobileOpen && (
