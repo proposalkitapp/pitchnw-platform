@@ -94,6 +94,8 @@ export default async function handler(req: Req, res: Res) {
 
     try {
         const apiKey = process.env.DODO_PAYMENTS_API_KEY;
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
         if (!apiKey) {
             res.status(500).json({ error: "Missing DODO_PAYMENTS_API_KEY" });
@@ -118,9 +120,9 @@ export default async function handler(req: Req, res: Res) {
             ((process.env.DODO_PAYMENTS_ENVIRONMENT as "test_mode" | "live_mode") || "test_mode");
 
         // Admin Override: If user is admin, force test_mode for verification purposes
-        if (userId && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        if (userId && supabaseUrl && supabaseServiceKey) {
             const { createClient } = await import("@supabase/supabase-js");
-            const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+            const supabase = createClient(supabaseUrl, supabaseServiceKey);
             const { data: profile } = await supabase
                 .from("profiles")
                 .select("is_admin")

@@ -160,7 +160,7 @@ export default function ProposalGenerator() {
     setGeneratedProposal("");
     
     if (generationMode === "ai") {
-      toast.loading("AI is crafting your proposal...", { id: "gen" });
+      toast.loading("Neural Edge AI is crafting your pitch...", { id: "gen" });
     } else {
       toast.loading("Smart Engine is assembling your proposal...", { id: "gen" });
     }
@@ -187,10 +187,10 @@ export default function ProposalGenerator() {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) {
-        toast.error("Please sign in to generate proposals", { id: "gen" });
+      // AI Generation Mode (Neural Edge)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Please sign in to continue.", { id: "gen" });
         navigate("/auth");
         return;
       }
@@ -200,7 +200,7 @@ export default function ProposalGenerator() {
         {
           body: {
             clientName: form.clientName,
-            clientEmail: form.clientEmail,
+            clientCompany: form.clientEmail, // Using email as company if not available, or keep as is
             projectType: form.projectType === "other" ? form.customProjectType : form.projectType,
             projectTitle: form.projectTitle,
             requirements: form.description,
@@ -208,37 +208,52 @@ export default function ProposalGenerator() {
             budget: form.budgetAmount,
             duration: form.timeline,
             tone: form.tone,
+            preparedBy: profile?.full_name || "The Team",
             proposalMode: form.proposalMode,
-            templatePrompt: activeTemplate?.aiPrompt || null,
-            templateSections: activeTemplate?.sections || null,
-            currencySymbol: getCurrencyByCode(form.budgetCurrency).symbol,
-            industry: form.industry === "other" ? form.customIndustry : form.industry,
           },
           headers: {
-            Authorization: `Bearer ${accessToken}`
+            Authorization: `Bearer ${session.access_token}`
           }
         }
       );
 
       if (error) {
-        if (error.context?.status === 403 || error.message?.includes("limit_reached")) {
-          toast.error("You've used all 3 Basic proposals. Upgrade to Pro for unlimited access.", { id: "gen" });
-          navigate("/checkout");
-          return;
-        }
-        throw new Error(error.message || "Failed to generate proposal");
+        console.error("Invoke error:", error);
+        toast.error(error.message || "Generation failed. Please try again.", { id: "gen" });
+        return;
       }
 
-      if (data && typeof data === 'string') {
-        setGeneratedProposal(data);
-      } else if (data && data.content) {
-        setGeneratedProposal(data.content);
-      } else if (data) {
-        setGeneratedProposal(JSON.stringify(data, null, 2));
+      if (!data) {
+        toast.error("No response received. Please try again.", { id: "gen" });
+        return;
       }
 
-      toast.success("Proposal created!", { id: "gen" });
+      if (data.error === 'limit_reached') {
+        toast.error("You have used all 3 free proposals.", { id: "gen" });
+        navigate('/checkout');
+        return;
+      }
+
+      if (data.error) {
+        toast.error(data.message || "Generation failed. Please try again.", { id: "gen" });
+        return;
+      }
+
+      if (!data.proposal?.id) {
+        toast.error("Proposal was not saved. Please try again.", { id: "gen" });
+        return;
+      }
+
+      toast.success("Proposal generated and saved!", { id: "gen" });
+
+      // Invalidate queries to refresh lists
+      queryClient.invalidateQueries({ queryKey: ['proposals', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['proposals-library', user?.id] });
+
+      // Navigate to the library where the new proposal will appear
+      navigate("/proposals");
+
     } catch (e: any) {
       console.error("Generation error details:", e);
       toast.error(e.message || "Generation failed. Please try again.", { id: "gen" });
@@ -278,12 +293,26 @@ export default function ProposalGenerator() {
       toast.error("Failed to save proposal");
     } else {
       toast.success("Proposal saved ✓");
+
+      // Increment proposals_used for free users in Smart mode
+      // (AI mode is handled by the edge function)
+      if (generationMode === "smart" && isFree) {
+        await supabase
+          .from("profiles")
+          .update({
+            proposals_used: proposalsUsed + 1
+          } as any)
+          .eq("user_id", user.id);
+      }
+
       if (data?.public_slug) {
         const link = `${window.location.origin}/p/${data.public_slug}`;
         navigator.clipboard.writeText(link);
         toast.success("Shareable link copied to clipboard! 🔗");
         toast.success("Proposal sent! Your client has been notified via email.");
       }
+      
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
       navigate("/dashboard");
     }
     setIsSaving(false);
@@ -309,7 +338,7 @@ export default function ProposalGenerator() {
           </h2>
           <p className="text-slate-500 max-w-md leading-relaxed">
             Basic accounts include 3 proposals for life.
-            Upgrade to Pro for unlimited proposal generation
+            Upgrade to the Freelancer plan for unlimited proposal generation
             and access to every premium feature.
           </p>
           <Button 
@@ -317,7 +346,7 @@ export default function ProposalGenerator() {
             className="h-14 px-8 bg-[#0033ff] hover:bg-[#002be6] text-white rounded-2xl font-bold shadow-lg"
             onClick={() => navigate('/checkout')}
           >
-            Upgrade to Pro — $2.99/mo
+            Upgrade to Freelancer Plan — $2.99/mo
           </Button>
           <p className="text-[11px] text-slate-400 font-medium tracking-wide uppercase">
             Existing proposals remain fully accessible

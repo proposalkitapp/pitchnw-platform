@@ -130,11 +130,14 @@ function UpgradeWall({ tab }: { tab: string }) {
 
 function AnalyzeTab() {
   const [option, setOption] = useState<"upload" | "paste">("upload");
-  const [text, setText] = useState("");
+  const [proposalText, setProposalText] = useState("");
   const [fileName, setFileName] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [loadingMessageIdx, setLoadingMessageIdx] = useState(0);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const navigate = useNavigate();
 
   const loadingMessages = [
     "Reading your proposal...",
@@ -145,7 +148,7 @@ function AnalyzeTab() {
   // Logic for cycling messages
   useState(() => {
     let interval: any;
-    if (isProcessing) {
+    if (analyzing) {
       interval = setInterval(() => {
         setLoadingMessageIdx(prev => (prev + 1) % loadingMessages.length);
       }, 2000);
@@ -157,74 +160,136 @@ function AnalyzeTab() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size exceeds 10MB");
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('File must be under 10MB.');
       return;
     }
 
     setFileName(file.name);
-    setIsProcessing(true);
-    setLoadingMessageIdx(0);
-
     try {
-      let extractedText = "";
-      if (file.name.endsWith('.txt')) {
-        extractedText = await file.text();
-      } else if (file.name.endsWith('.pdf')) {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let content = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          content += textContent.items.map((item: any) => item.str).join(" ");
-        }
-        extractedText = content;
-      } else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        extractedText = result.value;
-      } else {
-        toast.error("Unsupported file format");
-        setIsProcessing(false);
+      setExtracting(true);
+
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        const textValue = await file.text();
+        setProposalText(textValue);
+        toast.success('File loaded successfully.');
         return;
       }
-      setText(extractedText);
+
+      if (file.name.endsWith('.pdf')) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = await import('pdfjs-dist');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        let fullText = '';
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items
+            .map((item: any) => item.str)
+            .join(' ');
+          fullText += pageText + '\n';
+        }
+
+        setProposalText(fullText.trim());
+        toast.success('PDF loaded successfully.');
+        return;
+      }
+
+      if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+        const mammothModule = await import('mammoth');
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammothModule.extractRawText({ arrayBuffer });
+        setProposalText(result.value);
+        toast.success('Document loaded successfully.');
+        return;
+      }
+
+      toast.error('Unsupported file type. Please use PDF, Word, or text files.');
+
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to parse file");
+      console.error('File extraction error:', err);
+      toast.error('Could not read the file. Try pasting the text instead.');
     } finally {
-      setIsProcessing(false);
+      setExtracting(false);
     }
   };
 
   const analyzePitch = async () => {
-    if (!text) return;
-    setIsProcessing(true);
-    setResult(null);
+    if (!proposalText || proposalText.trim().length < 50) {
+      toast.error('Please provide a proposal text of at least 50 characters.');
+      return;
+    }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      setAnalyzing(true);
+      setAnalysisResult(null);
+      setAnalysisError(null);
 
-      const { data, error } = await supabase.functions.invoke("analyze-pitch", {
-        body: { proposalText: text },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (error) throw error;
-      setResult(data);
-      
-      // Smooth scroll to results
+      if (sessionError || !session) {
+        toast.error('Please sign in to continue.');
+        navigate('/auth');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke(
+        'analyze-pitch',
+        {
+          body: {
+            proposalText: proposalText.trim()
+          },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        }
+      );
+
+      if (error) {
+        console.error('Analysis invoke error:', error);
+        setAnalysisError(error.message || 'Analysis failed. Please try again.');
+        toast.error(error.message || 'Analysis failed. Please try again.');
+        return;
+      }
+
+      if (!data) {
+        setAnalysisError('No response received. Please try again.');
+        return;
+      }
+
+      if (data.error === 'upgrade_required') {
+        toast.error('Upgrade to Pro to use this feature.');
+        navigate('/checkout');
+        return;
+      }
+
+      if (data.error) {
+        setAnalysisError(data.message || 'Analysis failed.');
+        toast.error(data.message || 'Analysis failed.');
+        return;
+      }
+
+      if (!data.analysis) {
+        setAnalysisError('Analysis result was empty. Please try again.');
+        return;
+      }
+
+      setAnalysisResult(data.analysis);
+
       setTimeout(() => {
-        const el = document.getElementById('analysis-results');
-        el?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('analysis-results')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+
     } catch (err) {
-      console.error(err);
-      toast.error("Analysis failed. Please try again.");
+      console.error('Analysis exception:', err);
+      setAnalysisError('Something went wrong. Please try again.');
+      toast.error('Something went wrong. Please try again.');
     } finally {
-      setIsProcessing(false);
+      setAnalyzing(false);
     }
   };
 
@@ -265,7 +330,7 @@ function AnalyzeTab() {
                   <FileText className="h-10 w-10 text-primary" />
                   <div className="text-left min-w-0">
                     <p className="text-sm font-bold text-white truncate max-w-[200px]">{fileName}</p>
-                    <button onClick={(e) => { e.preventDefault(); setFileName(""); setText(""); }} className="text-[11px] text-destructive font-bold uppercase tracking-wider hover:underline mt-1">Remove</button>
+                    <button onClick={(e) => { e.preventDefault(); setFileName(""); setProposalText(""); }} className="text-[11px] text-destructive font-bold uppercase tracking-wider hover:underline mt-1">Remove</button>
                   </div>
                 </div>
               )}
@@ -278,11 +343,11 @@ function AnalyzeTab() {
             <textarea
               className="w-full min-h-[280px] bg-[#0E0E1A] border-1.5 border-[#2A2A45] rounded-[14px] p-4 font-dm text-sm text-[#EEEEFF] placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all resize-none"
               placeholder="Paste your proposal text here... The AI will analyze it and suggest improvements."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              value={proposalText}
+              onChange={(e) => setProposalText(e.target.value)}
             />
             <div className="text-right text-[11px] text-muted-foreground font-mono">
-              {text.length} characters
+              {proposalText.length} characters
             </div>
           </div>
         )}
@@ -291,13 +356,13 @@ function AnalyzeTab() {
           variant="hero" 
           size="lg" 
           className="w-full h-14 rounded-2xl text-[16px] font-bold"
-          disabled={!text || isProcessing}
+          disabled={!proposalText || analyzing || extracting}
           onClick={analyzePitch}
         >
-          {isProcessing ? (
+          {analyzing || extracting ? (
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>{loadingMessages[loadingMessageIdx]}</span>
+              <span>{extracting ? "Extracting text..." : loadingMessages[loadingMessageIdx]}</span>
             </div>
           ) : (
             "Analyze My Pitch →"
@@ -305,7 +370,13 @@ function AnalyzeTab() {
         </Button>
       </div>
 
-      {result && <AnalysisResults result={result} onReset={() => { setResult(null); setText(""); setFileName(""); }} />}
+      {analysisError && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
+          {analysisError}
+        </div>
+      )}
+
+      {analysisResult && <AnalysisResults result={analysisResult} onReset={() => { setAnalysisResult(null); setProposalText(""); setFileName(""); }} />}
     </div>
   );
 }

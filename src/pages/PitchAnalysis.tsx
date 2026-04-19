@@ -73,7 +73,7 @@ export default function PitchAnalysis() {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      return data as Analysis | null;
+      return data as unknown as Analysis | null;
     },
     enabled: !!id,
   });
@@ -124,7 +124,7 @@ export default function PitchAnalysis() {
       const { data, error } = await supabase.functions.invoke('analyze-pitch', {
         body: {
           proposalId: id,
-          proposalContent: proposal.generated_content
+          proposalText: proposal.generated_content
         }
       });
 

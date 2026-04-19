@@ -1,57 +1,111 @@
 "use client";
 
+import { Link } from "react-router-dom";
 import pitchnwLogo from "../assets/pitchnw-logo.png";
-import { Link } from 'react-router-dom';
+import { motion } from "framer-motion";
+
+const LINKS = {
+  Product: [
+    { label: "Features", to: "/#features" },
+    { label: "How it Works", to: "/#how-it-works" },
+    { label: "Pricing", to: "/#pricing" },
+    { label: "Marketplace", to: "/marketplace" },
+  ],
+  Account: [
+    { label: "Sign Up — Free", to: "/auth?mode=signup" },
+    { label: "Sign In", to: "/auth?mode=login" },
+    { label: "Dashboard", to: "/dashboard" },
+  ],
+  Legal: [
+    { label: "Privacy Policy", to: "/privacy" },
+    { label: "Terms of Use", to: "/terms" },
+    { label: "Contact Us", to: "mailto:support@pitchnw.com", external: true },
+  ],
+};
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-12 bg-muted/20">
-      <div className="container mx-auto px-4">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <img src={pitchnwLogo} alt="Pitchnw" className="h-24 w-auto object-contain" />
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Generate. Customize. Close. The AI-powered proposal platform for freelancers.
+    <footer className="relative border-t border-border bg-background">
+      {/* Subtle top glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+      <div className="container mx-auto px-4 pt-16 pb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-10">
+          {/* Brand Column */}
+          <div className="col-span-2 lg:col-span-2 space-y-5">
+            <Link to="/" className="inline-block">
+              <img
+                src={pitchnwLogo}
+                alt="Pitchnw"
+                className="h-16 w-auto object-contain"
+              />
+            </Link>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+              The AI-powered proposal platform built for freelancers who want to
+              win more deals without writing a single word from scratch.
             </p>
+            {/* Start CTA */}
+            <Link
+              to="/auth?mode=signup"
+              className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+            >
+              Get Started Free →
+            </Link>
           </div>
 
-          <div>
-            <h4 className="font-display text-sm font-semibold text-foreground mb-4">Product</h4>
-            <ul className="space-y-2">
-              <li><Link to="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
-              <li><Link to="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link to="/marketplace" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Marketplace</Link></li>
-              <li><Link to="/#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-display text-sm font-semibold text-foreground mb-4">Account</h4>
-            <ul className="space-y-2">
-              <li><Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign Up</Link></li>
-              <li><Link to="/auth?mode=login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-display text-sm font-semibold text-foreground mb-4">Legal</h4>
-            <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Use</Link></li>
-              <li><a href="mailto:support@pitchnw.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
-            </ul>
-          </div>
+          {/* Link Columns */}
+          {Object.entries(LINKS).map(([group, links]) => (
+            <div key={group} className="space-y-4">
+              <h4 className="text-xs font-black uppercase tracking-widest text-foreground">
+                {group}
+              </h4>
+              <ul className="space-y-2.5">
+                {links.map(({ label, to, external }) => (
+                  <li key={label}>
+                    {external ? (
+                      <a
+                        href={to}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {label}
+                      </a>
+                    ) : (
+                      <Link
+                        to={to}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Bottom bar */}
+        <div className="mt-14 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Pitchnw. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Built for freelancers who mean business.
-          </p>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/privacy"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              to="/terms"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
+            <span className="text-xs text-muted-foreground/50">
+              Built for freelancers who mean business.
+            </span>
+          </div>
         </div>
       </div>
     </footer>
