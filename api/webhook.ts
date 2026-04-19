@@ -129,13 +129,20 @@ export default async function handler(req: Req, res: Res) {
             const email = data?.customer?.email ?? data?.email;
 
             if (userId || email) {
-                const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-                const query = userId 
-                    ? supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("user_id", userId)
-                    : supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("email", email);
-                
-                await query;
-                console.log(`Deactivated account for ${userId || email} due to ${type}`);
+                const sbUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+                const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+                if (sbUrl && sbKey) {
+                    const supabase = createClient(sbUrl, sbKey);
+                    const query = userId 
+                        ? supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("user_id", userId)
+                        : supabase.from("profiles").update({ subscription_status: "cancelled", plan: "free" }).eq("email", email);
+                    
+                    await query;
+                    console.log(`Deactivated account for ${userId || email} due to ${type}`);
+                } else {
+                    console.error("Missing Supabase credentials for subscription cancellation");
+                }
             }
         }
 
