@@ -23,7 +23,6 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "My Pitches", url: "/proposals", icon: FileText },
   { title: "New Pitch", url: "/generate", icon: Plus },
-  { title: "Marketplace", url: "/marketplace", icon: Store },
 ];
 
 const proNavItems = [
