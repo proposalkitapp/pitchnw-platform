@@ -117,6 +117,7 @@ export default function ProposalGenerator() {
   const [appearance, setAppearance] = useState<AppearanceSettings>(defaultAppearance);
   const [budgetError, setBudgetError] = useState("");
   const [generationMode, setGenerationMode] = useState<"smart" | "ai">("smart");
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const templateId = searchParams.get("template");
 
@@ -154,6 +155,42 @@ export default function ProposalGenerator() {
     setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
   };
   const prev = () => setCurrentStep((s) => Math.max(s - 1, 0));
+
+  const handleSuggestDetails = async () => {
+    if (!form.projectTitle || (!form.industry && !form.customIndustry)) {
+      toast.error("Please enter a Project Title and Industry first.");
+      return;
+    }
+    
+    setIsSuggesting(true);
+    toast.loading("AI is suggesting details...", { id: "suggest" });
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-details', {
+        body: {
+          industry: form.industry === 'other' ? form.customIndustry : form.industry,
+          projectType: form.projectType === 'other' ? form.customProjectType : form.projectType,
+          projectTitle: form.projectTitle
+        }
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.description && data?.deliverables) {
+        update("description", data.description);
+        update("deliverables", data.deliverables);
+        toast.success("Details suggested!", { id: "suggest" });
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to suggest details", { id: "suggest" });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -208,7 +245,7 @@ export default function ProposalGenerator() {
             budget: form.budgetAmount,
             duration: form.timeline,
             tone: form.tone,
-            preparedBy: profile?.full_name || "The Team",
+            preparedBy: profile?.display_name || "The Team",
             proposalMode: form.proposalMode,
           },
           headers: {
@@ -497,8 +534,21 @@ export default function ProposalGenerator() {
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="description" className="font-bold text-slate-700">Project Description <span className="text-red-500">*</span></Label>
-                  <Textarea id="description" placeholder="Describe the project goals and requirements..." rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} className="mt-2 rounded-xl bg-slate-50 border-slate-100 resize-none" />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="description" className="font-bold text-slate-700">Project Description <span className="text-red-500">*</span></Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-primary font-bold h-8 text-xs hover:bg-primary/5"
+                      onClick={handleSuggestDetails}
+                      disabled={isSuggesting || !form.projectTitle || (!form.industry && !form.customIndustry)}
+                      type="button"
+                    >
+                      {isSuggesting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                      AI Suggest Details
+                    </Button>
+                  </div>
+                  <Textarea id="description" placeholder="Describe the project goals and requirements..." rows={4} value={form.description} onChange={(e) => update("description", e.target.value)} className="rounded-xl bg-slate-50 border-slate-100 resize-none" />
                 </div>
                 <div>
                   <Label htmlFor="deliverables" className="font-bold text-slate-700">Key Deliverables <span className="text-red-500">*</span></Label>

@@ -86,11 +86,6 @@ const features = [
     widget: "typing" as const,
   },
   {
-    icon: LayoutTemplate,
-    title: "Template Marketplace",
-    description: "Browse, buy, and use stunning proposal templates. Creators earn 80% on every sale.",
-  },
-  {
     icon: Send,
     title: "Client Portal",
     description: "Share proposals via private branded links. Clients can accept, decline, or comment — no login required.",

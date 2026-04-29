@@ -505,11 +505,15 @@ function InsightsTab() {
       const won = outcomes.filter(o => o.status === 'won');
       const lost = outcomes.filter(o => o.status === 'lost');
 
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke("win-rate-coach", {
         body: { 
           wonProposals: won.map(p => ({ title: p.title, budget: p.budget, type: p.project_type, date: p.created_at })),
           lostProposals: lost.map(p => ({ title: p.title, budget: p.budget, type: p.project_type, date: p.created_at }))
         },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`
+        }
       });
       if (error) throw error;
       return data as WinRateInsights;

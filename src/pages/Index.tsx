@@ -7,7 +7,6 @@ import { TrustMarquee } from "@/components/TrustMarquee";
 import { FeaturesSection } from "@/components/FeaturesSection";
 import { HowItWorksSection } from "@/components/HowItWorksSection";
 import { PricingSection } from "@/components/PricingSection";
-import { MarketplaceSection } from "@/components/MarketplaceSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
@@ -33,7 +32,6 @@ const Index = () => {
       <HowItWorksSection />
       <TestimonialsSection />
       <PricingSection />
-      <MarketplaceSection />
       <CTASection />
       <Footer />
     </div>

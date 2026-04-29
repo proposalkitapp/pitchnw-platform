@@ -19,6 +19,7 @@ export interface Profile {
   subscription_status: string | null;
   subscription_period_end: string | null;
   trial_ends_at: string | null;
+  role: string | null;
 }
 
 export function useProfile() {
@@ -40,7 +41,7 @@ export function useProfile() {
         return null;
       }
       
-      return data as Profile;
+      return data as unknown as Profile;
     },
     enabled: !!user?.id,
     staleTime: 0,

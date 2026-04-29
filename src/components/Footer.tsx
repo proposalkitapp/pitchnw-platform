@@ -9,7 +9,6 @@ const LINKS = {
     { label: "Features", to: "/#features" },
     { label: "How it Works", to: "/#how-it-works" },
     { label: "Pricing", to: "/#pricing" },
-    { label: "Marketplace", to: "/marketplace" },
   ],
   Account: [
     { label: "Sign Up — Free", to: "/auth?mode=signup" },

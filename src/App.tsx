@@ -25,11 +25,18 @@ import StrategyCoach from "./pages/StrategyCoach.tsx";
 import MyPitches from "./pages/MyPitches.tsx";
 import PitchAnalysis from "./pages/PitchAnalysis.tsx";
 import WinRateCoach from "./pages/WinRateCoach.tsx";
+import ProposalEditor from "./pages/ProposalEditor.tsx";
+import PitchDeckBuilder from "./pages/PitchDeckBuilder.tsx";
+import InvestorDashboard from "./pages/investor/InvestorDashboard.tsx";
+import PitchReview from "./pages/investor/PitchReview.tsx";
+import InvestorSubmission from "./pages/InvestorSubmission.tsx";
+import { LiveblocksProvider } from "@liveblocks/react";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <LiveblocksProvider publicApiKey={"pk_prod_placeholder_key_get_from_liveblocks"}>
+    <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -48,6 +55,11 @@ const App = () => (
             <Route path="/p/:slug" element={<ClientPortal />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/proposals" element={<MyPitches />} />
+            <Route path="/proposals/editor" element={<ProposalEditor />} />
+            <Route path="/pitch-decks/new" element={<PitchDeckBuilder />} />
+            <Route path="/investor" element={<InvestorDashboard />} />
+            <Route path="/investor/pitch/:id" element={<PitchReview />} />
+            <Route path="/investor-portal" element={<InvestorSubmission />} />
             <Route path="/coach" element={<StrategyCoach />} />
             <Route path="/win-rate" element={<WinRateCoach />} />
             <Route path="/proposals/:id/analysis" element={<PitchAnalysis />} />
@@ -64,6 +76,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </LiveblocksProvider>
 );
 
 export default App;

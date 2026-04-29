@@ -239,7 +239,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "scopeOfWork" && typeof value === "object" && !Array.isArray(value)) {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <ScopeOfWork value={value as { included?: string[]; notIncluded?: string[] }} />
             </div>
@@ -248,7 +248,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "timeline" && Array.isArray(value)) {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <TimelineSection value={value} />
             </div>
@@ -257,7 +257,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "pricing" && Array.isArray(value)) {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <PricingTable value={value} />
             </div>
@@ -266,7 +266,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "investmentJustification" && isSalesPitch && typeof value === "string") {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <div className="rounded-xl border border-green-200 bg-green-50 p-5">
                 <TextBlock value={value} />
@@ -277,7 +277,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "urgencyStatement" && isSalesPitch && typeof value === "string") {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
                 <TextBlock value={value} />
@@ -288,7 +288,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (key === "callToAction" && isSalesPitch && typeof value === "string") {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
                 <TextBlock value={value} />
@@ -299,7 +299,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (typeof value === "string") {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <TextBlock value={value} />
             </div>
@@ -308,7 +308,7 @@ export function ProposalRenderer({ content, mode, branding }: ProposalRendererPr
 
         if (Array.isArray(value)) {
           return (
-            <div key={key}>
+            <div key={key} data-section-title={getSectionTitle(key)}>
               <SectionHeading title={getSectionTitle(key)} />
               <ol className="space-y-2 list-decimal list-inside">
                 {value.map((item, i) => (

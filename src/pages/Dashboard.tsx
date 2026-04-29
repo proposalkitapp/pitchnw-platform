@@ -95,6 +95,12 @@ export default function Dashboard() {
     }
   }, [session, authLoading]);
 
+  useEffect(() => {
+    if (profile?.role === 'investor') {
+      navigate('/investor');
+    }
+  }, [profile?.role, navigate]);
+
   const plan = profile?.plan || 'free';
   const isFreelancer = plan === 'pro';
   const isBasic = plan !== 'pro';
@@ -655,7 +661,7 @@ export default function Dashboard() {
                       <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center">
                          <Sparkles className="h-6 w-6 text-blue-400" />
                       </div>
-                      <h4 className="text-xl font-black leading-tight">Unlock AI Strategy & Marketplace</h4>
+                      <h4 className="text-xl font-black leading-tight">Unlock AI Strategy</h4>
                       <p className="text-slate-400 text-sm leading-relaxed">
                         Upgrade to Freelancer to manage your pipeline, get AI closing advice, and see exactly why you're winning deals.
                       </p>

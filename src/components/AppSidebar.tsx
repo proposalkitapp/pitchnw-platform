@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield, Brain, Lock, Target } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Settings, LogOut, Store, Kanban, Shield, Brain, Lock, Target, Presentation } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +28,7 @@ const navItems = [
 const proNavItems = [
   { title: "CRM Pipeline", url: "/crm", icon: Kanban, pro: true },
   { title: "Strategy Coach", url: "/coach", icon: Brain, pro: true },
+  { title: "Pitch Decks", url: "/pitch-decks/new", icon: Presentation, pro: true },
 ];
 
 
@@ -40,6 +41,7 @@ export function AppSidebar() {
   const { data: profile } = useProfile();
 
   const isFreelancer = profile?.plan === "pro";
+  const isInvestor = profile?.role === "investor";
   const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "User";
   const isAdmin = profile?.is_admin || false;
 
@@ -59,60 +61,83 @@ export function AppSidebar() {
 
           <SidebarGroupContent className="px-3">
             <SidebarMenu className="space-y-1.5">
-              {navItems.map((item) => {
-                const isActive = location === item.url;
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} className="px-3 py-6 rounded-xl transition-all duration-200">
-                      <NavLink
-                        to={item.url}
-                        end
-                        className="text-muted-foreground hover:text-foreground hover:bg-muted"
-                        activeClassName="bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-primary-foreground"
-                      >
-                        <item.icon className="h-5 w-5 mr-3" />
-                        {!collapsed && <span className="text-[15px] font-medium">{item.title}</span>}
+              {isInvestor ? (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === '/investor'} className="px-3 py-6 rounded-xl transition-all duration-200">
+                      <NavLink to="/investor" end className="text-muted-foreground hover:text-foreground hover:bg-muted" activeClassName="bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-primary-foreground">
+                        <Kanban className="h-5 w-5 mr-3" />
+                        {!collapsed && <span className="text-[15px] font-medium">Pipeline</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location === '/settings'} className="px-3 py-6 rounded-xl transition-all duration-200">
+                      <NavLink to="/settings" end className="text-muted-foreground hover:text-foreground hover:bg-muted" activeClassName="bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-primary-foreground">
+                        <Settings className="h-5 w-5 mr-3" />
+                        {!collapsed && <span className="text-[15px] font-medium">Settings</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              ) : (
+                <>
+                  {navItems.map((item) => {
+                    const isActive = location === item.url;
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive} className="px-3 py-6 rounded-xl transition-all duration-200">
+                          <NavLink
+                            to={item.url}
+                            end
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted"
+                            activeClassName="bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-[0_4px_14px_0_rgba(0,51,255,0.39)] hover:text-primary-foreground"
+                          >
+                            <item.icon className="h-5 w-5 mr-3" />
+                            {!collapsed && <span className="text-[15px] font-medium">{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
 
-              {/* Freelancer Items with Lock for Basic Users */}
-              <div className="pt-4 pb-2">
-                 {!collapsed && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-3 mb-2">Freelancer Tools</p>}
-                 {proNavItems.map((item) => {
-                   const isActive = location === item.url;
-                   return (
-                     <SidebarMenuItem key={item.title}>
-                       <SidebarMenuButton 
-                         asChild 
-                         isActive={isActive} 
-                         className="px-3 py-6 rounded-xl transition-all duration-200"
-                         onClick={() => !isFreelancer && navigate('/checkout')}
-                       >
-                         <div className={`flex items-center w-full cursor-pointer ${isFreelancer ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/50'}`}>
-                           <NavLink
-                             to={isFreelancer ? item.url : "#"}
-                             end
-                             className="flex items-center w-full"
-                             activeClassName={isFreelancer ? "bg-primary text-primary-foreground font-medium rounded-xl px-3 py-2 -ml-3 -mr-3" : ""}
-                             onClick={(e) => !isFreelancer && e.preventDefault()}
+                  {/* Freelancer Items with Lock for Basic Users */}
+                  <div className="pt-4 pb-2">
+                     {!collapsed && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 px-3 mb-2">Freelancer Tools</p>}
+                     {proNavItems.map((item) => {
+                       const isActive = location === item.url;
+                       return (
+                         <SidebarMenuItem key={item.title}>
+                           <SidebarMenuButton 
+                             asChild 
+                             isActive={isActive} 
+                             className="px-3 py-6 rounded-xl transition-all duration-200"
+                             onClick={() => !isFreelancer && navigate('/checkout')}
                            >
-                              {isFreelancer ? <item.icon className="h-5 w-5 mr-3" /> : <Lock className="h-5 w-5 mr-3 text-muted-foreground" />}
-                              {!collapsed && (
-                                <div className="flex items-center justify-between w-full">
-                                  <span className="text-[15px] font-medium">{item.title}</span>
-                                  {!isFreelancer && <Lock className="h-3 w-3 opacity-40" />}
-                                </div>
-                              )}
-                           </NavLink>
-                         </div>
-                       </SidebarMenuButton>
-                     </SidebarMenuItem>
-                   );
-                 })}
-              </div>
+                             <div className={`flex items-center w-full cursor-pointer ${isFreelancer ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/50'}`}>
+                               <NavLink
+                                 to={isFreelancer ? item.url : "#"}
+                                 end
+                                 className="flex items-center w-full"
+                                 activeClassName={isFreelancer ? "bg-primary text-primary-foreground font-medium rounded-xl px-3 py-2 -ml-3 -mr-3" : ""}
+                                 onClick={(e) => !isFreelancer && e.preventDefault()}
+                               >
+                                  {isFreelancer ? <item.icon className="h-5 w-5 mr-3" /> : <Lock className="h-5 w-5 mr-3 text-muted-foreground" />}
+                                  {!collapsed && (
+                                    <div className="flex items-center justify-between w-full">
+                                      <span className="text-[15px] font-medium">{item.title}</span>
+                                      {!isFreelancer && <Lock className="h-3 w-3 opacity-40" />}
+                                    </div>
+                                  )}
+                               </NavLink>
+                             </div>
+                           </SidebarMenuButton>
+                         </SidebarMenuItem>
+                       );
+                     })}
+                  </div>
+                </>
+              )}
             </SidebarMenu>
 
             {isAdmin && (
@@ -141,16 +166,17 @@ export function AppSidebar() {
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{displayName}</p>
                 <span className={`inline-flex items-center text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                  isInvestor ? "bg-blue-500/20 text-blue-400" :
                   isFreelancer ? "bg-purple-500/20 text-purple-400" :
                   "bg-slate-500/20 text-slate-400"
                 }`}>
-                  {isFreelancer ? "Freelancer" : "Basic"}
+                  {isInvestor ? "Investor" : isFreelancer ? "Freelancer" : "Basic"}
                 </span>
               </div>
             )}
           </div>
           
-          {!collapsed && !isFreelancer && (
+          {!collapsed && !isFreelancer && !isInvestor && (
             <button 
               onClick={() => navigate('/checkout')}
               className="w-full mt-4 py-2.5 rounded-xl bg-purple-600 text-white text-[11px] font-bold hover:bg-purple-700 transition-all shadow-lg shadow-purple-900/20"

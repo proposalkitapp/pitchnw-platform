@@ -29,14 +29,62 @@ export default function ClientPortal() {
 
   useEffect(() => {
     if (proposal) {
+      // Track Open
       supabase.from("proposal_events").insert({
         proposal_id: proposal.id,
         event_type: "open",
         metadata: { userAgent: navigator.userAgent },
       });
-      // Fetch creator's profile for branding via secure RPC
+
+      const sessionStart = Date.now();
+      let currentSection = "Top";
+      let sectionStartTime = Date.now();
+
+      const trackSectionTime = () => {
+        const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+        if (timeSpent > 0 && currentSection) {
+          supabase.from("proposal_events").insert({
+            proposal_id: proposal.id,
+            event_type: "section_view",
+            section_name: currentSection,
+            time_spent_seconds: timeSpent,
+            device_type: navigator.userAgent,
+          });
+        }
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const sectionTitle = entry.target.getAttribute('data-section-title') || "Unknown";
+            if (sectionTitle !== currentSection) {
+              trackSectionTime();
+              currentSection = sectionTitle;
+              sectionStartTime = Date.now();
+            }
+          }
+        });
+      }, { threshold: 0.5 });
+
+      setTimeout(() => {
+        document.querySelectorAll('[data-section-title]').forEach(el => observer.observe(el));
+      }, 1000);
+
+      const handleBeforeUnload = () => {
+        trackSectionTime();
+        supabase.from("proposal_events").insert({
+          proposal_id: proposal.id,
+          event_type: "close",
+          time_spent_seconds: Math.round((Date.now() - sessionStart) / 1000),
+        });
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      // Fetch creator's profile for branding directly from profiles table
       supabase
-        .rpc("get_creator_branding", { creator_user_id: proposal.user_id })
+        .from('profiles')
+        .select('*')
+        .eq('user_id', proposal.user_id)
         .single()
         .then(({ data }: any) => {
           if (data) {
@@ -49,6 +97,12 @@ export default function ClientPortal() {
             });
           }
         });
+
+      return () => {
+        trackSectionTime();
+        observer.disconnect();
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
     }
   }, [proposal]);
 
@@ -140,14 +194,12 @@ export default function ClientPortal() {
         </div>
       )}
 
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="bg-white sticky top-0 z-40 border-b-[3px] border-b-purple-500">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex flex-col items-center justify-center text-center">
           {creatorBranding.logoUrl ? (
-            <img src={creatorBranding.logoUrl} alt={creatorLabel} className="max-h-16 w-auto object-contain" />
-          ) : (
-            <span className="text-lg font-bold text-gray-900" style={{ fontFamily: "'Syne', sans-serif" }}>{creatorLabel}</span>
-          )}
-          <span className="text-xs text-gray-400 font-mono">Proposal</span>
+            <img src={creatorBranding.logoUrl} alt={creatorLabel} className="max-h-[60px] w-auto object-contain mb-2" />
+          ) : null}
+          <span className="text-xl font-bold text-gray-900" style={{ fontFamily: "'Syne', sans-serif" }}>{creatorLabel}</span>
         </div>
       </header>
 

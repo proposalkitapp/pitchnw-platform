@@ -210,23 +210,6 @@ export function ProDashboardView({ profile, proposals, isLoading }: ProDashboard
             </div>
           </div>
 
-          {/* Premium Marketplace Preview */}
-          <div className="bg-[#0033ff] rounded-[40px] p-8 text-white group cursor-pointer overflow-hidden shadow-xl" onClick={() => navigate('/marketplace')}>
-            <div className="flex items-start justify-between mb-8">
-               <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-white" />
-               </div>
-               <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </div>
-            <h3 className="text-xl font-black mb-2 tracking-tight leading-none">Unlock Premium Templates</h3>
-            <p className="text-white/60 text-xs font-medium leading-relaxed mb-6">Access our "High-Conversion" collection designed for 7-figure deals.</p>
-            <div className="flex items-center gap-2">
-               <div className="h-8 w-8 rounded-full bg-white/20 border border-white/20" />
-               <div className="h-8 w-8 rounded-full bg-white/20 border border-white/20 -ml-4" />
-               <div className="h-8 w-8 rounded-full bg-white/20 border border-white/20 -ml-4" />
-               <span className="text-[10px] font-bold ml-2">50+ Premium Designs</span>
-            </div>
-          </div>
 
           {/* Customer Success Widget */}
           <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8 flex flex-col items-center text-center">
