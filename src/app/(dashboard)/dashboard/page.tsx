@@ -193,7 +193,7 @@ export default function Dashboard() {
             <div className="p-10 flex flex-wrap items-center justify-between gap-6 border-b border-white/20">
               <h3 className="text-2xl font-black text-slate-900">Performance Trends</h3>
               <div className="flex gap-2">
-                {['Analytics', 'CRM', 'Templates'].map(label => (
+                {['Analytics', 'CRM'].map(label => (
                   <ClayButton key={label} variant="ghost" size="sm" className="text-slate-500 hover:text-primary">
                     {label}
                   </ClayButton>

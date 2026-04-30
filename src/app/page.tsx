@@ -14,6 +14,7 @@ import {
   Star,
   Users,
   BarChart3,
+  Target,
   Layers,
   MousePointer2
 } from 'lucide-react'
@@ -158,7 +159,7 @@ export default function LandingPage() {
                       </div>
                       <h3 className="text-2xl font-black mb-3">{feat.title}</h3>
                       <p className="text-slate-400 font-medium leading-relaxed">{feat.desc}</p>
-                   </motion.div>
+                   </ClayCard>
                  </motion.div>
                ))}
             </div>

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { clientConfig } from '@/lib/client-config'
 
-export const createServerSupabaseClient = () => {
+export const createClient = () => {
   const cookieStore = cookies()
   return createServerClient(
     clientConfig.supabaseUrl,
